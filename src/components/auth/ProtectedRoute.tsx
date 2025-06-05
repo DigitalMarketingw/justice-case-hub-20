@@ -28,15 +28,8 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to="/auth" replace />;
   }
 
-  // Authenticated but no profile - allow access but with limited functionality
-  // This prevents infinite redirect loops
-  if (!profile) {
-    console.log('User authenticated but no profile, allowing access with limited functionality');
-    return <>{children}</>;
-  }
-
   // If specific roles are required and user doesn't have one of them
-  if (allowedRoles && !allowedRoles.includes(profile.role)) {
+  if (allowedRoles && profile && !allowedRoles.includes(profile.role)) {
     // Redirect to appropriate dashboard based on role
     const redirectMap = {
       "super_admin": "/super-admin",
@@ -49,6 +42,6 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to={redirectPath || "/attorney"} replace />;
   }
 
-  // User is authenticated and has the required role
+  // User is authenticated - allow access
   return <>{children}</>;
 };

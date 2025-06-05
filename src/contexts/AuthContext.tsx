@@ -28,20 +28,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
 
-        // Handle profile fetching for signed in users
         if (event === 'SIGNED_OUT') {
           setProfile(null);
           setLoading(false);
         } else if (event === 'SIGNED_IN' && currentSession?.user) {
+          // Only fetch profile once per sign in
           try {
             console.log('Fetching profile for user:', currentSession.user.id);
             await fetchUserProfile(currentSession.user.id);
           } catch (error) {
-            console.error('Failed to fetch profile after auth change:', error);
+            console.error('Failed to fetch profile:', error);
           } finally {
             if (mounted) {
               setLoading(false);
             }
+          }
+        } else if (event === 'TOKEN_REFRESHED' && currentSession?.user) {
+          // Don't refetch profile on token refresh, just clear loading
+          if (mounted) {
+            setLoading(false);
           }
         } else {
           setLoading(false);
@@ -49,27 +54,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
-    // Check for existing session
-    supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
-      if (!mounted) return;
-      
-      console.log('Initial session check:', currentSession?.user?.email);
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
+    // Check for existing session only once
+    const initializeAuth = async () => {
+      try {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
+        
+        console.log('Initial session check:', currentSession?.user?.email);
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
 
-      if (currentSession?.user) {
-        try {
-          console.log('Fetching profile for initial session:', currentSession.user.id);
-          await fetchUserProfile(currentSession.user.id);
-        } catch (error) {
-          console.error('Failed to fetch profile on initial load:', error);
+        if (currentSession?.user) {
+          try {
+            console.log('Fetching profile for initial session:', currentSession.user.id);
+            await fetchUserProfile(currentSession.user.id);
+          } catch (error) {
+            console.error('Failed to fetch profile on initial load:', error);
+          }
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+      } finally {
+        if (mounted) {
+          setLoading(false);
         }
       }
-      
-      if (mounted) {
-        setLoading(false);
-      }
-    });
+    };
+
+    initializeAuth();
 
     return () => {
       mounted = false;

@@ -14,19 +14,26 @@ const Index = () => {
 
   // Redirect authenticated users to their role-specific dashboard
   useEffect(() => {
-    if (!loading && isAuthenticated && user && profile) {
-      console.log('Index: User is authenticated with profile, redirecting to role dashboard:', profile.role);
+    if (!loading && isAuthenticated && user) {
+      console.log('Index: User is authenticated, profile:', profile?.role);
       
-      const redirectMap = {
-        "super_admin": "/super-admin",
-        "firm_admin": "/firm-admin", 
-        "attorney": "/attorney",
-        "client": "/client"
-      };
-      
-      const redirectPath = redirectMap[profile.role];
-      if (redirectPath) {
-        navigate(redirectPath, { replace: true });
+      if (profile) {
+        const redirectMap = {
+          "super_admin": "/super-admin",
+          "firm_admin": "/firm-admin", 
+          "attorney": "/attorney",
+          "client": "/client"
+        };
+        
+        const redirectPath = redirectMap[profile.role];
+        if (redirectPath) {
+          console.log('Redirecting to:', redirectPath);
+          navigate(redirectPath, { replace: true });
+        }
+      } else {
+        // No profile found, redirect to attorney dashboard as fallback
+        console.log('No profile found, redirecting to attorney dashboard');
+        navigate("/attorney", { replace: true });
       }
     }
   }, [isAuthenticated, profile, user, loading, navigate]);
@@ -47,8 +54,8 @@ const Index = () => {
     );
   }
 
-  // If authenticated with profile, show brief loading until redirect happens
-  if (isAuthenticated && user && profile) {
+  // If authenticated, show brief loading until redirect happens
+  if (isAuthenticated && user) {
     return (
       <div className="flex h-screen items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
         <div className="text-center text-white">
@@ -59,7 +66,7 @@ const Index = () => {
     );
   }
 
-  // Not authenticated or no profile - show landing page
+  // Not authenticated - show landing page
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
       <LandingNavigation onLoginClick={handleLoginClick} />

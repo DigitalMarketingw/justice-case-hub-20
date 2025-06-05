@@ -13,11 +13,12 @@ export const useProfile = () => {
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .maybeSingle(); // Use maybeSingle instead of single to handle missing records
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching user profile:', error.message);
-        throw error;
+        setProfile(null);
+        return;
       }
       
       if (!data) {
@@ -31,7 +32,6 @@ export const useProfile = () => {
     } catch (error: any) {
       console.error('Error fetching user profile:', error.message);
       setProfile(null);
-      // Don't re-throw the error to prevent blocking authentication
     }
   };
 

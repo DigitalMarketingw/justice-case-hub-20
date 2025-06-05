@@ -11,7 +11,6 @@ import { Badge } from "@/components/ui/badge";
 const Auth = () => {
   const { signIn, isAuthenticated, profile, user, loading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [hasWaitedForProfile, setHasWaitedForProfile] = useState(false);
   
   // Login form state
   const [loginEmail, setLoginEmail] = useState("");
@@ -45,27 +44,15 @@ const Auth = () => {
     }
   ];
 
-  // Wait for profile to load before redirecting
-  useEffect(() => {
-    if (isAuthenticated && user && !loading) {
-      const timer = setTimeout(() => {
-        setHasWaitedForProfile(true);
-      }, 2000); // Wait 2 seconds for profile to load
-
-      return () => clearTimeout(timer);
-    }
-  }, [isAuthenticated, user, loading]);
-
   // Debug logging
   useEffect(() => {
     console.log('Auth page state:', {
       isAuthenticated,
       profile,
       user: user?.email,
-      loading,
-      hasWaitedForProfile
+      loading
     });
-  }, [isAuthenticated, profile, user, loading, hasWaitedForProfile]);
+  }, [isAuthenticated, profile, user, loading]);
 
   // If loading, show loading state
   if (loading) {
@@ -96,22 +83,10 @@ const Auth = () => {
     }
   }
 
-  // If authenticated but no profile after waiting, redirect to attorney dashboard
-  if (isAuthenticated && user && !profile && hasWaitedForProfile) {
-    console.log('User authenticated but no profile after waiting, redirecting to attorney dashboard');
+  // If authenticated but no profile, redirect to attorney dashboard
+  if (isAuthenticated && user && !profile) {
+    console.log('User authenticated but no profile, redirecting to attorney dashboard');
     return <Navigate to="/attorney" replace />;
-  }
-
-  // If authenticated but still waiting for profile
-  if (isAuthenticated && user && !hasWaitedForProfile) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-gray-100">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p>Setting up your profile...</p>
-        </div>
-      </div>
-    );
   }
 
   const handleLogin = async (e: React.FormEvent) => {
