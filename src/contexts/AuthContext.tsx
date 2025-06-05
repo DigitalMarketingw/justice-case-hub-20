@@ -25,14 +25,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!mounted) return;
         
         console.log('Auth state changed:', event, currentSession?.user?.email);
+        
+        // Handle sign out immediately
+        if (event === 'SIGNED_OUT' || !currentSession) {
+          console.log('User signed out, clearing state');
+          setSession(null);
+          setUser(null);
+          setProfile(null);
+          setLoading(false);
+          return;
+        }
+
+        // Update session and user
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
 
-        if (event === 'SIGNED_OUT') {
-          setProfile(null);
-          setLoading(false);
-        } else if (event === 'SIGNED_IN' && currentSession?.user) {
-          // Only fetch profile once per sign in
+        // Only fetch profile on sign in, not on token refresh
+        if (event === 'SIGNED_IN' && currentSession?.user) {
           try {
             console.log('Fetching profile for user:', currentSession.user.id);
             await fetchUserProfile(currentSession.user.id);
@@ -43,13 +52,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               setLoading(false);
             }
           }
-        } else if (event === 'TOKEN_REFRESHED' && currentSession?.user) {
-          // Don't refetch profile on token refresh, just clear loading
+        } else {
+          // For token refresh or other events, just clear loading
           if (mounted) {
             setLoading(false);
           }
-        } else {
-          setLoading(false);
         }
       }
     );
@@ -62,10 +69,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!mounted) return;
         
         console.log('Initial session check:', currentSession?.user?.email);
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-
+        
         if (currentSession?.user) {
+          setSession(currentSession);
+          setUser(currentSession.user);
+          
           try {
             console.log('Fetching profile for initial session:', currentSession.user.id);
             await fetchUserProfile(currentSession.user.id);
@@ -91,12 +99,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [fetchUserProfile]);
 
   const handleSignOut = async () => {
-    setLoading(true);
+    console.log('Starting sign out process');
     try {
+      // Clear state immediately to prevent stuck loading
       setProfile(null);
+      setLoading(true);
+      
       await authSignOut(setProfile);
+      
+      // The auth state change handler will handle the rest
     } catch (error) {
       console.error('Error during sign out:', error);
+      // Force clear state even if sign out fails
+      setSession(null);
+      setUser(null);
+      setProfile(null);
     } finally {
       setLoading(false);
     }

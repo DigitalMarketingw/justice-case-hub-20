@@ -79,11 +79,26 @@ export const useAuthOperations = () => {
   };
 
   const signOut = async (setProfile: (profile: any) => void) => {
-    await supabase.auth.signOut();
-    setProfile(null);
-    toast({
-      title: "Signed out successfully",
-    });
+    console.log('Signing out user');
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Sign out error:', error);
+      }
+      
+      setProfile(null);
+      
+      toast({
+        title: "Signed out successfully",
+      });
+    } catch (error) {
+      console.error('Sign out error:', error);
+      toast({
+        title: "Sign out error",
+        description: "There was an issue signing out",
+        variant: "destructive",
+      });
+    }
   };
 
   return {

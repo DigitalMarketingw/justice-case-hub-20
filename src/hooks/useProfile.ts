@@ -1,12 +1,12 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { UserProfile } from "@/types/auth";
 
 export const useProfile = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
 
-  const fetchUserProfile = async (userId: string) => {
+  const fetchUserProfile = useCallback(async (userId: string) => {
     try {
       console.log('Fetching profile for user:', userId);
       const { data, error } = await supabase
@@ -33,7 +33,7 @@ export const useProfile = () => {
       console.error('Error fetching user profile:', error.message);
       setProfile(null);
     }
-  };
+  }, []); // Empty dependency array to prevent recreation
 
   return {
     profile,
