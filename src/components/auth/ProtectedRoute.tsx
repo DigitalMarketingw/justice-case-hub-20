@@ -55,4 +55,3 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
   // User is authenticated and has proper role - allow access
   return <>{children}</>;
 };
-</ProtectedRoute>
