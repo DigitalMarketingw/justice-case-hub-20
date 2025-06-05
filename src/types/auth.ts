@@ -11,6 +11,7 @@ export interface UserProfile {
   role: UserRole;
   firm_id: string | null;
   is_active: boolean;
+  phone: string | null;
 }
 
 export interface AuthContextType {
