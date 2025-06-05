@@ -59,6 +59,75 @@ export type Database = {
           },
         ]
       }
+      calendar_events: {
+        Row: {
+          attendees: string[] | null
+          attorney_id: string | null
+          client_id: string | null
+          created_at: string
+          description: string | null
+          end_time: string
+          event_type: string | null
+          google_event_id: string | null
+          id: string
+          is_google_synced: boolean | null
+          location: string | null
+          start_time: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attendees?: string[] | null
+          attorney_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          description?: string | null
+          end_time: string
+          event_type?: string | null
+          google_event_id?: string | null
+          id?: string
+          is_google_synced?: boolean | null
+          location?: string | null
+          start_time: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attendees?: string[] | null
+          attorney_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          description?: string | null
+          end_time?: string
+          event_type?: string | null
+          google_event_id?: string | null
+          id?: string
+          is_google_synced?: boolean | null
+          location?: string | null
+          start_time?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_events_attorney_id_fkey"
+            columns: ["attorney_id"]
+            isOneToOne: false
+            referencedRelation: "attorneys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_events_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cases: {
         Row: {
           casenumber: string
@@ -180,6 +249,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      google_calendar_settings: {
+        Row: {
+          access_token: string | null
+          created_at: string
+          google_calendar_id: string | null
+          id: string
+          is_connected: boolean | null
+          refresh_token: string | null
+          token_expires_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token?: string | null
+          created_at?: string
+          google_calendar_id?: string | null
+          id?: string
+          is_connected?: boolean | null
+          refresh_token?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string | null
+          created_at?: string
+          google_calendar_id?: string | null
+          id?: string
+          is_connected?: boolean | null
+          refresh_token?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
