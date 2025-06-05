@@ -9,7 +9,7 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
-  const { isAuthenticated, profile, loading } = useAuth();
+  const { isAuthenticated, profile, loading, user } = useAuth();
 
   // Show loading state while auth is being determined
   if (loading) {
@@ -28,6 +28,11 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to="/auth" replace />;
   }
 
+  // Special handling for superadmin@demo.com - allow access even without profile
+  if (user?.email === 'superadmin@demo.com' && (!allowedRoles || allowedRoles.includes('super_admin'))) {
+    return <>{children}</>;
+  }
+
   // If specific roles are required and user doesn't have one of them
   if (allowedRoles && profile && !allowedRoles.includes(profile.role)) {
     // Redirect to appropriate dashboard based on role
@@ -42,6 +47,12 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to={redirectPath || "/attorney"} replace />;
   }
 
+  // If we have no profile but specific roles are required, block access
+  if (allowedRoles && !profile && user?.email !== 'superadmin@demo.com') {
+    return <Navigate to="/attorney" replace />;
+  }
+
   // User is authenticated and has proper role - allow access
   return <>{children}</>;
 };
+</ProtectedRoute>

@@ -80,9 +80,16 @@ const Auth = () => {
     return <Navigate to={redirectPath} replace />;
   }
 
-  // If authenticated but no profile, redirect to attorney dashboard as fallback
+  // If authenticated but no profile yet, redirect to super-admin as default for superadmin@demo.com
   if (isAuthenticated && user && !profile) {
-    console.log('Auth: User authenticated but no profile, redirecting to attorney dashboard');
+    console.log('Auth: User authenticated but no profile yet');
+    // For superadmin@demo.com, redirect to super-admin dashboard
+    if (user.email === 'superadmin@demo.com') {
+      console.log('Auth: Redirecting superadmin to super-admin dashboard');
+      return <Navigate to="/super-admin" replace />;
+    }
+    // For others, redirect to attorney dashboard as fallback
+    console.log('Auth: Redirecting to attorney dashboard as fallback');
     return <Navigate to="/attorney" replace />;
   }
 

@@ -40,20 +40,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
 
-        // Only fetch profile on sign in, not on token refresh
-        if (event === 'SIGNED_IN' && currentSession?.user) {
+        // Fetch profile for all auth events with a user
+        if (currentSession?.user) {
           try {
             console.log('Fetching profile for user:', currentSession.user.id);
             await fetchUserProfile(currentSession.user.id);
           } catch (error) {
             console.error('Failed to fetch profile:', error);
+            // Set profile to null but don't block the auth flow
+            setProfile(null);
           } finally {
             if (mounted) {
               setLoading(false);
             }
           }
         } else {
-          // For token refresh or other events, just clear loading
           if (mounted) {
             setLoading(false);
           }
@@ -79,6 +80,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             await fetchUserProfile(currentSession.user.id);
           } catch (error) {
             console.error('Failed to fetch profile on initial load:', error);
+            // Set profile to null but don't block the auth flow
+            setProfile(null);
           }
         }
       } catch (error) {
