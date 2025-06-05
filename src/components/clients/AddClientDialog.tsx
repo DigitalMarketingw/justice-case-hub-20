@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,6 +12,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
@@ -22,8 +29,16 @@ interface AddClientDialogProps {
   onClientAdded: () => void;
 }
 
+interface Attorney {
+  id: string;
+  full_name: string;
+  specialization?: string;
+}
+
 export function AddClientDialog({ open, onOpenChange, onClientAdded }: AddClientDialogProps) {
   const [loading, setLoading] = useState(false);
+  const [attorneys, setAttorneys] = useState<Attorney[]>([]);
+  const [attorneysLoading, setAttorneysLoading] = useState(true);
   const { toast } = useToast();
   
   const [formData, setFormData] = useState({
@@ -33,10 +48,54 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded }: AddClient
     company_name: "",
     address: "",
     notes: "",
+    assigned_attorney_id: "",
   });
+
+  // Fetch attorneys when dialog opens
+  useEffect(() => {
+    if (open) {
+      fetchAttorneys();
+    }
+  }, [open]);
+
+  const fetchAttorneys = async () => {
+    try {
+      setAttorneysLoading(true);
+      const { data, error } = await supabase
+        .from('attorneys')
+        .select('id, full_name, specialization')
+        .order('full_name');
+
+      if (error) {
+        console.error('Error fetching attorneys:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load attorneys. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setAttorneys(data || []);
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setAttorneysLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.assigned_attorney_id) {
+      toast({
+        title: "Error",
+        description: "Please select an attorney for this client.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -67,6 +126,7 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded }: AddClient
         company_name: "",
         address: "",
         notes: "",
+        assigned_attorney_id: "",
       });
 
       onClientAdded();
@@ -93,7 +153,7 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded }: AddClient
         <DialogHeader>
           <DialogTitle>Add New Client</DialogTitle>
           <DialogDescription>
-            Enter the client's information to add them to your database.
+            Enter the client's information and assign them to an attorney.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -122,6 +182,34 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded }: AddClient
                 className="col-span-3"
                 required
               />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="assigned_attorney" className="text-right">
+                Assigned Attorney *
+              </Label>
+              <div className="col-span-3">
+                <Select
+                  value={formData.assigned_attorney_id}
+                  onValueChange={(value) => handleInputChange("assigned_attorney_id", value)}
+                  disabled={attorneysLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select an attorney" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {attorneys.map((attorney) => (
+                      <SelectItem key={attorney.id} value={attorney.id}>
+                        {attorney.full_name}
+                        {attorney.specialization && (
+                          <span className="text-gray-500 text-sm ml-2">
+                            ({attorney.specialization})
+                          </span>
+                        )}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="phone" className="text-right">
@@ -174,7 +262,7 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded }: AddClient
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading || attorneysLoading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Add Client
             </Button>
