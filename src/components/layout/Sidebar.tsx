@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { 
@@ -13,7 +12,8 @@ import {
   Menu,
   X,
   LogOut,
-  Building
+  Building,
+  MessageSquare
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -28,6 +28,7 @@ const superAdminNavigation = [
   { name: 'Firms', href: '/firms', icon: Building },
   { name: 'Attorneys', href: '/attorneys', icon: User },
   { name: 'Cases', href: '/cases', icon: Briefcase },
+  { name: 'Messages', href: '/messages', icon: MessageSquare },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
@@ -36,6 +37,7 @@ const firmAdminNavigation = [
   { name: 'Clients', href: '/clients', icon: Users },
   { name: 'Attorneys', href: '/attorneys', icon: User },
   { name: 'Cases', href: '/cases', icon: Briefcase },
+  { name: 'Messages', href: '/messages', icon: MessageSquare },
   { name: 'Calendar', href: '/calendar', icon: Calendar },
   { name: 'Billing', href: '/billing', icon: CreditCard },
   { name: 'Documents', href: '/documents', icon: FileText },
@@ -46,6 +48,7 @@ const attorneyNavigation = [
   { name: 'Dashboard', href: '/attorney', icon: Home },
   { name: 'Clients', href: '/clients', icon: Users },
   { name: 'Cases', href: '/cases', icon: Briefcase },
+  { name: 'Messages', href: '/messages', icon: MessageSquare },
   { name: 'Calendar', href: '/calendar', icon: Calendar },
   { name: 'Billing', href: '/billing', icon: CreditCard },
   { name: 'Documents', href: '/documents', icon: FileText },
@@ -55,6 +58,7 @@ const attorneyNavigation = [
 const clientNavigation = [
   { name: 'Dashboard', href: '/client', icon: Home },
   { name: 'Cases', href: '/cases', icon: Briefcase },
+  { name: 'Messages', href: '/messages', icon: MessageSquare },
   { name: 'Calendar', href: '/calendar', icon: Calendar },
   { name: 'Billing', href: '/billing', icon: CreditCard },
   { name: 'Documents', href: '/documents', icon: FileText },
