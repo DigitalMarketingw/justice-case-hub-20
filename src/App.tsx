@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -17,6 +16,7 @@ import Calendar from "./pages/Calendar";
 import Billing from "./pages/Billing";
 import Documents from "./pages/Documents";
 import Cases from "./pages/Cases";
+import Firms from "./pages/Firms";
 import NotFound from "./pages/NotFound";
 
 // Role-specific dashboards
@@ -93,10 +93,7 @@ function App() {
 
               <Route path="/firms" element={
                 <ProtectedRoute allowedRoles={['super_admin']}>
-                  <div className="min-h-screen bg-gray-50 p-6">
-                    <h1 className="text-3xl font-bold mb-6">Firms Management</h1>
-                    <p className="text-gray-600">Firm management functionality will be implemented here.</p>
-                  </div>
+                  <Firms />
                 </ProtectedRoute>
               } />
               
