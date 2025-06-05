@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { 
@@ -94,8 +95,14 @@ export function Sidebar({ className }: SidebarProps) {
     );
   }
 
-  // Choose navigation based on user role
+  // Choose navigation based on user role or special cases
   const getNavigationForRole = () => {
+    // Special case for superadmin@demo.com - always show super admin navigation
+    if (user?.email === 'superadmin@demo.com') {
+      return superAdminNavigation;
+    }
+    
+    // For other users, use their profile role
     switch (profile?.role) {
       case 'super_admin':
         return superAdminNavigation;
@@ -112,6 +119,46 @@ export function Sidebar({ className }: SidebarProps) {
 
   const navigation = getNavigationForRole();
 
+  // Determine the title based on user
+  const getTitle = () => {
+    if (user?.email === 'superadmin@demo.com') {
+      return 'Super Admin';
+    }
+    
+    switch (profile?.role) {
+      case 'super_admin':
+        return 'Super Admin';
+      case 'firm_admin':
+        return 'Firm Admin';
+      case 'attorney':
+        return 'Attorney';
+      case 'client':
+        return 'Client Portal';
+      default:
+        return 'LawFirm ERP';
+    }
+  };
+
+  // Determine the role label for display
+  const getRoleLabel = () => {
+    if (user?.email === 'superadmin@demo.com') {
+      return 'Super Admin';
+    }
+    
+    switch (profile?.role) {
+      case 'super_admin':
+        return 'Super Admin';
+      case 'firm_admin':
+        return 'Firm Admin';
+      case 'attorney':
+        return 'Attorney';
+      case 'client':
+        return 'Client';
+      default:
+        return 'User';
+    }
+  };
+
   return (
     <div className={cn(
       "flex flex-col bg-slate-900 text-white transition-all duration-300",
@@ -122,11 +169,7 @@ export function Sidebar({ className }: SidebarProps) {
       <div className="flex items-center justify-between p-4 border-b border-slate-700">
         {!isCollapsed && (
           <h1 className="text-xl font-bold">
-            {profile?.role === 'super_admin' ? 'Super Admin' : 
-             profile?.role === 'firm_admin' ? 'Firm Admin' :
-             profile?.role === 'attorney' ? 'Attorney' :
-             profile?.role === 'client' ? 'Client Portal' :
-             'LawFirm ERP'}
+            {getTitle()}
           </h1>
         )}
         <Button
@@ -177,11 +220,7 @@ export function Sidebar({ className }: SidebarProps) {
                   : user?.email ? user.email.split('@')[0] : 'User'}
               </p>
               <p className="text-xs text-slate-400">
-                {profile?.role === 'super_admin' ? 'Super Admin' : 
-                 profile?.role === 'firm_admin' ? 'Firm Admin' :
-                 profile?.role === 'attorney' ? 'Attorney' :
-                 profile?.role === 'client' ? 'Client' :
-                 'User'}
+                {getRoleLabel()}
               </p>
             </div>
           )}
