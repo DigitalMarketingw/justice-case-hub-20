@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -40,12 +39,24 @@ export function CalendarView({ refreshTrigger }: CalendarViewProps) {
   const fetchEvents = async () => {
     try {
       setLoading(true);
+      
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        console.log('No authenticated user found');
+        setEvents([]);
+        setLoading(false);
+        return;
+      }
+
       const monthStart = startOfMonth(currentDate);
       const monthEnd = endOfMonth(currentDate);
 
       const { data, error } = await supabase
         .from('calendar_events')
         .select('*')
+        .eq('user_id', user.id)
         .gte('start_time', monthStart.toISOString())
         .lte('start_time', monthEnd.toISOString())
         .order('start_time');

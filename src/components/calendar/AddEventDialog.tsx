@@ -100,11 +100,24 @@ export function AddEventDialog({ open, onOpenChange, onEventAdded }: AddEventDia
     setLoading(true);
 
     try {
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to create events.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const attendeesArray = formData.attendees 
         ? formData.attendees.split(',').map(email => email.trim()).filter(Boolean)
         : [];
 
       const eventData = {
+        user_id: user.id,
         title: formData.title,
         description: formData.description || null,
         start_time: formData.start_time,
