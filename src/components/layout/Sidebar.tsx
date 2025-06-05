@@ -31,10 +31,29 @@ const superAdminNavigation = [
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
-const defaultNavigation = [
-  { name: 'Dashboard', href: '/', icon: Home },
+const firmAdminNavigation = [
+  { name: 'Dashboard', href: '/firm-admin', icon: Home },
   { name: 'Clients', href: '/clients', icon: Users },
   { name: 'Attorneys', href: '/attorneys', icon: User },
+  { name: 'Cases', href: '/cases', icon: Briefcase },
+  { name: 'Calendar', href: '/calendar', icon: Calendar },
+  { name: 'Billing', href: '/billing', icon: CreditCard },
+  { name: 'Documents', href: '/documents', icon: FileText },
+  { name: 'Settings', href: '/settings', icon: Settings },
+];
+
+const attorneyNavigation = [
+  { name: 'Dashboard', href: '/attorney', icon: Home },
+  { name: 'Clients', href: '/clients', icon: Users },
+  { name: 'Cases', href: '/cases', icon: Briefcase },
+  { name: 'Calendar', href: '/calendar', icon: Calendar },
+  { name: 'Billing', href: '/billing', icon: CreditCard },
+  { name: 'Documents', href: '/documents', icon: FileText },
+  { name: 'Settings', href: '/settings', icon: Settings },
+];
+
+const clientNavigation = [
+  { name: 'Dashboard', href: '/client', icon: Home },
   { name: 'Cases', href: '/cases', icon: Briefcase },
   { name: 'Calendar', href: '/calendar', icon: Calendar },
   { name: 'Billing', href: '/billing', icon: CreditCard },
@@ -77,7 +96,22 @@ export function Sidebar({ className }: SidebarProps) {
   }
 
   // Choose navigation based on user role
-  const navigation = profile?.role === 'super_admin' ? superAdminNavigation : defaultNavigation;
+  const getNavigationForRole = () => {
+    switch (profile?.role) {
+      case 'super_admin':
+        return superAdminNavigation;
+      case 'firm_admin':
+        return firmAdminNavigation;
+      case 'attorney':
+        return attorneyNavigation;
+      case 'client':
+        return clientNavigation;
+      default:
+        return attorneyNavigation;
+    }
+  };
+
+  const navigation = getNavigationForRole();
 
   return (
     <div className={cn(
@@ -89,7 +123,11 @@ export function Sidebar({ className }: SidebarProps) {
       <div className="flex items-center justify-between p-4 border-b border-slate-700">
         {!isCollapsed && (
           <h1 className="text-xl font-bold">
-            {profile?.role === 'super_admin' ? 'Super Admin' : 'LawFirm ERP'}
+            {profile?.role === 'super_admin' ? 'Super Admin' : 
+             profile?.role === 'firm_admin' ? 'Firm Admin' :
+             profile?.role === 'attorney' ? 'Attorney' :
+             profile?.role === 'client' ? 'Client Portal' :
+             'LawFirm ERP'}
           </h1>
         )}
         <Button
@@ -140,7 +178,11 @@ export function Sidebar({ className }: SidebarProps) {
                   : user?.email ? user.email.split('@')[0] : 'User'}
               </p>
               <p className="text-xs text-slate-400">
-                {profile?.role === 'super_admin' ? 'Super Admin' : profile?.role || 'User'}
+                {profile?.role === 'super_admin' ? 'Super Admin' : 
+                 profile?.role === 'firm_admin' ? 'Firm Admin' :
+                 profile?.role === 'attorney' ? 'Attorney' :
+                 profile?.role === 'client' ? 'Client' :
+                 'User'}
               </p>
             </div>
           )}
