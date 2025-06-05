@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 import { 
   Home, 
   Users, 
@@ -18,16 +19,17 @@ interface SidebarProps {
 }
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: Home, current: true },
-  { name: 'Clients', href: '/clients', icon: Users, current: false },
-  { name: 'Attorneys', href: '/attorneys', icon: User, current: false },
-  { name: 'Cases', href: '/cases', icon: Briefcase, current: false },
-  { name: 'Calendar', href: '/calendar', icon: Calendar, current: false },
-  { name: 'Settings', href: '/settings', icon: Settings, current: false },
+  { name: 'Dashboard', href: '/', icon: Home },
+  { name: 'Clients', href: '/clients', icon: Users },
+  { name: 'Attorneys', href: '/attorneys', icon: User },
+  { name: 'Cases', href: '/cases', icon: Briefcase },
+  { name: 'Calendar', href: '/calendar', icon: Calendar },
+  { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
 export function Sidebar({ className }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const location = useLocation();
 
   return (
     <div className={cn(
@@ -54,13 +56,14 @@ export function Sidebar({ className }: SidebarProps) {
       <nav className="flex-1 p-4 space-y-2">
         {navigation.map((item) => {
           const Icon = item.icon;
+          const isActive = location.pathname === item.href;
           return (
             <a
               key={item.name}
               href={item.href}
               className={cn(
                 "flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                item.current
+                isActive
                   ? "bg-slate-800 text-white"
                   : "text-slate-300 hover:bg-slate-800 hover:text-white"
               )}
