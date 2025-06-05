@@ -40,7 +40,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
 
-        // Fetch profile for all auth events with a user
+        // For the special superadmin@demo.com, skip profile fetching to avoid RLS issues
+        if (currentSession?.user?.email === 'superadmin@demo.com') {
+          console.log('Superadmin detected, skipping profile fetch');
+          setProfile(null); // Set to null but allow access through special handling
+          setLoading(false);
+          return;
+        }
+
+        // Fetch profile for all other users
         if (currentSession?.user) {
           try {
             console.log('Fetching profile for user:', currentSession.user.id);
@@ -74,6 +82,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (currentSession?.user) {
           setSession(currentSession);
           setUser(currentSession.user);
+          
+          // Special handling for superadmin
+          if (currentSession.user.email === 'superadmin@demo.com') {
+            console.log('Superadmin initial session, skipping profile fetch');
+            setProfile(null);
+            setLoading(false);
+            return;
+          }
           
           try {
             console.log('Fetching profile for initial session:', currentSession.user.id);

@@ -9,6 +9,8 @@ export const useProfile = () => {
   const fetchUserProfile = useCallback(async (userId: string) => {
     try {
       console.log('Fetching profile for user:', userId);
+      
+      // Add error handling for potential RLS issues
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -17,12 +19,13 @@ export const useProfile = () => {
 
       if (error) {
         console.error('Error fetching user profile:', error.message);
+        // Don't throw here, just log and set profile to null
         setProfile(null);
         return;
       }
       
       if (!data) {
-        console.log('No profile found for user, this might be a new user');
+        console.log('No profile found for user, this might be a new user or RLS issue');
         setProfile(null);
         return;
       }
