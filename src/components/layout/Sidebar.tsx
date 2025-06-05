@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import { 
@@ -11,10 +10,12 @@ import {
   CreditCard,
   FileText,
   Menu,
-  X
+  X,
+  LogOut
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface SidebarProps {
   className?: string;
@@ -34,6 +35,11 @@ const navigation = [
 export function Sidebar({ className }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const location = useLocation();
+  const { signOut, user } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
 
   return (
     <div className={cn(
@@ -80,18 +86,34 @@ export function Sidebar({ className }: SidebarProps) {
       </nav>
 
       {/* Footer */}
-      <div className="p-4 border-t border-slate-700">
+      <div className="p-4 border-t border-slate-700 space-y-3">
+        {/* User Info */}
         <div className="flex items-center">
           <div className="h-8 w-8 rounded-full bg-slate-600 flex items-center justify-center">
             <User size={16} />
           </div>
           {!isCollapsed && (
             <div className="ml-3">
-              <p className="text-sm font-medium">Admin User</p>
-              <p className="text-xs text-slate-400">admin@lawfirm.com</p>
+              <p className="text-sm font-medium">
+                {user?.email ? user.email.split('@')[0] : 'User'}
+              </p>
+              <p className="text-xs text-slate-400">{user?.email || 'user@example.com'}</p>
             </div>
           )}
         </div>
+        
+        {/* Logout Button */}
+        {user && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleSignOut}
+            className="w-full justify-start text-slate-300 hover:bg-slate-800 hover:text-white"
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            {!isCollapsed && "Sign Out"}
+          </Button>
+        )}
       </div>
     </div>
   );
