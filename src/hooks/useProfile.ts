@@ -17,8 +17,7 @@ export const useProfile = () => {
 
       if (error) {
         console.error('Error fetching user profile:', error.message);
-        setProfile(null);
-        return;
+        throw error;
       }
       
       if (!data) {
@@ -32,6 +31,7 @@ export const useProfile = () => {
     } catch (error: any) {
       console.error('Error fetching user profile:', error.message);
       setProfile(null);
+      throw error; // Re-throw so caller can handle it
     }
   };
 

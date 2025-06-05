@@ -59,8 +59,9 @@ const Auth = () => {
     return <div className="flex h-screen items-center justify-center">Loading...</div>;
   }
 
-  // If already authenticated, redirect based on profile or fallback to a default
-  if (isAuthenticated) {
+  // If already authenticated, redirect immediately
+  if (isAuthenticated && user) {
+    // Try to redirect based on profile first, but fallback to default if no profile
     if (profile) {
       console.log('Redirecting based on profile role:', profile.role);
       switch (profile.role) {
@@ -75,9 +76,9 @@ const Auth = () => {
         default:
           return <Navigate to="/" replace />;
       }
-    } else if (user) {
-      // If authenticated but no profile loaded, redirect to a default dashboard
-      console.log('User authenticated but no profile, redirecting to default');
+    } else {
+      // User is authenticated but profile failed to load - redirect to a safe default
+      console.log('User authenticated but no profile, redirecting to index');
       return <Navigate to="/" replace />;
     }
   }
