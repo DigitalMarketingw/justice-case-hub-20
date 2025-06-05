@@ -56,7 +56,14 @@ const Auth = () => {
 
   // If loading, show loading state
   if (loading) {
-    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
   }
 
   // If already authenticated, redirect immediately
@@ -77,9 +84,10 @@ const Auth = () => {
           return <Navigate to="/" replace />;
       }
     } else {
-      // User is authenticated but profile failed to load - redirect to a safe default
-      console.log('User authenticated but no profile, redirecting to index');
-      return <Navigate to="/" replace />;
+      // User is authenticated but profile failed to load - show a loading state briefly
+      // then redirect to attorney dashboard as a safe default
+      console.log('User authenticated but no profile, redirecting to attorney dashboard');
+      return <Navigate to="/attorney" replace />;
     }
   }
 

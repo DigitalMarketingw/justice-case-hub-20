@@ -31,7 +31,7 @@ export const useProfile = () => {
     } catch (error: any) {
       console.error('Error fetching user profile:', error.message);
       setProfile(null);
-      throw error; // Re-throw so caller can handle it
+      // Don't re-throw the error to prevent blocking authentication
     }
   };
 
