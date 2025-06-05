@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { CasesStats } from "@/components/cases/CasesStats";
 import { CasesTable } from "@/components/cases/CasesTable";
 import { AddCaseDialog } from "@/components/cases/AddCaseDialog";
 
-const Cases = () => {
+function Cases() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
@@ -55,6 +55,6 @@ const Cases = () => {
       </div>
     </SidebarProvider>
   );
-};
+}
 
 export default Cases;
