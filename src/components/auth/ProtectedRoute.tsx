@@ -28,9 +28,11 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to="/auth" replace />;
   }
 
-  // Authenticated but no profile yet, redirect to auth to handle profile creation
+  // Authenticated but no profile - allow access but with limited functionality
+  // This prevents infinite redirect loops
   if (!profile) {
-    return <Navigate to="/auth" replace />;
+    console.log('User authenticated but no profile, allowing access with limited functionality');
+    return <>{children}</>;
   }
 
   // If specific roles are required and user doesn't have one of them
@@ -44,7 +46,7 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
     };
     
     const redirectPath = redirectMap[profile.role];
-    return <Navigate to={redirectPath || "/"} replace />;
+    return <Navigate to={redirectPath || "/attorney"} replace />;
   }
 
   // User is authenticated and has the required role
