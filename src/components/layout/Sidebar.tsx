@@ -1,5 +1,6 @@
+
 import { useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { 
   Home, 
   Users, 
@@ -35,10 +36,12 @@ const navigation = [
 export function Sidebar({ className }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { signOut, user } = useAuth();
 
   const handleSignOut = async () => {
     await signOut();
+    navigate("/auth");
   };
 
   return (
