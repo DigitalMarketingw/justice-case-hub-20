@@ -2,39 +2,19 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
-import { useToast } from "@/components/ui/use-toast";
-
-export type UserRole = "super_admin" | "firm_admin" | "attorney" | "client";
-
-interface UserProfile {
-  id: string;
-  email: string;
-  first_name: string | null;
-  last_name: string | null;
-  role: UserRole;
-  firm_id: string | null;
-  is_active: boolean;
-}
-
-interface AuthContextType {
-  session: Session | null;
-  user: User | null;
-  profile: UserProfile | null;
-  signIn: (email: string, password: string) => Promise<{ error: any | null }>;
-  signUp: (email: string, password: string, firstName: string, lastName: string, role?: UserRole) => Promise<{ error: any | null }>;
-  signOut: () => Promise<void>;
-  loading: boolean;
-  isAuthenticated: boolean;
-}
+import { AuthContextType } from "@/types/auth";
+import { useProfile } from "@/hooks/useProfile";
+import { useAuthOperations } from "@/hooks/useAuthOperations";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const { toast } = useToast();
+  
+  const { profile, setProfile, fetchUserProfile } = useProfile();
+  const { signIn, signUp, signOut: authSignOut } = useAuthOperations();
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -73,113 +53,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  const fetchUserProfile = async (userId: string) => {
-    try {
-      console.log('Fetching profile for user:', userId);
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle(); // Use maybeSingle instead of single to handle missing records
-
-      if (error) {
-        console.error('Error fetching user profile:', error.message);
-        setProfile(null);
-        return;
-      }
-      
-      if (!data) {
-        console.log('No profile found for user, this might be a new user');
-        setProfile(null);
-        return;
-      }
-      
-      console.log('Profile fetched successfully:', data);
-      setProfile(data as UserProfile);
-    } catch (error: any) {
-      console.error('Error fetching user profile:', error.message);
-      setProfile(null);
-    }
-  };
-
-  const signIn = async (email: string, password: string) => {
-    try {
-      console.log('Attempting to sign in:', email);
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      
-      if (error) {
-        console.error('Sign in error:', error.message);
-        toast({
-          title: "Sign in failed",
-          description: error.message,
-          variant: "destructive",
-        });
-        return { error };
-      }
-
-      toast({
-        title: "Signed in successfully",
-        description: "Welcome back!",
-      });
-
-      return { error: null };
-    } catch (error: any) {
-      console.error('Sign in catch error:', error.message);
-      toast({
-        title: "Sign in failed",
-        description: error.message,
-        variant: "destructive",
-      });
-      return { error };
-    }
-  };
-
-  const signUp = async (email: string, password: string, firstName: string, lastName: string, role: UserRole = "client") => {
-    try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-          data: {
-            first_name: firstName,
-            last_name: lastName,
-            role: role,
-          },
-        },
-      });
-
-      if (error) {
-        toast({
-          title: "Sign up failed",
-          description: error.message,
-          variant: "destructive",
-        });
-        return { error };
-      }
-
-      toast({
-        title: "Sign up successful",
-        description: "Please check your email to confirm your account.",
-      });
-
-      return { error: null };
-    } catch (error: any) {
-      toast({
-        title: "Sign up failed",
-        description: error.message,
-        variant: "destructive",
-      });
-      return { error };
-    }
-  };
-
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    setProfile(null);
-    toast({
-      title: "Signed out successfully",
-    });
+  const handleSignOut = async () => {
+    await authSignOut(setProfile);
   };
 
   return (
@@ -190,7 +65,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         profile,
         signIn,
         signUp,
-        signOut,
+        signOut: handleSignOut,
         loading,
         isAuthenticated: !!user,
       }}
@@ -207,3 +82,5 @@ export const useAuth = () => {
   }
   return context;
 };
+
+export type { UserRole } from "@/types/auth";
