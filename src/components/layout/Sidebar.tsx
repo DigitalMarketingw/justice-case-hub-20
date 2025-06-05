@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 import { 
   Home, 
   Users, 
@@ -71,9 +71,9 @@ export function Sidebar({ className }: SidebarProps) {
           const Icon = item.icon;
           const isActive = location.pathname === item.href;
           return (
-            <a
+            <Link
               key={item.name}
-              href={item.href}
+              to={item.href}
               className={cn(
                 "flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                 isActive
@@ -83,7 +83,7 @@ export function Sidebar({ className }: SidebarProps) {
             >
               <Icon className="mr-3 h-5 w-5 flex-shrink-0" />
               {!isCollapsed && item.name}
-            </a>
+            </Link>
           );
         })}
       </nav>
