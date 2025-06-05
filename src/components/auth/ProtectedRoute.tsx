@@ -42,6 +42,6 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to={redirectPath || "/attorney"} replace />;
   }
 
-  // User is authenticated - allow access
+  // User is authenticated and has proper role - allow access
   return <>{children}</>;
 };

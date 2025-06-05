@@ -14,25 +14,23 @@ const Index = () => {
 
   // Redirect authenticated users to their role-specific dashboard
   useEffect(() => {
-    if (!loading && isAuthenticated && user) {
-      console.log('Index: User is authenticated, profile:', profile?.role);
+    if (!loading && isAuthenticated && user && profile) {
+      console.log('Index: User is authenticated, profile role:', profile.role);
       
-      if (profile) {
-        const redirectMap = {
-          "super_admin": "/super-admin",
-          "firm_admin": "/firm-admin", 
-          "attorney": "/attorney",
-          "client": "/client"
-        };
-        
-        const redirectPath = redirectMap[profile.role];
-        if (redirectPath) {
-          console.log('Redirecting to:', redirectPath);
-          navigate(redirectPath, { replace: true });
-        }
+      const redirectMap = {
+        "super_admin": "/super-admin",
+        "firm_admin": "/firm-admin", 
+        "attorney": "/attorney",
+        "client": "/client"
+      };
+      
+      const redirectPath = redirectMap[profile.role];
+      if (redirectPath) {
+        console.log('Redirecting to:', redirectPath);
+        navigate(redirectPath, { replace: true });
       } else {
-        // No profile found, redirect to attorney dashboard as fallback
-        console.log('No profile found, redirecting to attorney dashboard');
+        // Fallback to attorney dashboard for unknown roles
+        console.log('Unknown role, redirecting to attorney dashboard');
         navigate("/attorney", { replace: true });
       }
     }

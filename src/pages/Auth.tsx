@@ -48,7 +48,7 @@ const Auth = () => {
   useEffect(() => {
     console.log('Auth page state:', {
       isAuthenticated,
-      profile,
+      profile: profile?.role,
       user: user?.email,
       loading
     });
@@ -66,26 +66,23 @@ const Auth = () => {
     );
   }
 
-  // If authenticated and we have a profile, redirect
+  // If authenticated and we have a profile, redirect to the correct dashboard
   if (isAuthenticated && user && profile) {
-    console.log('Redirecting based on profile role:', profile.role);
-    switch (profile.role) {
-      case "super_admin":
-        return <Navigate to="/super-admin" replace />;
-      case "firm_admin":
-        return <Navigate to="/firm-admin" replace />;
-      case "attorney":
-        return <Navigate to="/attorney" replace />;
-      case "client":
-        return <Navigate to="/client" replace />;
-      default:
-        return <Navigate to="/attorney" replace />;
-    }
+    console.log('Auth: Redirecting based on profile role:', profile.role);
+    const redirectMap = {
+      "super_admin": "/super-admin",
+      "firm_admin": "/firm-admin",
+      "attorney": "/attorney",
+      "client": "/client"
+    };
+    
+    const redirectPath = redirectMap[profile.role] || "/attorney";
+    return <Navigate to={redirectPath} replace />;
   }
 
-  // If authenticated but no profile, redirect to attorney dashboard
+  // If authenticated but no profile, redirect to attorney dashboard as fallback
   if (isAuthenticated && user && !profile) {
-    console.log('User authenticated but no profile, redirecting to attorney dashboard');
+    console.log('Auth: User authenticated but no profile, redirecting to attorney dashboard');
     return <Navigate to="/attorney" replace />;
   }
 
