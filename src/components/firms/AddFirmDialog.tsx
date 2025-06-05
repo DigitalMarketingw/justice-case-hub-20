@@ -55,6 +55,12 @@ export function AddFirmDialog({ open, onOpenChange }: AddFirmDialogProps) {
 
   const createFirmMutation = useMutation({
     mutationFn: async (values: z.infer<typeof formSchema>) => {
+      // First generate a firm code
+      const { data: firmCode, error: codeError } = await supabase
+        .rpc('generate_firm_code');
+
+      if (codeError) throw codeError;
+
       const { data, error } = await supabase
         .from('firms')
         .insert([
@@ -63,6 +69,7 @@ export function AddFirmDialog({ open, onOpenChange }: AddFirmDialogProps) {
             email: values.email || null,
             phone: values.phone || null,
             address: values.address || null,
+            firm_code: firmCode,
           },
         ])
         .select()
