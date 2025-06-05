@@ -84,6 +84,24 @@ const App = () => {
                 </ProtectedRoute>
               } />
               
+              <Route path="/cases" element={
+                <ProtectedRoute allowedRoles={['super_admin', 'firm_admin', 'attorney']}>
+                  <div className="min-h-screen bg-gray-50 p-6">
+                    <h1 className="text-3xl font-bold mb-6">Cases Management</h1>
+                    <p className="text-gray-600">Cases management functionality will be implemented here.</p>
+                  </div>
+                </ProtectedRoute>
+              } />
+
+              <Route path="/firms" element={
+                <ProtectedRoute allowedRoles={['super_admin']}>
+                  <div className="min-h-screen bg-gray-50 p-6">
+                    <h1 className="text-3xl font-bold mb-6">Firms Management</h1>
+                    <p className="text-gray-600">Firm management functionality will be implemented here.</p>
+                  </div>
+                </ProtectedRoute>
+              } />
+              
               <Route path="/calendar" element={
                 <ProtectedRoute>
                   <Calendar />

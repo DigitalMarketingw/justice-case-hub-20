@@ -12,7 +12,8 @@ import {
   FileText,
   Menu,
   X,
-  LogOut
+  LogOut,
+  Building
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -22,7 +23,15 @@ interface SidebarProps {
   className?: string;
 }
 
-const navigation = [
+const superAdminNavigation = [
+  { name: 'Dashboard', href: '/super-admin', icon: Home },
+  { name: 'Firms', href: '/firms', icon: Building },
+  { name: 'Attorneys', href: '/attorneys', icon: User },
+  { name: 'Cases', href: '/cases', icon: Briefcase },
+  { name: 'Settings', href: '/settings', icon: Settings },
+];
+
+const defaultNavigation = [
   { name: 'Dashboard', href: '/', icon: Home },
   { name: 'Clients', href: '/clients', icon: Users },
   { name: 'Attorneys', href: '/attorneys', icon: User },
@@ -37,7 +46,7 @@ export function Sidebar({ className }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut, user, loading } = useAuth();
+  const { signOut, user, profile, loading } = useAuth();
 
   const handleSignOut = async () => {
     try {
@@ -67,6 +76,9 @@ export function Sidebar({ className }: SidebarProps) {
     );
   }
 
+  // Choose navigation based on user role
+  const navigation = profile?.role === 'super_admin' ? superAdminNavigation : defaultNavigation;
+
   return (
     <div className={cn(
       "flex flex-col bg-slate-900 text-white transition-all duration-300",
@@ -76,7 +88,9 @@ export function Sidebar({ className }: SidebarProps) {
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-slate-700">
         {!isCollapsed && (
-          <h1 className="text-xl font-bold">LawFirm ERP</h1>
+          <h1 className="text-xl font-bold">
+            {profile?.role === 'super_admin' ? 'Super Admin' : 'LawFirm ERP'}
+          </h1>
         )}
         <Button
           variant="ghost"
@@ -121,9 +135,13 @@ export function Sidebar({ className }: SidebarProps) {
           {!isCollapsed && (
             <div className="ml-3">
               <p className="text-sm font-medium">
-                {user?.email ? user.email.split('@')[0] : 'User'}
+                {profile?.first_name && profile?.last_name 
+                  ? `${profile.first_name} ${profile.last_name}`
+                  : user?.email ? user.email.split('@')[0] : 'User'}
               </p>
-              <p className="text-xs text-slate-400">{user?.email || 'user@example.com'}</p>
+              <p className="text-xs text-slate-400">
+                {profile?.role === 'super_admin' ? 'Super Admin' : profile?.role || 'User'}
+              </p>
             </div>
           )}
         </div>
