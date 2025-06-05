@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -17,6 +18,7 @@ import Billing from "./pages/Billing";
 import Documents from "./pages/Documents";
 import Cases from "./pages/Cases";
 import Firms from "./pages/Firms";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 // Role-specific dashboards
@@ -112,6 +114,12 @@ function App() {
               <Route path="/documents" element={
                 <ProtectedRoute>
                   <Documents />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/settings" element={
+                <ProtectedRoute>
+                  <Settings />
                 </ProtectedRoute>
               } />
               
