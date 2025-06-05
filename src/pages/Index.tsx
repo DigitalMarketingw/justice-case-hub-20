@@ -14,29 +14,31 @@ const Index = () => {
 
   // Redirect authenticated users to their role-specific dashboard
   useEffect(() => {
-    if (!loading && isAuthenticated && user && profile) {
-      console.log('Index: Redirecting user with profile to role dashboard:', profile.role);
+    if (!loading && isAuthenticated && user) {
+      console.log('Index: User is authenticated, checking profile:', profile);
       
-      // Use setTimeout to ensure the redirect happens after the current render cycle
-      setTimeout(() => {
-        switch (profile.role) {
-          case "super_admin":
-            navigate("/super-admin", { replace: true });
-            break;
-          case "firm_admin":
-            navigate("/firm-admin", { replace: true });
-            break;
-          case "attorney":
-            navigate("/attorney", { replace: true });
-            break;
-          case "client":
-            navigate("/client", { replace: true });
-            break;
-          default:
-            console.log('Unknown role, staying on landing page');
-            break;
+      // If user has profile, redirect to role dashboard
+      if (profile) {
+        console.log('Index: Redirecting user with profile to role dashboard:', profile.role);
+        
+        const redirectMap = {
+          "super_admin": "/super-admin",
+          "firm_admin": "/firm-admin", 
+          "attorney": "/attorney",
+          "client": "/client"
+        };
+        
+        const redirectPath = redirectMap[profile.role];
+        if (redirectPath) {
+          navigate(redirectPath, { replace: true });
+        } else {
+          console.log('Unknown role, staying on landing page');
         }
-      }, 100);
+      } else {
+        // User is authenticated but no profile - redirect to auth to handle profile creation
+        console.log('User authenticated but no profile, redirecting to auth');
+        navigate("/auth", { replace: true });
+      }
     }
   }, [isAuthenticated, profile, user, loading, navigate]);
 
@@ -46,23 +48,35 @@ const Index = () => {
 
   // Show loading while checking auth state
   if (loading) {
-    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+    return (
+      <div className="flex h-screen items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
+        <div className="text-center text-white">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto mb-4"></div>
+          <p className="text-lg">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
-  // If authenticated but no profile yet, redirect to auth to handle profile creation
-  if (isAuthenticated && user && !profile) {
-    console.log('User authenticated but no profile, redirecting to auth');
-    navigate("/auth", { replace: true });
-    return <div className="flex h-screen items-center justify-center">Setting up your profile...</div>;
-  }
-
-  // If they're authenticated with profile, show brief loading until redirect happens
+  // If authenticated with profile, show brief loading until redirect happens
   if (isAuthenticated && user && profile) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p>Redirecting to your dashboard...</p>
+      <div className="flex h-screen items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
+        <div className="text-center text-white">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto mb-4"></div>
+          <p className="text-lg">Redirecting to your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If authenticated but no profile, show setup message
+  if (isAuthenticated && user && !profile) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
+        <div className="text-center text-white">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto mb-4"></div>
+          <p className="text-lg">Setting up your profile...</p>
         </div>
       </div>
     );

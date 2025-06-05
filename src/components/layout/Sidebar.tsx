@@ -37,12 +37,35 @@ export function Sidebar({ className }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut, user } = useAuth();
+  const { signOut, user, loading } = useAuth();
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate("/auth");
+    try {
+      await signOut();
+      navigate("/auth");
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
+
+  // Show loading state while auth is being determined
+  if (loading) {
+    return (
+      <div className={cn(
+        "flex flex-col bg-slate-900 text-white w-64",
+        className
+      )}>
+        <div className="p-4 border-b border-slate-700">
+          <div className="h-6 bg-slate-700 rounded animate-pulse"></div>
+        </div>
+        <div className="flex-1 p-4 space-y-2">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="h-8 bg-slate-700 rounded animate-pulse"></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={cn(

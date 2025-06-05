@@ -11,9 +11,16 @@ interface ProtectedRouteProps {
 export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
   const { isAuthenticated, profile, loading } = useAuth();
 
+  // Show loading state while auth is being determined
   if (loading) {
-    // Display a simple loading state
-    return <div className="flex h-screen w-full items-center justify-center">Loading...</div>;
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-lg text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
   // Not authenticated, redirect to login
@@ -21,21 +28,23 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to="/auth" replace />;
   }
 
+  // Authenticated but no profile yet, redirect to auth to handle profile creation
+  if (!profile) {
+    return <Navigate to="/auth" replace />;
+  }
+
   // If specific roles are required and user doesn't have one of them
-  if (allowedRoles && profile && !allowedRoles.includes(profile.role)) {
+  if (allowedRoles && !allowedRoles.includes(profile.role)) {
     // Redirect to appropriate dashboard based on role
-    switch (profile.role) {
-      case "super_admin":
-        return <Navigate to="/super-admin" replace />;
-      case "firm_admin":
-        return <Navigate to="/firm-admin" replace />;
-      case "attorney":
-        return <Navigate to="/attorney" replace />;
-      case "client":
-        return <Navigate to="/client" replace />;
-      default:
-        return <Navigate to="/" replace />;
-    }
+    const redirectMap = {
+      "super_admin": "/super-admin",
+      "firm_admin": "/firm-admin",
+      "attorney": "/attorney", 
+      "client": "/client"
+    };
+    
+    const redirectPath = redirectMap[profile.role];
+    return <Navigate to={redirectPath || "/"} replace />;
   }
 
   // User is authenticated and has the required role

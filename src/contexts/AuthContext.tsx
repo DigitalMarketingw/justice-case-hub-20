@@ -12,67 +12,81 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [profileFetched, setProfileFetched] = useState<boolean>(false);
   
   const { profile, setProfile, fetchUserProfile } = useProfile();
   const { signIn, signUp, signOut: authSignOut } = useAuthOperations();
 
   useEffect(() => {
-    // Set up auth state listener FIRST
+    let mounted = true;
+    
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
+        if (!mounted) return;
+        
         console.log('Auth state changed:', event, currentSession?.user?.email);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
 
-        // Reset profile fetched flag when auth state changes
+        // Handle profile fetching for signed in users
         if (event === 'SIGNED_OUT') {
           setProfile(null);
-          setProfileFetched(false);
-        } else if (event === 'SIGNED_IN' && currentSession?.user && !profileFetched) {
+          setLoading(false);
+        } else if (event === 'SIGNED_IN' && currentSession?.user) {
           try {
             console.log('Fetching profile for user:', currentSession.user.id);
             await fetchUserProfile(currentSession.user.id);
-            setProfileFetched(true);
           } catch (error) {
             console.error('Failed to fetch profile after auth change:', error);
-            setProfileFetched(true); // Mark as fetched even if failed to prevent retry loops
+          } finally {
+            if (mounted) {
+              setLoading(false);
+            }
           }
+        } else {
+          setLoading(false);
         }
-        
-        // Always set loading to false after processing auth state
-        setLoading(false);
       }
     );
 
-    // THEN check for existing session
+    // Check for existing session
     supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
+      if (!mounted) return;
+      
       console.log('Initial session check:', currentSession?.user?.email);
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
 
-      if (currentSession?.user && !profileFetched) {
+      if (currentSession?.user) {
         try {
           console.log('Fetching profile for initial session:', currentSession.user.id);
           await fetchUserProfile(currentSession.user.id);
-          setProfileFetched(true);
         } catch (error) {
           console.error('Failed to fetch profile on initial load:', error);
-          setProfileFetched(true); // Mark as fetched even if failed
         }
       }
-
-      setLoading(false);
+      
+      if (mounted) {
+        setLoading(false);
+      }
     });
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
-  }, [fetchUserProfile, profileFetched]);
+  }, [fetchUserProfile]);
 
   const handleSignOut = async () => {
-    setProfileFetched(false);
-    await authSignOut(setProfile);
+    setLoading(true);
+    try {
+      setProfile(null);
+      await authSignOut(setProfile);
+    } catch (error) {
+      console.error('Error during sign out:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
