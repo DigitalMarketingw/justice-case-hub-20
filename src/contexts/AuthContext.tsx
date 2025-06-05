@@ -27,8 +27,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Fetch user profile if authenticated, but defer it to avoid recursion
         if (currentSession?.user) {
           setTimeout(async () => {
-            await fetchUserProfile(currentSession.user.id);
-          }, 0);
+            try {
+              await fetchUserProfile(currentSession.user.id);
+            } catch (error) {
+              console.error('Failed to fetch profile after auth change:', error);
+              // Don't block authentication if profile fetch fails
+            }
+          }, 100); // Slightly longer timeout to ensure auth state is stable
         } else {
           setProfile(null);
         }
@@ -42,7 +47,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(currentSession?.user ?? null);
 
       if (currentSession?.user) {
-        await fetchUserProfile(currentSession.user.id);
+        try {
+          await fetchUserProfile(currentSession.user.id);
+        } catch (error) {
+          console.error('Failed to fetch profile on initial load:', error);
+          // Don't block authentication if profile fetch fails
+        }
       }
 
       setLoading(false);

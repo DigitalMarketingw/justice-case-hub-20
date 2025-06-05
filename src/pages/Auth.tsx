@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 
 const Auth = () => {
-  const { signIn, isAuthenticated, profile } = useAuth();
+  const { signIn, isAuthenticated, profile, user, loading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   
   // Login form state
@@ -44,19 +44,41 @@ const Auth = () => {
     }
   ];
 
-  // If already authenticated, redirect to the appropriate dashboard
-  if (isAuthenticated && profile) {
-    switch (profile.role) {
-      case "super_admin":
-        return <Navigate to="/super-admin" replace />;
-      case "firm_admin":
-        return <Navigate to="/firm-admin" replace />;
-      case "attorney":
-        return <Navigate to="/attorney" replace />;
-      case "client":
-        return <Navigate to="/client" replace />;
-      default:
-        return <Navigate to="/" replace />;
+  // Debug logging
+  useEffect(() => {
+    console.log('Auth page state:', {
+      isAuthenticated,
+      profile,
+      user: user?.email,
+      loading
+    });
+  }, [isAuthenticated, profile, user, loading]);
+
+  // If loading, show loading state
+  if (loading) {
+    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+  }
+
+  // If already authenticated, redirect based on profile or fallback to a default
+  if (isAuthenticated) {
+    if (profile) {
+      console.log('Redirecting based on profile role:', profile.role);
+      switch (profile.role) {
+        case "super_admin":
+          return <Navigate to="/super-admin" replace />;
+        case "firm_admin":
+          return <Navigate to="/firm-admin" replace />;
+        case "attorney":
+          return <Navigate to="/attorney" replace />;
+        case "client":
+          return <Navigate to="/client" replace />;
+        default:
+          return <Navigate to="/" replace />;
+      }
+    } else if (user) {
+      // If authenticated but no profile loaded, redirect to a default dashboard
+      console.log('User authenticated but no profile, redirecting to default');
+      return <Navigate to="/" replace />;
     }
   }
 
@@ -64,7 +86,9 @@ const Auth = () => {
     e.preventDefault();
     setIsLoading(true);
     
-    await signIn(loginEmail, loginPassword);
+    console.log('Attempting login with:', loginEmail);
+    const result = await signIn(loginEmail, loginPassword);
+    console.log('Login result:', result);
     
     setIsLoading(false);
   };
@@ -74,7 +98,9 @@ const Auth = () => {
     setLoginEmail(email);
     setLoginPassword(password);
     
-    await signIn(email, password);
+    console.log('Attempting demo login with:', email);
+    const result = await signIn(email, password);
+    console.log('Demo login result:', result);
     
     setIsLoading(false);
   };
