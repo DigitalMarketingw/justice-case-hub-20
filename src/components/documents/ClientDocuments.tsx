@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +14,7 @@ interface Client {
   company_name?: string;
 }
 
-interface Document {
+interface DocumentFile {
   id: string;
   file_name: string;
   file_size: number;
@@ -27,7 +26,7 @@ interface Document {
 }
 
 interface ClientWithDocuments extends Client {
-  documents: Document[];
+  documents: DocumentFile[];
   documentCount: number;
 }
 
@@ -94,7 +93,7 @@ export function ClientDocuments() {
     fetchClientsWithDocuments();
   }, [searchTerm]);
 
-  const handleDownloadDocument = async (document: Document) => {
+  const handleDownloadDocument = async (document: DocumentFile) => {
     try {
       const { data, error } = await supabase.storage
         .from('documents')
@@ -106,13 +105,13 @@ export function ClientDocuments() {
       }
 
       const url = window.URL.createObjectURL(data);
-      const a = document.createElement('a');
+      const a = window.document.createElement('a');
       a.href = url;
       a.download = document.file_name;
-      document.body.appendChild(a);
+      window.document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      window.document.body.removeChild(a);
     } catch (error) {
       console.error('Error downloading document:', error);
     }

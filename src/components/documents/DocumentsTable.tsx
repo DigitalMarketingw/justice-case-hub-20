@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Download, Trash2, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
-interface Document {
+interface DocumentFile {
   id: string;
   file_name: string;
   file_size: number;
@@ -22,7 +21,7 @@ interface Document {
 }
 
 export function DocumentsTable() {
-  const [documents, setDocuments] = useState<Document[]>([]);
+  const [documents, setDocuments] = useState<DocumentFile[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchDocuments = async () => {
@@ -60,7 +59,7 @@ export function DocumentsTable() {
     fetchDocuments();
   }, []);
 
-  const handleDownloadDocument = async (document: Document) => {
+  const handleDownloadDocument = async (document: DocumentFile) => {
     try {
       const { data, error } = await supabase.storage
         .from('documents')
