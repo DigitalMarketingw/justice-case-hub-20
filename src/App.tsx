@@ -94,7 +94,7 @@ function App() {
               } />
 
               <Route path="/firms" element={
-                <ProtectedRoute allowedRoles={['super_admin']}>
+                <ProtectedRoute>
                   <Firms />
                 </ProtectedRoute>
               } />
