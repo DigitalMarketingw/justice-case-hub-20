@@ -31,10 +31,8 @@ interface Case {
   opendate: string;
   courtdate?: string;
   clientid: string;
-  clients?: {
-    full_name: string;
-    email: string;
-  };
+  client_name?: string;
+  client_email?: string;
 }
 
 interface CasesTableProps {
@@ -51,31 +49,66 @@ export function CasesTable({ searchTerm }: CasesTableProps) {
   const fetchCases = async () => {
     try {
       setLoading(true);
-      let query = supabase
+      
+      // First get cases
+      let casesQuery = supabase
         .from('cases')
-        .select(`
-          *,
-          clients!inner(
-            full_name,
-            email
-          )
-        `)
+        .select('*')
         .order('opendate', { ascending: false });
 
       if (searchTerm) {
-        query = query.or(`title.ilike.%${searchTerm}%,casenumber.ilike.%${searchTerm}%,clients.full_name.ilike.%${searchTerm}%`);
+        casesQuery = casesQuery.or(`title.ilike.%${searchTerm}%,casenumber.ilike.%${searchTerm}%`);
       }
 
-      const { data, error } = await query;
+      const { data: casesData, error: casesError } = await casesQuery;
 
-      if (error) {
-        console.error('Error fetching cases:', error);
+      if (casesError) {
+        console.error('Error fetching cases:', casesError);
         return;
       }
 
-      setCases(data || []);
+      if (!casesData || casesData.length === 0) {
+        setCases([]);
+        return;
+      }
+
+      // Get client details for each case
+      const clientIds = casesData.map(c => c.clientid);
+      const { data: clientsData, error: clientsError } = await supabase
+        .from('clients')
+        .select('id, full_name, email')
+        .in('id', clientIds);
+
+      if (clientsError) {
+        console.error('Error fetching clients:', clientsError);
+        setCases(casesData.map(caseItem => ({ ...caseItem, client_name: 'Unknown', client_email: '' })));
+        return;
+      }
+
+      // Combine cases with client data
+      const casesWithClients = casesData.map(caseItem => {
+        const client = clientsData?.find(c => c.id === caseItem.clientid);
+        return {
+          ...caseItem,
+          client_name: client?.full_name || 'Unknown',
+          client_email: client?.email || ''
+        };
+      });
+
+      // Apply search filter for client names if needed
+      let filteredCases = casesWithClients;
+      if (searchTerm) {
+        filteredCases = casesWithClients.filter(caseItem => 
+          caseItem.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          caseItem.casenumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (caseItem.client_name && caseItem.client_name.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+      }
+
+      setCases(filteredCases);
     } catch (error) {
       console.error('Error:', error);
+      setCases([]);
     } finally {
       setLoading(false);
     }
@@ -141,8 +174,8 @@ export function CasesTable({ searchTerm }: CasesTableProps) {
                 <TableCell>{caseItem.casenumber}</TableCell>
                 <TableCell>
                   <div>
-                    <div className="font-medium">{caseItem.clients?.full_name}</div>
-                    <div className="text-sm text-gray-500">{caseItem.clients?.email}</div>
+                    <div className="font-medium">{caseItem.client_name}</div>
+                    <div className="text-sm text-gray-500">{caseItem.client_email}</div>
                   </div>
                 </TableCell>
                 <TableCell className="capitalize">{caseItem.casetype}</TableCell>

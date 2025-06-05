@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -8,11 +7,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { Download, FileText, Eye, Calendar } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Download, FileText, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
-import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
+
+interface Document {
+  id: string;
+  file_name: string;
+  file_type: string;
+  file_size: number;
+  upload_date: string;
+  description?: string;
+  tags?: string[];
+}
 
 interface CaseDocumentsDialogProps {
   open: boolean;
@@ -21,69 +29,78 @@ interface CaseDocumentsDialogProps {
   clientId: string;
 }
 
-interface Document {
-  id: string;
-  file_name: string;
-  file_size: number;
-  file_type: string;
-  file_path: string;
-  upload_date: string;
-  description?: string;
-  tags?: string[];
-}
-
-interface CaseInfo {
-  title: string;
-  casenumber: string;
-  clients?: {
-    full_name: string;
-  };
-}
-
-export function CaseDocumentsDialog({ open, onOpenChange, caseId, clientId }: CaseDocumentsDialogProps) {
-  const { toast } = useToast();
+export function CaseDocumentsDialog({
+  open,
+  onOpenChange,
+  caseId,
+  clientId,
+}: CaseDocumentsDialogProps) {
   const [documents, setDocuments] = useState<Document[]>([]);
-  const [caseInfo, setCaseInfo] = useState<CaseInfo | null>(null);
   const [loading, setLoading] = useState(false);
+  const [caseInfo, setCaseInfo] = useState<{
+    title: string;
+    casenumber: string;
+    client_name: string;
+  } | null>(null);
 
   useEffect(() => {
-    if (open && clientId && caseId) {
-      fetchCaseAndDocuments();
+    if (open && caseId && clientId) {
+      fetchDocuments();
+      fetchCaseInfo();
     }
-  }, [open, clientId, caseId]);
+  }, [open, caseId, clientId]);
 
-  const fetchCaseAndDocuments = async () => {
-    setLoading(true);
+  const fetchCaseInfo = async () => {
     try {
-      // Fetch case information
+      // Get case info
       const { data: caseData, error: caseError } = await supabase
         .from('cases')
-        .select(`
-          title,
-          casenumber,
-          clients(full_name)
-        `)
+        .select('title, casenumber')
         .eq('id', caseId)
         .single();
 
       if (caseError) {
-        console.error('Error fetching case:', caseError);
-      } else {
-        setCaseInfo(caseData);
+        console.error('Error fetching case info:', caseError);
+        return;
       }
 
-      // Fetch documents for the client
-      const { data: documentsData, error: documentsError } = await supabase
+      // Get client info
+      const { data: clientData, error: clientError } = await supabase
+        .from('clients')
+        .select('full_name')
+        .eq('id', clientId)
+        .single();
+
+      if (clientError) {
+        console.error('Error fetching client info:', clientError);
+        return;
+      }
+
+      setCaseInfo({
+        title: caseData?.title || '',
+        casenumber: caseData?.casenumber || '',
+        client_name: clientData?.full_name || ''
+      });
+    } catch (error) {
+      console.error('Error fetching case info:', error);
+    }
+  };
+
+  const fetchDocuments = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
         .from('documents')
         .select('*')
         .eq('client_id', clientId)
         .order('upload_date', { ascending: false });
 
-      if (documentsError) {
-        console.error('Error fetching documents:', documentsError);
-      } else {
-        setDocuments(documentsData || []);
+      if (error) {
+        console.error('Error fetching documents:', error);
+        return;
       }
+
+      setDocuments(data || []);
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -95,38 +112,24 @@ export function CaseDocumentsDialog({ open, onOpenChange, caseId, clientId }: Ca
     try {
       const { data, error } = await supabase.storage
         .from('documents')
-        .download(document.file_path);
+        .download(document.file_name);
 
       if (error) {
         console.error('Error downloading file:', error);
-        toast({
-          title: "Error",
-          description: "Failed to download document",
-          variant: "destructive",
-        });
         return;
       }
 
-      const url = window.URL.createObjectURL(data);
-      const a = window.document.createElement('a');
+      // Create download link
+      const url = URL.createObjectURL(data);
+      const a = document.createElement('a');
       a.href = url;
       a.download = document.file_name;
-      window.document.body.appendChild(a);
+      document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
-      window.document.body.removeChild(a);
-
-      toast({
-        title: "Success",
-        description: "Document downloaded successfully",
-      });
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error downloading document:', error);
-      toast({
-        title: "Error",
-        description: "Failed to download document",
-        variant: "destructive",
-      });
     }
   };
 
@@ -134,26 +137,18 @@ export function CaseDocumentsDialog({ open, onOpenChange, caseId, clientId }: Ca
     try {
       const { data, error } = await supabase.storage
         .from('documents')
-        .createSignedUrl(document.file_path, 60); // 1 minute expiry
+        .createSignedUrl(document.file_name, 3600); // 1 hour expiry
 
       if (error) {
         console.error('Error creating signed URL:', error);
-        toast({
-          title: "Error",
-          description: "Failed to view document",
-          variant: "destructive",
-        });
         return;
       }
 
-      window.open(data.signedUrl, '_blank');
+      if (data?.signedUrl) {
+        window.open(data.signedUrl, '_blank');
+      }
     } catch (error) {
       console.error('Error viewing document:', error);
-      toast({
-        title: "Error",
-        description: "Failed to view document",
-        variant: "destructive",
-      });
     }
   };
 
@@ -165,26 +160,20 @@ export function CaseDocumentsDialog({ open, onOpenChange, caseId, clientId }: Ca
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const getFileIcon = (fileType: string) => {
-    if (fileType.includes('pdf')) {
-      return <FileText className="h-4 w-4 text-red-500" />;
-    }
-    return <FileText className="h-4 w-4 text-gray-500" />;
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Case Documents</DialogTitle>
           <DialogDescription>
-            {caseInfo && (
-              <div className="mt-2">
-                <div className="font-medium">{caseInfo.title}</div>
-                <div className="text-sm text-gray-500">
-                  Case #{caseInfo.casenumber} - {caseInfo.clients?.full_name}
-                </div>
-              </div>
+            {caseInfo ? (
+              <>
+                <strong>Case:</strong> {caseInfo.title} ({caseInfo.casenumber})
+                <br />
+                <strong>Client:</strong> {caseInfo.client_name}
+              </>
+            ) : (
+              'Loading case information...'
             )}
           </DialogDescription>
         </DialogHeader>
@@ -198,57 +187,62 @@ export function CaseDocumentsDialog({ open, onOpenChange, caseId, clientId }: Ca
             </div>
           ) : documents.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-              <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-              <p>No documents found for this case</p>
+              <FileText className="mx-auto h-12 w-12 text-gray-300" />
+              <p className="mt-2">No documents found for this case</p>
             </div>
           ) : (
-            documents.map((document) => (
-              <div key={document.id} className="border rounded-lg p-4 hover:bg-gray-50">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3 flex-1">
-                    {getFileIcon(document.file_type)}
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium truncate">{document.file_name}</div>
-                      <div className="flex items-center space-x-4 text-sm text-gray-500">
-                        <span>{formatFileSize(document.file_size)}</span>
-                        <div className="flex items-center">
-                          <Calendar className="h-3 w-3 mr-1" />
-                          {format(new Date(document.upload_date), 'MMM dd, yyyy')}
+            <div className="space-y-3">
+              {documents.map((doc) => (
+                <div
+                  key={doc.id}
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3">
+                      <FileText className="h-8 w-8 text-blue-500" />
+                      <div>
+                        <h4 className="font-medium">{doc.file_name}</h4>
+                        <div className="flex items-center space-x-2 text-sm text-gray-500">
+                          <span>{formatFileSize(doc.file_size)}</span>
+                          <span>•</span>
+                          <span>{new Date(doc.upload_date).toLocaleDateString()}</span>
                         </div>
+                        {doc.description && (
+                          <p className="text-sm text-gray-600 mt-1">{doc.description}</p>
+                        )}
+                        {doc.tags && doc.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {doc.tags.map((tag, index) => (
+                              <Badge key={index} variant="secondary" className="text-xs">
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                      {document.description && (
-                        <div className="text-sm text-gray-600 mt-1">{document.description}</div>
-                      )}
-                      {document.tags && document.tags.length > 0 && (
-                        <div className="flex gap-1 mt-2">
-                          {document.tags.map((tag, index) => (
-                            <Badge key={index} variant="secondary" className="text-xs">
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
                     </div>
                   </div>
                   <div className="flex space-x-2">
                     <Button
-                      size="sm"
                       variant="outline"
-                      onClick={() => handleView(document)}
+                      size="sm"
+                      onClick={() => handleView(doc)}
                     >
-                      <Eye className="h-4 w-4" />
+                      <Eye className="h-4 w-4 mr-1" />
+                      View
                     </Button>
                     <Button
-                      size="sm"
                       variant="outline"
-                      onClick={() => handleDownload(document)}
+                      size="sm"
+                      onClick={() => handleDownload(doc)}
                     >
-                      <Download className="h-4 w-4" />
+                      <Download className="h-4 w-4 mr-1" />
+                      Download
                     </Button>
                   </div>
                 </div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </div>
       </DialogContent>
