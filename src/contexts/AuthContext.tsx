@@ -12,6 +12,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [profileFetched, setProfileFetched] = useState<boolean>(false);
   
   const { profile, setProfile, fetchUserProfile } = useProfile();
   const { signIn, signUp, signOut: authSignOut } = useAuthOperations();
@@ -24,17 +25,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
 
-        // Fetch user profile if authenticated
-        if (currentSession?.user) {
+        // Reset profile fetched flag when auth state changes
+        if (event === 'SIGNED_OUT') {
+          setProfile(null);
+          setProfileFetched(false);
+        } else if (event === 'SIGNED_IN' && currentSession?.user && !profileFetched) {
           try {
             console.log('Fetching profile for user:', currentSession.user.id);
             await fetchUserProfile(currentSession.user.id);
+            setProfileFetched(true);
           } catch (error) {
             console.error('Failed to fetch profile after auth change:', error);
-            // Don't block authentication if profile fetch fails, but log the error
+            setProfileFetched(true); // Mark as fetched even if failed to prevent retry loops
           }
-        } else {
-          setProfile(null);
         }
         
         // Always set loading to false after processing auth state
@@ -48,13 +51,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
 
-      if (currentSession?.user) {
+      if (currentSession?.user && !profileFetched) {
         try {
           console.log('Fetching profile for initial session:', currentSession.user.id);
           await fetchUserProfile(currentSession.user.id);
+          setProfileFetched(true);
         } catch (error) {
           console.error('Failed to fetch profile on initial load:', error);
-          // Don't block authentication if profile fetch fails
+          setProfileFetched(true); // Mark as fetched even if failed
         }
       }
 
@@ -64,9 +68,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [fetchUserProfile, profileFetched]);
 
   const handleSignOut = async () => {
+    setProfileFetched(false);
     await authSignOut(setProfile);
   };
 
