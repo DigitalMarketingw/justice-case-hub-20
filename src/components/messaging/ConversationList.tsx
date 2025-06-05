@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,17 +35,10 @@ export const ConversationList = ({ onSelectConversation, selectedConversation }:
 
   const fetchConversations = async () => {
     try {
-      // Use the new conversations table with proper joins
+      // First, get conversations based on user role
       let query = supabase
         .from('conversations')
-        .select(`
-          id,
-          client_id,
-          attorney_id,
-          last_message_at,
-          clients:client_id (id, full_name, profile_id),
-          attorney_profile:attorney_id (first_name, last_name)
-        `)
+        .select('id, client_id, attorney_id, last_message_at')
         .order('last_message_at', { ascending: false });
 
       // Filter based on user role
@@ -61,10 +53,24 @@ export const ConversationList = ({ onSelectConversation, selectedConversation }:
 
       if (error) throw error;
 
-      // For each conversation, get the latest message and unread count
+      // For each conversation, get the participant names and latest message
       const conversationList: Conversation[] = [];
       
       for (const conv of conversationsData || []) {
+        // Get client profile information
+        const { data: clientProfile } = await supabase
+          .from('profiles')
+          .select('first_name, last_name')
+          .eq('id', conv.client_id)
+          .single();
+
+        // Get attorney profile information
+        const { data: attorneyProfile } = await supabase
+          .from('profiles')
+          .select('first_name, last_name')
+          .eq('id', conv.attorney_id)
+          .single();
+
         // Get latest message
         const { data: latestMessage } = await supabase
           .from('messages')
@@ -82,12 +88,18 @@ export const ConversationList = ({ onSelectConversation, selectedConversation }:
           .eq('recipient_id', user.id)
           .eq('is_read', false);
 
+        const clientName = clientProfile 
+          ? `${clientProfile.first_name || ''} ${clientProfile.last_name || ''}`.trim()
+          : 'Unknown Client';
+
+        const attorneyName = attorneyProfile 
+          ? `${attorneyProfile.first_name || ''} ${attorneyProfile.last_name || ''}`.trim()
+          : 'Unknown Attorney';
+
         conversationList.push({
           id: conv.id,
-          client_name: conv.clients?.full_name || 'Unknown Client',
-          attorney_name: conv.attorney_profile 
-            ? `${conv.attorney_profile.first_name || ''} ${conv.attorney_profile.last_name || ''}`.trim()
-            : 'Unknown Attorney',
+          client_name: clientName,
+          attorney_name: attorneyName,
           last_message: latestMessage?.content || 'No messages yet',
           last_message_time: latestMessage?.created_at || conv.last_message_at || '',
           unread_count: unreadCount || 0,
