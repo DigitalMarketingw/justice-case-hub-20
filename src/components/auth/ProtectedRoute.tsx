@@ -28,12 +28,6 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to="/auth" replace />;
   }
 
-  // Special handling for superadmin@demo.com - allow access even without profile
-  if (user?.email === 'superadmin@demo.com' && (!allowedRoles || allowedRoles.includes('super_admin'))) {
-    console.log('Allowing superadmin access without profile check');
-    return <>{children}</>;
-  }
-
   // If specific roles are required and user doesn't have one of them
   if (allowedRoles && profile && !allowedRoles.includes(profile.role)) {
     // Redirect to appropriate dashboard based on role
@@ -48,12 +42,12 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to={redirectPath || "/attorney"} replace />;
   }
 
-  // If we have no profile but specific roles are required, and it's not superadmin
-  if (allowedRoles && !profile && user?.email !== 'superadmin@demo.com') {
+  // If we have no profile but specific roles are required, redirect to fallback
+  if (allowedRoles && !profile) {
     console.log('No profile found for user, redirecting to attorney dashboard as fallback');
     return <Navigate to="/attorney" replace />;
   }
 
-  // User is authenticated and has proper role (or is superadmin) - allow access
+  // User is authenticated and has proper role - allow access
   return <>{children}</>;
 };
