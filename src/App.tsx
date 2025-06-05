@@ -16,6 +16,7 @@ import Attorneys from "./pages/Attorneys";
 import Calendar from "./pages/Calendar";
 import Billing from "./pages/Billing";
 import Documents from "./pages/Documents";
+import Cases from "./pages/Cases";
 import NotFound from "./pages/NotFound";
 
 // Role-specific dashboards
@@ -86,10 +87,7 @@ const App = () => {
               
               <Route path="/cases" element={
                 <ProtectedRoute allowedRoles={['super_admin', 'firm_admin', 'attorney']}>
-                  <div className="min-h-screen bg-gray-50 p-6">
-                    <h1 className="text-3xl font-bold mb-6">Cases Management</h1>
-                    <p className="text-gray-600">Cases management functionality will be implemented here.</p>
-                  </div>
+                  <Cases />
                 </ProtectedRoute>
               } />
 
