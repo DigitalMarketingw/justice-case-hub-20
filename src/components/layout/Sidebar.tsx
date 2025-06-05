@@ -8,6 +8,7 @@ import {
   Briefcase, 
   Calendar, 
   Settings,
+  CreditCard,
   Menu,
   X
 } from "lucide-react";
@@ -24,6 +25,7 @@ const navigation = [
   { name: 'Attorneys', href: '/attorneys', icon: User },
   { name: 'Cases', href: '/cases', icon: Briefcase },
   { name: 'Calendar', href: '/calendar', icon: Calendar },
+  { name: 'Billing', href: '/billing', icon: CreditCard },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 

@@ -59,6 +59,79 @@ export type Database = {
           },
         ]
       }
+      billable_hours: {
+        Row: {
+          attorney_id: string | null
+          case_id: string | null
+          client_id: string
+          created_at: string
+          description: string
+          hourly_rate: number
+          hours_worked: number
+          id: string
+          is_billable: boolean | null
+          is_invoiced: boolean | null
+          total_amount: number | null
+          updated_at: string
+          user_id: string
+          work_date: string
+        }
+        Insert: {
+          attorney_id?: string | null
+          case_id?: string | null
+          client_id: string
+          created_at?: string
+          description: string
+          hourly_rate: number
+          hours_worked: number
+          id?: string
+          is_billable?: boolean | null
+          is_invoiced?: boolean | null
+          total_amount?: number | null
+          updated_at?: string
+          user_id: string
+          work_date: string
+        }
+        Update: {
+          attorney_id?: string | null
+          case_id?: string | null
+          client_id?: string
+          created_at?: string
+          description?: string
+          hourly_rate?: number
+          hours_worked?: number
+          id?: string
+          is_billable?: boolean | null
+          is_invoiced?: boolean | null
+          total_amount?: number | null
+          updated_at?: string
+          user_id?: string
+          work_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billable_hours_attorney_id_fkey"
+            columns: ["attorney_id"]
+            isOneToOne: false
+            referencedRelation: "attorneys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billable_hours_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billable_hours_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendar_events: {
         Row: {
           attendees: string[] | null
@@ -286,6 +359,157 @@ export type Database = {
         }
         Relationships: []
       }
+      invoice_line_items: {
+        Row: {
+          amount: number | null
+          billable_hour_id: string | null
+          created_at: string
+          description: string
+          id: string
+          invoice_id: string
+          quantity: number
+          rate: number
+        }
+        Insert: {
+          amount?: number | null
+          billable_hour_id?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          invoice_id: string
+          quantity?: number
+          rate: number
+        }
+        Update: {
+          amount?: number | null
+          billable_hour_id?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          invoice_id?: string
+          quantity?: number
+          rate?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_line_items_billable_hour_id_fkey"
+            columns: ["billable_hour_id"]
+            isOneToOne: false
+            referencedRelation: "billable_hours"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_line_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          client_id: string
+          created_at: string
+          due_date: string
+          id: string
+          invoice_date: string
+          invoice_number: string
+          notes: string | null
+          status: string
+          subtotal: number
+          tax_amount: number | null
+          tax_rate: number | null
+          total_amount: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          due_date: string
+          id?: string
+          invoice_date?: string
+          invoice_number: string
+          notes?: string | null
+          status?: string
+          subtotal?: number
+          tax_amount?: number | null
+          tax_rate?: number | null
+          total_amount?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          due_date?: string
+          id?: string
+          invoice_date?: string
+          invoice_number?: string
+          notes?: string | null
+          status?: string
+          subtotal?: number
+          tax_amount?: number | null
+          tax_rate?: number | null
+          total_amount?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          invoice_id: string
+          notes: string | null
+          payment_date: string
+          payment_method: string | null
+          reference_number: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          invoice_id: string
+          notes?: string | null
+          payment_date?: string
+          payment_method?: string | null
+          reference_number?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          invoice_id?: string
+          notes?: string | null
+          payment_date?: string
+          payment_method?: string | null
+          reference_number?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -324,7 +548,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_invoice_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
