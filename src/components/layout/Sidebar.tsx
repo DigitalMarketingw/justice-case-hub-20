@@ -32,7 +32,6 @@ const superAdminNavigation = [
 
 const firmAdminNavigation = [
   { name: 'Dashboard', href: '/firm-admin', icon: Home },
-  { name: 'Firms', href: '/firms', icon: Building },
   { name: 'Clients', href: '/clients', icon: Users },
   { name: 'Attorneys', href: '/attorneys', icon: User },
   { name: 'Cases', href: '/cases', icon: Briefcase },
@@ -44,7 +43,6 @@ const firmAdminNavigation = [
 
 const attorneyNavigation = [
   { name: 'Dashboard', href: '/attorney', icon: Home },
-  { name: 'Firms', href: '/firms', icon: Building },
   { name: 'Clients', href: '/clients', icon: Users },
   { name: 'Cases', href: '/cases', icon: Briefcase },
   { name: 'Calendar', href: '/calendar', icon: Calendar },
@@ -55,7 +53,6 @@ const attorneyNavigation = [
 
 const clientNavigation = [
   { name: 'Dashboard', href: '/client', icon: Home },
-  { name: 'Firms', href: '/firms', icon: Building },
   { name: 'Cases', href: '/cases', icon: Briefcase },
   { name: 'Calendar', href: '/calendar', icon: Calendar },
   { name: 'Billing', href: '/billing', icon: CreditCard },
