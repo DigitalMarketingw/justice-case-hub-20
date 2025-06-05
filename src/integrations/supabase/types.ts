@@ -370,6 +370,36 @@ export type Database = {
           },
         ]
       }
+      conversations: {
+        Row: {
+          attorney_id: string
+          client_id: string
+          created_at: string
+          id: string
+          is_archived: boolean | null
+          last_message_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          attorney_id: string
+          client_id: string
+          created_at?: string
+          id?: string
+          is_archived?: boolean | null
+          last_message_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          attorney_id?: string
+          client_id?: string
+          created_at?: string
+          id?: string
+          is_archived?: boolean | null
+          last_message_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           client_id: string
@@ -603,6 +633,7 @@ export type Database = {
         Row: {
           client_id: string
           content: string
+          conversation_id: string | null
           created_at: string
           id: string
           is_read: boolean
@@ -614,6 +645,7 @@ export type Database = {
         Insert: {
           client_id: string
           content: string
+          conversation_id?: string | null
           created_at?: string
           id?: string
           is_read?: boolean
@@ -625,6 +657,7 @@ export type Database = {
         Update: {
           client_id?: string
           content?: string
+          conversation_id?: string | null
           created_at?: string
           id?: string
           is_read?: boolean
@@ -639,6 +672,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
             referencedColumns: ["id"]
           },
           {
@@ -764,6 +804,10 @@ export type Database = {
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: Database["public"]["Enums"]["user_role"]
+      }
+      get_or_create_conversation: {
+        Args: { p_client_id: string; p_attorney_id: string }
+        Returns: string
       }
       get_user_role: {
         Args: { user_id: string }

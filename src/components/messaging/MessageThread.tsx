@@ -54,14 +54,19 @@ export const MessageThread = ({ conversationId, onBack }: MessageThreadProps) =>
 
   const fetchConversationInfo = async () => {
     try {
-      const { data: client, error } = await supabase
-        .from('clients')
-        .select('full_name, assigned_attorney_id')
+      const { data: conversation, error } = await supabase
+        .from('conversations')
+        .select(`
+          client_id,
+          attorney_id,
+          clients:client_id (full_name),
+          attorney_profile:attorney_id (first_name, last_name)
+        `)
         .eq('id', conversationId)
         .single();
 
       if (error) throw error;
-      setConversationInfo(client);
+      setConversationInfo(conversation);
     } catch (error) {
       console.error('Error fetching conversation info:', error);
     }
@@ -80,7 +85,7 @@ export const MessageThread = ({ conversationId, onBack }: MessageThreadProps) =>
           is_read,
           profiles!messages_sender_id_fkey (first_name, last_name)
         `)
-        .eq('client_id', conversationId)
+        .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
@@ -127,16 +132,9 @@ export const MessageThread = ({ conversationId, onBack }: MessageThreadProps) =>
       // Determine recipient based on user role
       let recipientId;
       if (profile?.role === 'client') {
-        recipientId = conversationInfo.assigned_attorney_id;
+        recipientId = conversationInfo.attorney_id;
       } else {
-        // For attorneys, find the client's user_id from profiles
-        const { data: clientProfile } = await supabase
-          .from('clients')
-          .select('profile_id')
-          .eq('id', conversationId)
-          .single();
-        
-        recipientId = clientProfile?.profile_id;
+        recipientId = conversationInfo.client_id;
       }
 
       const { error } = await supabase
@@ -144,7 +142,8 @@ export const MessageThread = ({ conversationId, onBack }: MessageThreadProps) =>
         .insert({
           sender_id: user.id,
           recipient_id: recipientId,
-          client_id: conversationId,
+          client_id: conversationInfo.clients?.id || conversationInfo.client_id,
+          conversation_id: conversationId,
           content: newMessage.trim()
         });
 
@@ -184,6 +183,12 @@ export const MessageThread = ({ conversationId, onBack }: MessageThreadProps) =>
     );
   }
 
+  const displayName = profile?.role === 'client' 
+    ? conversationInfo?.attorney_profile 
+      ? `${conversationInfo.attorney_profile.first_name || ''} ${conversationInfo.attorney_profile.last_name || ''}`.trim()
+      : 'Attorney'
+    : conversationInfo?.clients?.full_name || 'Client';
+
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
@@ -197,10 +202,10 @@ export const MessageThread = ({ conversationId, onBack }: MessageThreadProps) =>
           </AvatarFallback>
         </Avatar>
         <div>
-          <h3 className="font-medium">
-            {conversationInfo?.full_name || 'Loading...'}
-          </h3>
-          <p className="text-sm text-gray-500">Client</p>
+          <h3 className="font-medium">{displayName}</h3>
+          <p className="text-sm text-gray-500">
+            {profile?.role === 'client' ? 'Attorney' : 'Client'}
+          </p>
         </div>
       </div>
 

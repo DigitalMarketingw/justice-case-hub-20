@@ -36,66 +36,67 @@ export const ConversationList = ({ onSelectConversation, selectedConversation }:
 
   const fetchConversations = async () => {
     try {
+      // Use the new conversations table with proper joins
       let query = supabase
-        .from('messages')
+        .from('conversations')
         .select(`
+          id,
           client_id,
-          sender_id,
-          recipient_id,
-          content,
-          created_at,
-          is_read,
-          clients:client_id (full_name),
-          sender_profile:profiles!messages_sender_id_fkey (first_name, last_name),
-          recipient_profile:profiles!messages_recipient_id_fkey (first_name, last_name)
+          attorney_id,
+          last_message_at,
+          clients:client_id (id, full_name, profile_id),
+          attorney_profile:attorney_id (first_name, last_name)
         `)
-        .order('created_at', { ascending: false });
+        .order('last_message_at', { ascending: false });
 
       // Filter based on user role
       if (profile?.role === 'client') {
-        query = query.or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`);
+        query = query.eq('client_id', user.id);
       } else if (profile?.role === 'attorney') {
-        query = query.or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`);
+        query = query.eq('attorney_id', user.id);
       }
-      // For admins, get all messages (no filter needed)
+      // For admins, get all conversations (no filter needed)
 
-      const { data: messages, error } = await query;
+      const { data: conversationsData, error } = await query;
 
       if (error) throw error;
 
-      // Group messages by client_id to create conversations
-      const conversationMap = new Map<string, Conversation>();
+      // For each conversation, get the latest message and unread count
+      const conversationList: Conversation[] = [];
       
-      messages?.forEach((message: any) => {
-        const clientId = message.client_id;
-        const isFromClient = message.sender_id !== user.id && message.clients;
-        const isToClient = message.recipient_id !== user.id && message.clients;
-        
-        if (!conversationMap.has(clientId)) {
-          conversationMap.set(clientId, {
-            id: clientId,
-            client_name: message.clients?.full_name || 'Unknown Client',
-            attorney_name: isFromClient 
-              ? `${message.recipient_profile?.first_name || ''} ${message.recipient_profile?.last_name || ''}`.trim()
-              : `${message.sender_profile?.first_name || ''} ${message.sender_profile?.last_name || ''}`.trim(),
-            last_message: message.content,
-            last_message_time: message.created_at,
-            unread_count: 0,
-            client_id: clientId,
-            attorney_id: isFromClient ? message.recipient_id : message.sender_id
-          });
-        }
-        
-        // Count unread messages for current user
-        if (!message.is_read && message.recipient_id === user.id) {
-          const conv = conversationMap.get(clientId);
-          if (conv) {
-            conv.unread_count++;
-          }
-        }
-      });
+      for (const conv of conversationsData || []) {
+        // Get latest message
+        const { data: latestMessage } = await supabase
+          .from('messages')
+          .select('content, created_at')
+          .eq('conversation_id', conv.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
 
-      setConversations(Array.from(conversationMap.values()));
+        // Count unread messages for current user
+        const { count: unreadCount } = await supabase
+          .from('messages')
+          .select('*', { count: 'exact', head: true })
+          .eq('conversation_id', conv.id)
+          .eq('recipient_id', user.id)
+          .eq('is_read', false);
+
+        conversationList.push({
+          id: conv.id,
+          client_name: conv.clients?.full_name || 'Unknown Client',
+          attorney_name: conv.attorney_profile 
+            ? `${conv.attorney_profile.first_name || ''} ${conv.attorney_profile.last_name || ''}`.trim()
+            : 'Unknown Attorney',
+          last_message: latestMessage?.content || 'No messages yet',
+          last_message_time: latestMessage?.created_at || conv.last_message_at || '',
+          unread_count: unreadCount || 0,
+          client_id: conv.client_id,
+          attorney_id: conv.attorney_id
+        });
+      }
+
+      setConversations(conversationList);
     } catch (error) {
       console.error('Error fetching conversations:', error);
     } finally {
@@ -131,6 +132,9 @@ export const ConversationList = ({ onSelectConversation, selectedConversation }:
         {conversations.length === 0 ? (
           <div className="p-4 text-center text-gray-500">
             <p>No conversations yet</p>
+            {profile?.role === 'attorney' && (
+              <p className="text-sm mt-1">Start a new conversation with a client</p>
+            )}
           </div>
         ) : (
           <div className="p-2 space-y-2">
@@ -168,7 +172,10 @@ export const ConversationList = ({ onSelectConversation, selectedConversation }:
                         </p>
                         
                         <p className="text-xs text-gray-400 mt-1">
-                          {new Date(conversation.last_message_time).toLocaleDateString()}
+                          {conversation.last_message_time ? 
+                            new Date(conversation.last_message_time).toLocaleDateString() : 
+                            'New conversation'
+                          }
                         </p>
                       </div>
                     </div>
