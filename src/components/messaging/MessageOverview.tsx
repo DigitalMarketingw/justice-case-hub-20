@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,8 +46,8 @@ export const MessageOverview = ({ onSelectConversation }: MessageOverviewProps) 
           created_at,
           is_read,
           clients:client_id (full_name),
-          sender_profile:sender_id (first_name, last_name),
-          recipient_profile:recipient_id (first_name, last_name)
+          sender_profile:profiles!messages_sender_id_fkey (first_name, last_name),
+          recipient_profile:profiles!messages_recipient_id_fkey (first_name, last_name)
         `)
         .order('created_at', { ascending: false });
 
@@ -62,12 +61,14 @@ export const MessageOverview = ({ onSelectConversation }: MessageOverviewProps) 
         const clientId = message.client_id;
         
         if (!conversationMap.has(clientId)) {
+          const attorneyName = message.sender_profile?.first_name 
+            ? `${message.sender_profile.first_name} ${message.sender_profile.last_name}`
+            : `${message.recipient_profile?.first_name || ''} ${message.recipient_profile?.last_name || ''}`.trim();
+
           conversationMap.set(clientId, {
             client_id: clientId,
             client_name: message.clients?.full_name || 'Unknown Client',
-            attorney_name: message.sender_profile?.first_name 
-              ? `${message.sender_profile.first_name} ${message.sender_profile.last_name}`
-              : `${message.recipient_profile?.first_name} ${message.recipient_profile?.last_name}`,
+            attorney_name: attorneyName || 'Unknown Attorney',
             message_count: 0,
             unread_count: 0,
             last_message_time: message.created_at,

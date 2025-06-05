@@ -46,8 +46,8 @@ export const ConversationList = ({ onSelectConversation, selectedConversation }:
           created_at,
           is_read,
           clients:client_id (full_name),
-          sender_profile:sender_id (first_name, last_name),
-          recipient_profile:recipient_id (first_name, last_name)
+          sender_profile:profiles!messages_sender_id_fkey (first_name, last_name),
+          recipient_profile:profiles!messages_recipient_id_fkey (first_name, last_name)
         `)
         .order('created_at', { ascending: false });
 
@@ -76,8 +76,8 @@ export const ConversationList = ({ onSelectConversation, selectedConversation }:
             id: clientId,
             client_name: message.clients?.full_name || 'Unknown Client',
             attorney_name: isFromClient 
-              ? message.recipient_profile?.first_name + ' ' + message.recipient_profile?.last_name
-              : message.sender_profile?.first_name + ' ' + message.sender_profile?.last_name,
+              ? `${message.recipient_profile?.first_name || ''} ${message.recipient_profile?.last_name || ''}`.trim()
+              : `${message.sender_profile?.first_name || ''} ${message.sender_profile?.last_name || ''}`.trim(),
             last_message: message.content,
             last_message_time: message.created_at,
             unread_count: 0,

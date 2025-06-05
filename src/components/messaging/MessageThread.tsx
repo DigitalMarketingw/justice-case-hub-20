@@ -78,14 +78,28 @@ export const MessageThread = ({ conversationId, onBack }: MessageThreadProps) =>
           content,
           created_at,
           is_read,
-          sender_profile:sender_id (first_name, last_name)
+          profiles!messages_sender_id_fkey (first_name, last_name)
         `)
         .eq('client_id', conversationId)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
 
-      setMessages(messages || []);
+      // Transform the data to match our Message interface
+      const transformedMessages = messages?.map((msg: any) => ({
+        id: msg.id,
+        sender_id: msg.sender_id,
+        recipient_id: msg.recipient_id,
+        content: msg.content,
+        created_at: msg.created_at,
+        is_read: msg.is_read,
+        sender_profile: {
+          first_name: msg.profiles?.first_name || 'Unknown',
+          last_name: msg.profiles?.last_name || 'User'
+        }
+      })) || [];
+
+      setMessages(transformedMessages);
       
       // Mark messages as read if they're for the current user
       const unreadMessages = messages?.filter(msg => 
