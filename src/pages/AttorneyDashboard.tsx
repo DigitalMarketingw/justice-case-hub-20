@@ -8,71 +8,130 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { supabase } from "@/integrations/supabase/client";
 
 const AttorneyDashboard = () => {
-  const { profile, signOut } = useAuth();
+  const { profile, signOut, user, loading: authLoading } = useAuth();
   const [clientCount, setClientCount] = useState(0);
   const [pendingMessages, setPendingMessages] = useState(0);
   const [upcomingEvents, setUpcomingEvents] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  console.log('AttorneyDashboard - Auth state:', {
+    user: user?.email,
+    profile: profile?.role,
+    authLoading,
+    profileId: profile?.id
+  });
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!profile?.id) return;
+      console.log('AttorneyDashboard - Starting data fetch');
       
-      setLoading(true);
-      
-      // Get attorney details
-      const { data: attorneyData } = await supabase
-        .from('attorneys')
-        .select('id')
-        .eq('profile_id', profile.id)
-        .single();
-        
-      if (attorneyData) {
-        // Count assigned clients
-        const { count: clientCount, error: clientError } = await supabase
-          .from('clients')
-          .select('*', { count: 'exact', head: true })
-          .eq('assigned_attorney_id', attorneyData.id);
-          
-        if (clientError) {
-          console.error('Error fetching clients:', clientError);
-        } else {
-          setClientCount(clientCount || 0);
-        }
-        
-        // Count unread messages
-        const { count: messageCount, error: messageError } = await supabase
-          .from('messages')
-          .select('*', { count: 'exact', head: true })
-          .eq('recipient_id', profile.id)
-          .eq('is_read', false);
-          
-        if (messageError) {
-          console.error('Error fetching messages:', messageError);
-        } else {
-          setPendingMessages(messageCount || 0);
-        }
-        
-        // Count upcoming calendar events
-        const today = new Date();
-        const { count: eventCount, error: eventError } = await supabase
-          .from('calendar_events')
-          .select('*', { count: 'exact', head: true })
-          .eq('attorney_id', attorneyData.id)
-          .gte('start_time', today.toISOString());
-          
-        if (eventError) {
-          console.error('Error fetching events:', eventError);
-        } else {
-          setUpcomingEvents(eventCount || 0);
-        }
+      if (authLoading) {
+        console.log('AttorneyDashboard - Auth still loading, waiting...');
+        return;
       }
+
+      if (!user) {
+        console.log('AttorneyDashboard - No user found');
+        setError('No user found');
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
       
-      setLoading(false);
+      try {
+        // Get attorney details
+        console.log('AttorneyDashboard - Fetching attorney data for profile:', profile?.id);
+        
+        if (profile?.id) {
+          const { data: attorneyData, error: attorneyError } = await supabase
+            .from('attorneys')
+            .select('id')
+            .eq('profile_id', profile.id)
+            .single();
+            
+          console.log('AttorneyDashboard - Attorney data result:', { attorneyData, attorneyError });
+            
+          if (attorneyError) {
+            console.log('AttorneyDashboard - No attorney record found, this might be normal for demo users');
+            // Don't treat this as an error for demo purposes
+          }
+          
+          if (attorneyData) {
+            // Count assigned clients
+            const { count: clientCount, error: clientError } = await supabase
+              .from('clients')
+              .select('*', { count: 'exact', head: true })
+              .eq('assigned_attorney_id', attorneyData.id);
+              
+            if (!clientError) {
+              setClientCount(clientCount || 0);
+            }
+            
+            // Count unread messages
+            const { count: messageCount, error: messageError } = await supabase
+              .from('messages')
+              .select('*', { count: 'exact', head: true })
+              .eq('recipient_id', profile.id)
+              .eq('is_read', false);
+              
+            if (!messageError) {
+              setPendingMessages(messageCount || 0);
+            }
+            
+            // Count upcoming calendar events
+            const today = new Date();
+            const { count: eventCount, error: eventError } = await supabase
+              .from('calendar_events')
+              .select('*', { count: 'exact', head: true })
+              .eq('attorney_id', attorneyData.id)
+              .gte('start_time', today.toISOString());
+              
+            if (!eventError) {
+              setUpcomingEvents(eventCount || 0);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('AttorneyDashboard - Error fetching data:', err);
+        setError('Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchData();
-  }, [profile]);
+  }, [profile, user, authLoading]);
+
+  // Show loading while auth is loading
+  if (authLoading) {
+    console.log('AttorneyDashboard - Rendering auth loading state');
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-lg">Loading authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if there's an authentication error
+  if (error) {
+    console.log('AttorneyDashboard - Rendering error state:', error);
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <p className="text-lg text-red-600 mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()}>Reload Page</Button>
+        </div>
+      </div>
+    );
+  }
+
+  console.log('AttorneyDashboard - Rendering main dashboard');
 
   return (
     <SidebarProvider>
@@ -82,7 +141,10 @@ const AttorneyDashboard = () => {
           <div className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-3xl font-bold">Attorney Dashboard</h1>
-              <p className="text-gray-600">Welcome, {profile?.first_name} {profile?.last_name}</p>
+              <p className="text-gray-600">
+                Welcome, {profile?.first_name || user?.email?.split('@')[0] || 'Attorney'}
+                {profile?.last_name && ` ${profile.last_name}`}
+              </p>
             </div>
             <Button variant="outline" onClick={signOut}>Sign Out</Button>
           </div>
