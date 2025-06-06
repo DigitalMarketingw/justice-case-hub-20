@@ -11,272 +11,180 @@ export type Database = {
     Tables: {
       attorneys: {
         Row: {
-          bio: string | null
+          bar_number: string | null
           created_at: string | null
-          email: string
-          firm_id: string | null
-          full_name: string
+          hourly_rate: number | null
           id: string
-          office_location: string | null
-          phone: string | null
-          profile_id: string | null
-          specialization: string | null
+          specialization: string[] | null
           updated_at: string | null
-          user_id: string | null
           years_of_experience: number | null
         }
         Insert: {
-          bio?: string | null
+          bar_number?: string | null
           created_at?: string | null
-          email: string
-          firm_id?: string | null
-          full_name: string
-          id?: string
-          office_location?: string | null
-          phone?: string | null
-          profile_id?: string | null
-          specialization?: string | null
+          hourly_rate?: number | null
+          id: string
+          specialization?: string[] | null
           updated_at?: string | null
-          user_id?: string | null
           years_of_experience?: number | null
         }
         Update: {
-          bio?: string | null
+          bar_number?: string | null
           created_at?: string | null
-          email?: string
-          firm_id?: string | null
-          full_name?: string
+          hourly_rate?: number | null
           id?: string
-          office_location?: string | null
-          phone?: string | null
-          profile_id?: string | null
-          specialization?: string | null
+          specialization?: string[] | null
           updated_at?: string | null
-          user_id?: string | null
           years_of_experience?: number | null
         }
         Relationships: [
           {
-            foreignKeyName: "attorneys_firm_id_fkey"
-            columns: ["firm_id"]
-            isOneToOne: false
-            referencedRelation: "firms"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "attorneys_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "attorneys_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
+            foreignKeyName: "attorneys_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
       }
-      billable_hours: {
+      billing_entries: {
         Row: {
-          attorney_id: string | null
-          case_id: string | null
-          client_id: string
-          created_at: string
+          attorney_id: string
+          case_id: string
+          created_at: string | null
+          date_worked: string
           description: string
           hourly_rate: number
           hours_worked: number
           id: string
           is_billable: boolean | null
-          is_invoiced: boolean | null
           total_amount: number | null
-          updated_at: string
-          user_id: string
-          work_date: string
         }
         Insert: {
-          attorney_id?: string | null
-          case_id?: string | null
-          client_id: string
-          created_at?: string
+          attorney_id: string
+          case_id: string
+          created_at?: string | null
+          date_worked: string
           description: string
           hourly_rate: number
           hours_worked: number
           id?: string
           is_billable?: boolean | null
-          is_invoiced?: boolean | null
           total_amount?: number | null
-          updated_at?: string
-          user_id: string
-          work_date: string
         }
         Update: {
-          attorney_id?: string | null
-          case_id?: string | null
-          client_id?: string
-          created_at?: string
+          attorney_id?: string
+          case_id?: string
+          created_at?: string | null
+          date_worked?: string
           description?: string
           hourly_rate?: number
           hours_worked?: number
           id?: string
           is_billable?: boolean | null
-          is_invoiced?: boolean | null
           total_amount?: number | null
-          updated_at?: string
-          user_id?: string
-          work_date?: string
         }
         Relationships: [
           {
-            foreignKeyName: "billable_hours_attorney_id_fkey"
+            foreignKeyName: "billing_entries_attorney_id_fkey"
             columns: ["attorney_id"]
             isOneToOne: false
-            referencedRelation: "attorneys"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "billable_hours_case_id_fkey"
+            foreignKeyName: "billing_entries_case_id_fkey"
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "billable_hours_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      calendar_events: {
-        Row: {
-          attendees: string[] | null
-          attorney_id: string | null
-          client_id: string | null
-          created_at: string
-          description: string | null
-          end_time: string
-          event_type: string | null
-          google_event_id: string | null
-          id: string
-          is_google_synced: boolean | null
-          location: string | null
-          start_time: string
-          title: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          attendees?: string[] | null
-          attorney_id?: string | null
-          client_id?: string | null
-          created_at?: string
-          description?: string | null
-          end_time: string
-          event_type?: string | null
-          google_event_id?: string | null
-          id?: string
-          is_google_synced?: boolean | null
-          location?: string | null
-          start_time: string
-          title: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          attendees?: string[] | null
-          attorney_id?: string | null
-          client_id?: string | null
-          created_at?: string
-          description?: string | null
-          end_time?: string
-          event_type?: string | null
-          google_event_id?: string | null
-          id?: string
-          is_google_synced?: boolean | null
-          location?: string | null
-          start_time?: string
-          title?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "calendar_events_attorney_id_fkey"
-            columns: ["attorney_id"]
-            isOneToOne: false
-            referencedRelation: "attorneys"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "calendar_events_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
             referencedColumns: ["id"]
           },
         ]
       }
       cases: {
         Row: {
-          casenumber: string
-          casetype: string
-          clientid: string
-          courtdate: string | null
-          created_at: string
+          attorney_id: string
+          billable_rate: number | null
+          case_number: string
+          case_type: string | null
+          client_id: string
+          court_date: string | null
+          court_name: string | null
+          created_at: string | null
           description: string | null
+          estimated_hours: number | null
+          filing_date: string | null
+          firm_id: string | null
           id: string
-          notes: string | null
-          opendate: string
-          status: string
+          judge_name: string | null
+          priority: Database["public"]["Enums"]["case_priority"] | null
+          status: Database["public"]["Enums"]["case_status"] | null
           title: string
-          updated_at: string
+          total_billed: number | null
+          updated_at: string | null
         }
         Insert: {
-          casenumber: string
-          casetype: string
-          clientid: string
-          courtdate?: string | null
-          created_at?: string
+          attorney_id: string
+          billable_rate?: number | null
+          case_number: string
+          case_type?: string | null
+          client_id: string
+          court_date?: string | null
+          court_name?: string | null
+          created_at?: string | null
           description?: string | null
+          estimated_hours?: number | null
+          filing_date?: string | null
+          firm_id?: string | null
           id?: string
-          notes?: string | null
-          opendate?: string
-          status: string
+          judge_name?: string | null
+          priority?: Database["public"]["Enums"]["case_priority"] | null
+          status?: Database["public"]["Enums"]["case_status"] | null
           title: string
-          updated_at?: string
+          total_billed?: number | null
+          updated_at?: string | null
         }
         Update: {
-          casenumber?: string
-          casetype?: string
-          clientid?: string
-          courtdate?: string | null
-          created_at?: string
+          attorney_id?: string
+          billable_rate?: number | null
+          case_number?: string
+          case_type?: string | null
+          client_id?: string
+          court_date?: string | null
+          court_name?: string | null
+          created_at?: string | null
           description?: string | null
+          estimated_hours?: number | null
+          filing_date?: string | null
+          firm_id?: string | null
           id?: string
-          notes?: string | null
-          opendate?: string
-          status?: string
+          judge_name?: string | null
+          priority?: Database["public"]["Enums"]["case_priority"] | null
+          status?: Database["public"]["Enums"]["case_status"] | null
           title?: string
-          updated_at?: string
+          total_billed?: number | null
+          updated_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "cases_clientid_fkey"
-            columns: ["clientid"]
+            foreignKeyName: "cases_attorney_id_fkey"
+            columns: ["attorney_id"]
             isOneToOne: false
-            referencedRelation: "clients"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "fk_cases_client"
-            columns: ["clientid"]
+            foreignKeyName: "cases_client_id_fkey"
+            columns: ["client_id"]
             isOneToOne: false
-            referencedRelation: "clients"
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cases_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
             referencedColumns: ["id"]
           },
         ]
@@ -284,87 +192,39 @@ export type Database = {
       clients: {
         Row: {
           address: string | null
-          assigned_attorney_id: string | null
-          company_name: string | null
           created_at: string | null
-          dropped_date: string | null
-          dropped_reason: string | null
-          email: string
-          firm_id: string | null
-          full_name: string
+          date_of_birth: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
           id: string
-          is_dropped: boolean | null
           notes: string | null
-          phone: string | null
-          profile_id: string | null
-          tags: string[] | null
           updated_at: string | null
-          user_id: string | null
         }
         Insert: {
           address?: string | null
-          assigned_attorney_id?: string | null
-          company_name?: string | null
           created_at?: string | null
-          dropped_date?: string | null
-          dropped_reason?: string | null
-          email: string
-          firm_id?: string | null
-          full_name: string
-          id?: string
-          is_dropped?: boolean | null
+          date_of_birth?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          id: string
           notes?: string | null
-          phone?: string | null
-          profile_id?: string | null
-          tags?: string[] | null
           updated_at?: string | null
-          user_id?: string | null
         }
         Update: {
           address?: string | null
-          assigned_attorney_id?: string | null
-          company_name?: string | null
           created_at?: string | null
-          dropped_date?: string | null
-          dropped_reason?: string | null
-          email?: string
-          firm_id?: string | null
-          full_name?: string
+          date_of_birth?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
           id?: string
-          is_dropped?: boolean | null
           notes?: string | null
-          phone?: string | null
-          profile_id?: string | null
-          tags?: string[] | null
           updated_at?: string | null
-          user_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "clients_assigned_attorney_id_fkey"
-            columns: ["assigned_attorney_id"]
-            isOneToOne: false
-            referencedRelation: "attorneys"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "clients_firm_id_fkey"
-            columns: ["firm_id"]
-            isOneToOne: false
-            referencedRelation: "firms"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "clients_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "clients_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
+            foreignKeyName: "clients_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -373,82 +233,128 @@ export type Database = {
       conversations: {
         Row: {
           attorney_id: string
+          case_id: string | null
           client_id: string
-          created_at: string
+          created_at: string | null
           id: string
-          is_archived: boolean | null
           last_message_at: string | null
-          updated_at: string
         }
         Insert: {
           attorney_id: string
+          case_id?: string | null
           client_id: string
-          created_at?: string
+          created_at?: string | null
           id?: string
-          is_archived?: boolean | null
           last_message_at?: string | null
-          updated_at?: string
         }
         Update: {
           attorney_id?: string
+          case_id?: string | null
           client_id?: string
-          created_at?: string
+          created_at?: string | null
           id?: string
-          is_archived?: boolean | null
           last_message_at?: string | null
-          updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "conversations_attorney_id_fkey"
+            columns: ["attorney_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       documents: {
         Row: {
-          client_id: string
-          created_at: string
+          attorney_id: string | null
+          case_id: string | null
+          client_id: string | null
+          created_at: string | null
           description: string | null
-          file_name: string
-          file_path: string
-          file_size: number
-          file_type: string
+          document_type: Database["public"]["Enums"]["document_type"] | null
+          file_path: string | null
+          file_size: number | null
           id: string
-          tags: string[] | null
-          updated_at: string
-          upload_date: string
-          user_id: string
+          is_confidential: boolean | null
+          mime_type: string | null
+          name: string
+          updated_at: string | null
+          uploaded_by: string
         }
         Insert: {
-          client_id: string
-          created_at?: string
+          attorney_id?: string | null
+          case_id?: string | null
+          client_id?: string | null
+          created_at?: string | null
           description?: string | null
-          file_name: string
-          file_path: string
-          file_size: number
-          file_type: string
+          document_type?: Database["public"]["Enums"]["document_type"] | null
+          file_path?: string | null
+          file_size?: number | null
           id?: string
-          tags?: string[] | null
-          updated_at?: string
-          upload_date?: string
-          user_id: string
+          is_confidential?: boolean | null
+          mime_type?: string | null
+          name: string
+          updated_at?: string | null
+          uploaded_by: string
         }
         Update: {
-          client_id?: string
-          created_at?: string
+          attorney_id?: string | null
+          case_id?: string | null
+          client_id?: string | null
+          created_at?: string | null
           description?: string | null
-          file_name?: string
-          file_path?: string
-          file_size?: number
-          file_type?: string
+          document_type?: Database["public"]["Enums"]["document_type"] | null
+          file_path?: string | null
+          file_size?: number | null
           id?: string
-          tags?: string[] | null
-          updated_at?: string
-          upload_date?: string
-          user_id?: string
+          is_confidential?: boolean | null
+          mime_type?: string | null
+          name?: string
+          updated_at?: string | null
+          uploaded_by?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "documents_attorney_id_fkey"
+            columns: ["attorney_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "documents_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
-            referencedRelation: "clients"
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -456,224 +362,135 @@ export type Database = {
       firms: {
         Row: {
           address: string | null
-          created_at: string
+          created_at: string | null
           email: string | null
-          firm_code: string
           id: string
           name: string
           phone: string | null
-          updated_at: string
+          updated_at: string | null
+          website: string | null
         }
         Insert: {
           address?: string | null
-          created_at?: string
+          created_at?: string | null
           email?: string | null
-          firm_code: string
           id?: string
           name: string
           phone?: string | null
-          updated_at?: string
+          updated_at?: string | null
+          website?: string | null
         }
         Update: {
           address?: string | null
-          created_at?: string
+          created_at?: string | null
           email?: string | null
-          firm_code?: string
           id?: string
           name?: string
           phone?: string | null
-          updated_at?: string
+          updated_at?: string | null
+          website?: string | null
         }
         Relationships: []
-      }
-      google_calendar_settings: {
-        Row: {
-          access_token: string | null
-          created_at: string
-          google_calendar_id: string | null
-          id: string
-          is_connected: boolean | null
-          refresh_token: string | null
-          token_expires_at: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          access_token?: string | null
-          created_at?: string
-          google_calendar_id?: string | null
-          id?: string
-          is_connected?: boolean | null
-          refresh_token?: string | null
-          token_expires_at?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          access_token?: string | null
-          created_at?: string
-          google_calendar_id?: string | null
-          id?: string
-          is_connected?: boolean | null
-          refresh_token?: string | null
-          token_expires_at?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      invoice_line_items: {
-        Row: {
-          amount: number | null
-          billable_hour_id: string | null
-          created_at: string
-          description: string
-          id: string
-          invoice_id: string
-          quantity: number
-          rate: number
-        }
-        Insert: {
-          amount?: number | null
-          billable_hour_id?: string | null
-          created_at?: string
-          description: string
-          id?: string
-          invoice_id: string
-          quantity?: number
-          rate: number
-        }
-        Update: {
-          amount?: number | null
-          billable_hour_id?: string | null
-          created_at?: string
-          description?: string
-          id?: string
-          invoice_id?: string
-          quantity?: number
-          rate?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "invoice_line_items_billable_hour_id_fkey"
-            columns: ["billable_hour_id"]
-            isOneToOne: false
-            referencedRelation: "billable_hours"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "invoice_line_items_invoice_id_fkey"
-            columns: ["invoice_id"]
-            isOneToOne: false
-            referencedRelation: "invoices"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       invoices: {
         Row: {
+          amount: number
+          attorney_id: string
+          case_id: string
           client_id: string
-          created_at: string
+          created_at: string | null
           due_date: string
           id: string
-          invoice_date: string
           invoice_number: string
           notes: string | null
-          status: string
-          subtotal: number
+          paid_date: string | null
+          status: string | null
           tax_amount: number | null
-          tax_rate: number | null
           total_amount: number | null
-          updated_at: string
-          user_id: string
         }
         Insert: {
+          amount: number
+          attorney_id: string
+          case_id: string
           client_id: string
-          created_at?: string
+          created_at?: string | null
           due_date: string
           id?: string
-          invoice_date?: string
           invoice_number: string
           notes?: string | null
-          status?: string
-          subtotal?: number
+          paid_date?: string | null
+          status?: string | null
           tax_amount?: number | null
-          tax_rate?: number | null
           total_amount?: number | null
-          updated_at?: string
-          user_id: string
         }
         Update: {
+          amount?: number
+          attorney_id?: string
+          case_id?: string
           client_id?: string
-          created_at?: string
+          created_at?: string | null
           due_date?: string
           id?: string
-          invoice_date?: string
           invoice_number?: string
           notes?: string | null
-          status?: string
-          subtotal?: number
+          paid_date?: string | null
+          status?: string | null
           tax_amount?: number | null
-          tax_rate?: number | null
           total_amount?: number | null
-          updated_at?: string
-          user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "invoices_attorney_id_fkey"
+            columns: ["attorney_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "invoices_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
-            referencedRelation: "clients"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
       }
       messages: {
         Row: {
-          client_id: string
           content: string
-          conversation_id: string | null
-          created_at: string
+          conversation_id: string
+          created_at: string | null
           id: string
-          is_read: boolean
+          is_read: boolean | null
           recipient_id: string
           sender_id: string
-          subject: string | null
-          updated_at: string
         }
         Insert: {
-          client_id: string
           content: string
-          conversation_id?: string | null
-          created_at?: string
+          conversation_id: string
+          created_at?: string | null
           id?: string
-          is_read?: boolean
+          is_read?: boolean | null
           recipient_id: string
           sender_id: string
-          subject?: string | null
-          updated_at?: string
         }
         Update: {
-          client_id?: string
           content?: string
-          conversation_id?: string | null
-          created_at?: string
+          conversation_id?: string
+          created_at?: string | null
           id?: string
-          is_read?: boolean
+          is_read?: boolean | null
           recipient_id?: string
           sender_id?: string
-          subject?: string | null
-          updated_at?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "messages_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "messages_conversation_id_fkey"
             columns: ["conversation_id"]
@@ -697,50 +514,6 @@ export type Database = {
           },
         ]
       }
-      payments: {
-        Row: {
-          amount: number
-          created_at: string
-          id: string
-          invoice_id: string
-          notes: string | null
-          payment_date: string
-          payment_method: string | null
-          reference_number: string | null
-          user_id: string
-        }
-        Insert: {
-          amount: number
-          created_at?: string
-          id?: string
-          invoice_id: string
-          notes?: string | null
-          payment_date?: string
-          payment_method?: string | null
-          reference_number?: string | null
-          user_id: string
-        }
-        Update: {
-          amount?: number
-          created_at?: string
-          id?: string
-          invoice_id?: string
-          notes?: string | null
-          payment_date?: string
-          payment_method?: string | null
-          reference_number?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "payments_invoice_id_fkey"
-            columns: ["invoice_id"]
-            isOneToOne: false
-            referencedRelation: "invoices"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       profiles: {
         Row: {
           created_at: string | null
@@ -748,7 +521,7 @@ export type Database = {
           firm_id: string | null
           first_name: string | null
           id: string
-          is_active: boolean
+          is_active: boolean | null
           last_name: string | null
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
@@ -760,7 +533,7 @@ export type Database = {
           firm_id?: string | null
           first_name?: string | null
           id: string
-          is_active?: boolean
+          is_active?: boolean | null
           last_name?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
@@ -772,7 +545,7 @@ export type Database = {
           firm_id?: string | null
           first_name?: string | null
           id?: string
-          is_active?: boolean
+          is_active?: boolean | null
           last_name?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
@@ -793,32 +566,28 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      generate_firm_code: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_invoice_number: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_current_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: Database["public"]["Enums"]["user_role"]
-      }
-      get_or_create_conversation: {
-        Args: { p_client_id: string; p_attorney_id: string }
-        Returns: string
-      }
       get_user_role: {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
       }
-      is_admin_user: {
-        Args: Record<PropertyKey, never>
+      is_firm_admin: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
+      is_super_admin: {
+        Args: { user_id: string }
         Returns: boolean
       }
     }
     Enums: {
+      case_priority: "low" | "medium" | "high" | "urgent"
+      case_status: "active" | "pending" | "closed" | "on_hold"
+      document_type:
+        | "contract"
+        | "court_filing"
+        | "evidence"
+        | "correspondence"
+        | "other"
       user_role: "super_admin" | "firm_admin" | "attorney" | "client"
     }
     CompositeTypes: {
@@ -935,6 +704,15 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      case_priority: ["low", "medium", "high", "urgent"],
+      case_status: ["active", "pending", "closed", "on_hold"],
+      document_type: [
+        "contract",
+        "court_filing",
+        "evidence",
+        "correspondence",
+        "other",
+      ],
       user_role: ["super_admin", "firm_admin", "attorney", "client"],
     },
   },

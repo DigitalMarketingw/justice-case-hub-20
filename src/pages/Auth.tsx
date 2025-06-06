@@ -7,39 +7,41 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { createDemoUsers } from "@/utils/createDemoUsers";
 
 const Auth = () => {
   const { signIn, isAuthenticated, profile, user, loading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [showCreateDemo, setShowCreateDemo] = useState(false);
   
   // Login form state
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
 
-  // Demo credentials for each role
+  // Demo credentials for each role with the specified passwords
   const demoCredentials = [
     {
       role: "Super Admin",
       email: "superadmin@demo.com",
-      password: "demo123",
+      password: "admin123",
       description: "Full system access"
     },
     {
       role: "Firm Admin",
       email: "firmadmin@demo.com", 
-      password: "demo123",
+      password: "admin123",
       description: "Manage firm and users"
     },
     {
       role: "Attorney",
       email: "attorney@demo.com",
-      password: "demo123", 
+      password: "password", 
       description: "Handle cases and clients"
     },
     {
       role: "Client",
       email: "client@demo.com",
-      password: "demo123",
+      password: "password",
       description: "View case information"
     }
   ];
@@ -107,6 +109,20 @@ const Auth = () => {
     console.log('Demo login result:', result);
     
     setIsLoading(false);
+  };
+
+  const handleCreateDemoUsers = async () => {
+    setIsLoading(true);
+    try {
+      await createDemoUsers();
+      alert('Demo users created successfully! You can now login with the demo credentials.');
+    } catch (error) {
+      console.error('Error creating demo users:', error);
+      alert('Error creating demo users. Check console for details.');
+    } finally {
+      setIsLoading(false);
+      setShowCreateDemo(false);
+    }
   };
 
   return (
@@ -178,6 +194,30 @@ const Auth = () => {
               </div>
             ))}
           </CardContent>
+          <CardFooter>
+            <div className="w-full space-y-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={() => setShowCreateDemo(!showCreateDemo)}
+                disabled={isLoading}
+              >
+                {showCreateDemo ? 'Cancel' : 'Need to create demo users?'}
+              </Button>
+              {showCreateDemo && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="w-full bg-green-600 hover:bg-green-700"
+                  onClick={handleCreateDemoUsers}
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Creating...' : 'Create Demo Users'}
+                </Button>
+              )}
+            </div>
+          </CardFooter>
         </Card>
       </div>
     </div>
