@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -141,24 +140,25 @@ export const ConversationList = ({
   return (
     <div className="h-full flex flex-col">
       <div className="p-4 border-b bg-gray-50">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold flex items-center gap-2">
             <MessageSquare className="h-5 w-5" />
             Conversations
           </h2>
-          {profile?.role === 'attorney' && (
-            <Button 
-              size="sm" 
-              variant="ghost"
-              onClick={onStartNewConversation}
-              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          )}
         </div>
-        {profile?.role === 'attorney' && conversations.length === 0 && (
-          <p className="text-xs text-gray-500 mt-1">Click + to start messaging clients</p>
+        
+        {/* Attorney Start Conversation Button - Always Visible */}
+        {profile?.role === 'attorney' && (
+          <div className="mb-2">
+            <Button 
+              onClick={onStartNewConversation}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              size="sm"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Start New Conversation
+            </Button>
+          </div>
         )}
       </div>
       
@@ -169,15 +169,15 @@ export const ConversationList = ({
               <MessageSquare className="h-12 w-12 mx-auto mb-3 text-gray-300" />
               <p className="text-sm">No conversations yet</p>
               {profile?.role === 'attorney' && (
-                <div className="mt-3">
-                  <p className="text-xs mb-2">Start messaging your clients</p>
+                <div className="mt-4">
+                  <p className="text-xs mb-3 text-gray-400">Start messaging your clients to begin</p>
                   <Button 
-                    size="sm" 
                     onClick={onStartNewConversation}
                     className="bg-blue-600 hover:bg-blue-700 text-white"
+                    size="sm"
                   >
-                    <Plus className="h-4 w-4 mr-1" />
-                    New Message
+                    <Plus className="h-4 w-4 mr-2" />
+                    Message a Client
                   </Button>
                 </div>
               )}

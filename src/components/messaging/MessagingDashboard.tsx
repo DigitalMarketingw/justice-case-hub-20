@@ -48,30 +48,6 @@ export const MessagingDashboard = () => {
   // For attorneys and clients, show their direct conversations
   return (
     <div className="h-[calc(100vh-200px)] flex flex-col">
-      {/* Header with Start Conversation button for attorneys */}
-      {profile?.role === 'attorney' && (
-        <div className="p-4 border-b bg-white">
-          <div className="flex gap-2">
-            <Button 
-              onClick={handleStartNewConversation} 
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-              size="sm"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Start New Conversation
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={handleStartNewConversation}
-              size="sm"
-            >
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Message Client
-            </Button>
-          </div>
-        </div>
-      )}
-      
       <div className="flex-1 flex">
         <div className="w-1/3 border-r">
           <ConversationList 
@@ -93,14 +69,15 @@ export const MessagingDashboard = () => {
                 <p className="text-lg mb-2">Select a conversation to start messaging</p>
                 <p className="text-sm mb-4">Choose a conversation from the list to view messages</p>
                 {profile?.role === 'attorney' && (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <p className="text-sm font-medium">Or start a new conversation:</p>
                     <Button 
                       onClick={handleStartNewConversation}
                       className="bg-blue-600 hover:bg-blue-700 text-white"
+                      size="lg"
                     >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Message a Client
+                      <Plus className="h-5 w-5 mr-2" />
+                      Start New Conversation
                     </Button>
                   </div>
                 )}
