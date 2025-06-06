@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { ConversationList } from "./ConversationList";
 import { MessageThread } from "./MessageThread";
@@ -13,19 +13,28 @@ export const MessagingDashboard = () => {
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [showStartDialog, setShowStartDialog] = useState(false);
 
-  console.log('Current user profile:', profile);
-  console.log('Current user:', user);
+  useEffect(() => {
+    console.log('MessagingDashboard - Current user profile:', profile);
+    console.log('MessagingDashboard - Current user:', user);
+    console.log('MessagingDashboard - User role:', profile?.role);
+    console.log('MessagingDashboard - User email:', user?.email);
+  }, [profile, user]);
 
   const handleConversationCreated = (conversationId: string) => {
     setSelectedConversation(conversationId);
   };
 
   const handleStartNewConversation = () => {
+    console.log('Starting new conversation...');
     setShowStartDialog(true);
   };
 
-  // For super admin and firm admin, show overview of all conversations
-  if (profile?.role === 'super_admin' || profile?.role === 'firm_admin' || user?.email === 'superadmin@demo.com') {
+  // Check if user should see admin overview
+  const isAdmin = profile?.role === 'super_admin' || profile?.role === 'firm_admin' || user?.email === 'superadmin@demo.com';
+  console.log('MessagingDashboard - Is admin?', isAdmin);
+
+  // For admin users, show overview of all conversations
+  if (isAdmin) {
     if (selectedConversation) {
       return (
         <div className="h-[calc(100vh-200px)] flex">
@@ -51,7 +60,7 @@ export const MessagingDashboard = () => {
   // For attorneys and clients, show their direct conversations
   return (
     <div className="h-[calc(100vh-200px)] flex flex-col">
-      {/* Always show header for better visibility */}
+      {/* Header with Start Conversation Button for Attorneys */}
       <div className="p-6 border-b bg-white shadow-sm">
         <div className="flex justify-between items-center">
           <div>
@@ -66,14 +75,14 @@ export const MessagingDashboard = () => {
             </p>
           </div>
           
-          {/* Show Start Conversation Button for Attorneys */}
-          {profile?.role === 'attorney' && (
+          {/* Always show Start Conversation Button for Attorneys */}
+          {(profile?.role === 'attorney' || user?.email?.includes('attorney')) && (
             <Button 
               onClick={handleStartNewConversation}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 text-lg font-medium shadow-lg"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 text-lg font-medium shadow-lg flex items-center gap-2"
               size="lg"
             >
-              <Plus className="h-5 w-5 mr-2" />
+              <Plus className="h-5 w-5" />
               Start New Conversation
             </Button>
           )}
@@ -99,23 +108,24 @@ export const MessagingDashboard = () => {
               <div className="text-center max-w-md p-8">
                 <MessageSquare className="h-20 w-20 mx-auto mb-6 text-gray-300" />
                 <h3 className="text-xl font-semibold text-gray-700 mb-3">
-                  {profile?.role === 'attorney' ? 'Start Messaging Your Clients' : 'Your Messages'}
+                  {(profile?.role === 'attorney' || user?.email?.includes('attorney')) ? 'Start Messaging Your Clients' : 'Your Messages'}
                 </h3>
                 <p className="text-gray-500 mb-6">
-                  {profile?.role === 'attorney' 
+                  {(profile?.role === 'attorney' || user?.email?.includes('attorney'))
                     ? 'Select an existing conversation or start a new one with your clients' 
                     : 'Select a conversation from the list to view messages and continue your discussions'
                   }
                 </p>
                 
-                {profile?.role === 'attorney' && (
+                {/* Large Start Conversation Button in Empty State */}
+                {(profile?.role === 'attorney' || user?.email?.includes('attorney')) && (
                   <div className="space-y-4">
                     <Button 
                       onClick={handleStartNewConversation}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg"
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg shadow-lg"
                       size="lg"
                     >
-                      <Plus className="h-5 w-5 mr-2" />
+                      <Plus className="h-6 w-6 mr-2" />
                       Start New Conversation
                     </Button>
                     <div className="flex items-center justify-center text-sm text-gray-400">
