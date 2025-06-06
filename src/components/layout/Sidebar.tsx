@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { 
@@ -132,26 +133,6 @@ export function Sidebar({ className }: SidebarProps) {
 
   const navigation = getNavigationForRole();
 
-  // Determine the title based on user
-  const getTitle = () => {
-    if (user?.email === 'superadmin@demo.com') {
-      return 'Super Admin';
-    }
-    
-    switch (profile?.role) {
-      case 'super_admin':
-        return 'Super Admin';
-      case 'firm_admin':
-        return 'Firm Admin';
-      case 'attorney':
-        return 'Attorney';
-      case 'client':
-        return 'Client Portal';
-      default:
-        return 'LawFirm ERP';
-    }
-  };
-
   // Determine the role label for display
   const getRoleLabel = () => {
     if (user?.email === 'superadmin@demo.com') {
@@ -187,9 +168,6 @@ export function Sidebar({ className }: SidebarProps) {
               alt="LAWerp500 Logo" 
               className="h-6 w-auto"
             />
-            <h1 className="text-xl font-bold">
-              {getTitle()}
-            </h1>
           </div>
         )}
         <Button
