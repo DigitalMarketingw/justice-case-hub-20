@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table";
 import { User, Mail, Phone, Building, MoreHorizontal, RefreshCw } from "lucide-react";
 import { DropClientDialog } from "./DropClientDialog";
+import { TransferClientDialog } from "./TransferClientDialog";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface Client {
@@ -39,6 +40,7 @@ interface ClientsTableProps {
 export function ClientsTable({ clients, loading, onRefresh }: ClientsTableProps) {
   const { profile } = useAuth();
   const isFirmAdmin = profile?.role === 'firm_admin' || profile?.role === 'super_admin';
+  const isSuperAdmin = profile?.role === 'super_admin';
   
   // Filter out dropped clients - they'll be shown in the dropped section
   const activeClients = clients.filter(client => !client.is_dropped);
@@ -164,6 +166,14 @@ export function ClientsTable({ clients, loading, onRefresh }: ClientsTableProps)
                         clientId={client.id}
                         clientName={client.full_name}
                         onClientDropped={onRefresh}
+                      />
+                    )}
+                    {isSuperAdmin && profile?.firm_id && (
+                      <TransferClientDialog
+                        clientId={client.id}
+                        clientName={client.full_name}
+                        currentFirmId={profile.firm_id}
+                        onClientTransferred={onRefresh}
                       />
                     )}
                     <Button variant="ghost" size="sm">

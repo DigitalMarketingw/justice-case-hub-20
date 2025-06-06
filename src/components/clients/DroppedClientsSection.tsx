@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { User, Mail, Calendar, RefreshCw } from "lucide-react";
+import { User, Mail, Calendar, RefreshCw, ArrowRightLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { ReassignClientDialog } from "./ReassignClientDialog";
@@ -17,6 +17,10 @@ interface DroppedClient {
   dropped_date: string;
   dropped_by: string;
   dropper_name: string;
+  transferred_from_firm_id?: string;
+  transferred_date?: string;
+  transferred_by?: string;
+  transferred_firm_name?: string;
 }
 
 interface DroppedClientsSectionProps {
@@ -42,7 +46,7 @@ export function DroppedClientsSection({ onClientReassigned }: DroppedClientsSect
       // First get the dropped clients
       const { data: clients, error: clientsError } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, email, dropped_date, dropped_by')
+        .select('id, first_name, last_name, email, dropped_date, dropped_by, transferred_from_firm_id, transferred_date, transferred_by')
         .eq('role', 'client')
         .eq('firm_id', profile.firm_id)
         .eq('is_dropped', true)
@@ -59,12 +63,26 @@ export function DroppedClientsSection({ onClientReassigned }: DroppedClientsSect
 
       if (droppersError) throw droppersError;
 
+      // Get transferred from firm names
+      const fromFirmIds = [...new Set(clients?.map(c => c.transferred_from_firm_id).filter(Boolean) || [])];
+      let fromFirmsMap = new Map();
+      if (fromFirmIds.length > 0) {
+        const { data: fromFirms, error: fromFirmsError } = await supabase
+          .from('firms')
+          .select('id, name')
+          .in('id', fromFirmIds);
+
+        if (fromFirmsError) throw fromFirmsError;
+        fromFirmsMap = new Map(fromFirms?.map(f => [f.id, f.name]) || []);
+      }
+
       // Map dropper names to clients
       const droppersMap = new Map(droppers?.map(d => [d.id, `${d.first_name} ${d.last_name}`]) || []);
 
       const transformedData: DroppedClient[] = (clients || []).map(client => ({
         ...client,
-        dropper_name: droppersMap.get(client.dropped_by) || 'Unknown'
+        dropper_name: droppersMap.get(client.dropped_by) || 'Unknown',
+        transferred_firm_name: fromFirmsMap.get(client.transferred_from_firm_id) || undefined
       }));
 
       setDroppedClients(transformedData);
@@ -77,6 +95,10 @@ export function DroppedClientsSection({ onClientReassigned }: DroppedClientsSect
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
+  };
+
+  const isTransferredClient = (client: DroppedClient) => {
+    return !!client.transferred_from_firm_id;
   };
 
   if (loading) {
@@ -139,13 +161,24 @@ export function DroppedClientsSection({ onClientReassigned }: DroppedClientsSect
               <TableRow key={client.id} className="hover:bg-gray-50">
                 <TableCell>
                   <div className="flex items-center space-x-3">
-                    <div className="h-10 w-10 bg-red-100 rounded-full flex items-center justify-center">
-                      <User className="h-5 w-5 text-red-600" />
+                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                      isTransferredClient(client) ? 'bg-orange-100' : 'bg-red-100'
+                    }`}>
+                      {isTransferredClient(client) ? (
+                        <ArrowRightLeft className="h-5 w-5 text-orange-600" />
+                      ) : (
+                        <User className="h-5 w-5 text-red-600" />
+                      )}
                     </div>
                     <div>
                       <p className="font-medium text-gray-900">
                         {client.first_name} {client.last_name}
                       </p>
+                      {isTransferredClient(client) && client.transferred_firm_name && (
+                        <p className="text-xs text-orange-600">
+                          Transferred from {client.transferred_firm_name}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </TableCell>
@@ -165,7 +198,13 @@ export function DroppedClientsSection({ onClientReassigned }: DroppedClientsSect
                   {client.dropper_name}
                 </TableCell>
                 <TableCell>
-                  <Badge variant="destructive">Dropped</Badge>
+                  {isTransferredClient(client) ? (
+                    <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+                      Transferred
+                    </Badge>
+                  ) : (
+                    <Badge variant="destructive">Dropped</Badge>
+                  )}
                 </TableCell>
                 <TableCell className="text-right">
                   <ReassignClientDialog

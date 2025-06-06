@@ -7,7 +7,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { Briefcase, Users, Settings, Building } from "lucide-react";
+import { Briefcase, Users, Settings, Building, ArrowRightLeft } from "lucide-react";
 
 const SuperAdminDashboard = () => {
   const { profile, signOut } = useAuth();
@@ -15,6 +15,7 @@ const SuperAdminDashboard = () => {
   const [firmCount, setFirmCount] = useState(0);
   const [userCount, setUserCount] = useState(0);
   const [caseCount, setCaseCount] = useState(0);
+  const [clientCount, setClientCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -45,6 +46,15 @@ const SuperAdminDashboard = () => {
 
         if (caseError) console.error('Error fetching cases:', caseError);
         else setCaseCount(caseCount || 0);
+
+        // Count clients
+        const { count: clientCount, error: clientError } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .eq('role', 'client');
+
+        if (clientError) console.error('Error fetching clients:', clientError);
+        else setClientCount(clientCount || 0);
       } catch (error) {
         console.error('Error fetching stats:', error);
       } finally {
@@ -65,6 +75,10 @@ const SuperAdminDashboard = () => {
 
   const handleNavigateToUsers = () => {
     navigate('/attorneys');
+  };
+
+  const handleNavigateToClients = () => {
+    navigate('/clients');
   };
 
   const handleNavigateToSettings = () => {
@@ -106,19 +120,19 @@ const SuperAdminDashboard = () => {
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Total Cases</CardTitle>
+                <CardTitle className="text-sm font-medium">Total Clients</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{loading ? '...' : caseCount}</div>
+                <div className="text-2xl font-bold">{loading ? '...' : clientCount}</div>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Active Firms</CardTitle>
+                <CardTitle className="text-sm font-medium">Total Cases</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{loading ? '...' : firmCount}</div>
+                <div className="text-2xl font-bold">{loading ? '...' : caseCount}</div>
               </CardContent>
             </Card>
           </div>
@@ -135,6 +149,20 @@ const SuperAdminDashboard = () => {
               <CardContent>
                 <p className="text-gray-600 mb-4">Create new firms and assign firm administrators.</p>
                 <Button onClick={handleNavigateToFirms}>Manage Firms</Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ArrowRightLeft className="h-5 w-5" />
+                  Client Management
+                </CardTitle>
+                <CardDescription>View and transfer clients between firms</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600 mb-4">Monitor clients across all firms and transfer them when needed.</p>
+                <Button onClick={handleNavigateToClients}>Manage Clients</Button>
               </CardContent>
             </Card>
 

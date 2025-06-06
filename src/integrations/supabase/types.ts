@@ -305,6 +305,68 @@ export type Database = {
           },
         ]
       }
+      client_transfers: {
+        Row: {
+          client_id: string
+          created_at: string | null
+          from_firm_id: string | null
+          id: string
+          reason: string | null
+          to_firm_id: string
+          transferred_by: string
+          transferred_date: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string | null
+          from_firm_id?: string | null
+          id?: string
+          reason?: string | null
+          to_firm_id: string
+          transferred_by: string
+          transferred_date?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string | null
+          from_firm_id?: string | null
+          id?: string
+          reason?: string | null
+          to_firm_id?: string
+          transferred_by?: string
+          transferred_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_transfers_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_transfers_from_firm_id_fkey"
+            columns: ["from_firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_transfers_to_firm_id_fkey"
+            columns: ["to_firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_transfers_transferred_by_fkey"
+            columns: ["transferred_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           address: string | null
@@ -681,6 +743,9 @@ export type Database = {
           last_name: string | null
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
+          transferred_by: string | null
+          transferred_date: string | null
+          transferred_from_firm_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -697,6 +762,9 @@ export type Database = {
           last_name?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          transferred_by?: string | null
+          transferred_date?: string | null
+          transferred_from_firm_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -713,6 +781,9 @@ export type Database = {
           last_name?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          transferred_by?: string | null
+          transferred_date?: string | null
+          transferred_from_firm_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -733,6 +804,20 @@ export type Database = {
           {
             foreignKeyName: "profiles_firm_id_fkey"
             columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_transferred_by_fkey"
+            columns: ["transferred_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_transferred_from_firm_id_fkey"
+            columns: ["transferred_from_firm_id"]
             isOneToOne: false
             referencedRelation: "firms"
             referencedColumns: ["id"]
