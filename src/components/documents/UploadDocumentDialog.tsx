@@ -13,9 +13,9 @@ import { useToast } from "@/hooks/use-toast";
 
 interface Client {
   id: string;
-  full_name: string;
+  first_name: string;
+  last_name: string;
   email: string;
-  company_name?: string;
 }
 
 interface UploadDocumentDialogProps {
@@ -53,9 +53,10 @@ export function UploadDocumentDialog({
   useEffect(() => {
     const fetchClients = async () => {
       const { data, error } = await supabase
-        .from('clients')
-        .select('id, full_name, email, company_name')
-        .order('full_name');
+        .from('profiles')
+        .select('id, first_name, last_name, email')
+        .eq('role', 'client')
+        .order('first_name');
 
       if (error) {
         console.error('Error fetching clients:', error);
@@ -128,14 +129,13 @@ export function UploadDocumentDialog({
       const { error: dbError } = await supabase
         .from('documents')
         .insert({
-          user_id: user.id,
+          uploaded_by: user.id,
           client_id: selectedClientId,
-          file_name: file.name,
+          name: file.name,
           file_size: file.size,
-          file_type: file.type,
+          mime_type: file.type,
           file_path: filePath,
           description: description.trim() || null,
-          tags: tags.length > 0 ? tags : null
         });
 
       if (dbError) {
@@ -211,10 +211,8 @@ export function UploadDocumentDialog({
                 {clients.map((client) => (
                   <SelectItem key={client.id} value={client.id}>
                     <div>
-                      <div className="font-medium">{client.full_name}</div>
-                      <div className="text-sm text-gray-600">
-                        {client.company_name ? `${client.company_name} • ${client.email}` : client.email}
-                      </div>
+                      <div className="font-medium">{client.first_name} {client.last_name}</div>
+                      <div className="text-sm text-gray-600">{client.email}</div>
                     </div>
                   </SelectItem>
                 ))}

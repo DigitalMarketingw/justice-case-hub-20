@@ -14,12 +14,12 @@ import { Badge } from "@/components/ui/badge";
 
 interface Document {
   id: string;
-  file_name: string;
-  file_type: string;
+  name: string;
   file_size: number;
-  upload_date: string;
+  mime_type: string;
+  created_at: string;
   description?: string;
-  tags?: string[];
+  file_path?: string;
 }
 
 interface CaseDocumentsDialogProps {
@@ -39,7 +39,7 @@ export function CaseDocumentsDialog({
   const [loading, setLoading] = useState(false);
   const [caseInfo, setCaseInfo] = useState<{
     title: string;
-    casenumber: string;
+    case_number: string;
     client_name: string;
   } | null>(null);
 
@@ -55,7 +55,7 @@ export function CaseDocumentsDialog({
       // Get case info
       const { data: caseData, error: caseError } = await supabase
         .from('cases')
-        .select('title, casenumber')
+        .select('title, case_number')
         .eq('id', caseId)
         .single();
 
@@ -64,10 +64,10 @@ export function CaseDocumentsDialog({
         return;
       }
 
-      // Get client info
+      // Get client info from profiles
       const { data: clientData, error: clientError } = await supabase
-        .from('clients')
-        .select('full_name')
+        .from('profiles')
+        .select('first_name, last_name')
         .eq('id', clientId)
         .single();
 
@@ -78,8 +78,8 @@ export function CaseDocumentsDialog({
 
       setCaseInfo({
         title: caseData?.title || '',
-        casenumber: caseData?.casenumber || '',
-        client_name: clientData?.full_name || ''
+        case_number: caseData?.case_number || '',
+        client_name: clientData ? `${clientData.first_name} ${clientData.last_name}` : ''
       });
     } catch (error) {
       console.error('Error fetching case info:', error);
@@ -91,9 +91,9 @@ export function CaseDocumentsDialog({
       setLoading(true);
       const { data, error } = await supabase
         .from('documents')
-        .select('*')
+        .select('id, name, file_size, mime_type, created_at, description, file_path')
         .eq('client_id', clientId)
-        .order('upload_date', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching documents:', error);
@@ -110,9 +110,11 @@ export function CaseDocumentsDialog({
 
   const handleDownload = async (document: Document) => {
     try {
+      if (!document.file_path) return;
+      
       const { data, error } = await supabase.storage
         .from('documents')
-        .download(document.file_name);
+        .download(document.file_path);
 
       if (error) {
         console.error('Error downloading file:', error);
@@ -123,7 +125,7 @@ export function CaseDocumentsDialog({
       const url = URL.createObjectURL(data);
       const a = window.document.createElement('a');
       a.href = url;
-      a.download = document.file_name;
+      a.download = document.name;
       window.document.body.appendChild(a);
       a.click();
       window.document.body.removeChild(a);
@@ -135,9 +137,11 @@ export function CaseDocumentsDialog({
 
   const handleView = async (document: Document) => {
     try {
+      if (!document.file_path) return;
+      
       const { data, error } = await supabase.storage
         .from('documents')
-        .createSignedUrl(document.file_name, 3600); // 1 hour expiry
+        .createSignedUrl(document.file_path, 3600); // 1 hour expiry
 
       if (error) {
         console.error('Error creating signed URL:', error);
@@ -168,7 +172,7 @@ export function CaseDocumentsDialog({
           <DialogDescription>
             {caseInfo ? (
               <>
-                <strong>Case:</strong> {caseInfo.title} ({caseInfo.casenumber})
+                <strong>Case:</strong> {caseInfo.title} ({caseInfo.case_number})
                 <br />
                 <strong>Client:</strong> {caseInfo.client_name}
               </>
@@ -201,23 +205,14 @@ export function CaseDocumentsDialog({
                     <div className="flex items-center space-x-3">
                       <FileText className="h-8 w-8 text-blue-500" />
                       <div>
-                        <h4 className="font-medium">{doc.file_name}</h4>
+                        <h4 className="font-medium">{doc.name}</h4>
                         <div className="flex items-center space-x-2 text-sm text-gray-500">
                           <span>{formatFileSize(doc.file_size)}</span>
                           <span>•</span>
-                          <span>{new Date(doc.upload_date).toLocaleDateString()}</span>
+                          <span>{new Date(doc.created_at).toLocaleDateString()}</span>
                         </div>
                         {doc.description && (
                           <p className="text-sm text-gray-600 mt-1">{doc.description}</p>
-                        )}
-                        {doc.tags && doc.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {doc.tags.map((tag, index) => (
-                              <Badge key={index} variant="secondary" className="text-xs">
-                                {tag}
-                              </Badge>
-                            ))}
-                          </div>
                         )}
                       </div>
                     </div>

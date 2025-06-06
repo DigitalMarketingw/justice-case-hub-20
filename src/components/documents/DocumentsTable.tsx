@@ -1,55 +1,110 @@
+
 import { useState, useEffect } from "react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Trash2, FileText } from "lucide-react";
+import { FileText, Download, Eye, MoreHorizontal } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface DocumentFile {
   id: string;
-  file_name: string;
+  name: string;
   file_size: number;
-  file_type: string;
-  file_path: string;
-  upload_date: string;
+  mime_type: string;
+  created_at: string;
   description?: string;
-  tags?: string[];
-  client: {
-    full_name: string;
-    email: string;
-  };
+  client_name?: string;
+  file_path?: string;
 }
 
-export function DocumentsTable() {
+interface DocumentsTableProps {
+  searchTerm: string;
+  selectedClient: string;
+  refreshTrigger: number;
+}
+
+export function DocumentsTable({ searchTerm, selectedClient, refreshTrigger }: DocumentsTableProps) {
   const [documents, setDocuments] = useState<DocumentFile[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchDocuments = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      let query = supabase
         .from('documents')
-        .select(`
-          id,
-          file_name,
-          file_size,
-          file_type,
-          file_path,
-          upload_date,
-          description,
-          tags,
-          client:clients(full_name, email)
-        `)
-        .order('upload_date', { ascending: false });
+        .select('id, name, file_size, mime_type, created_at, description, file_path, client_id')
+        .order('created_at', { ascending: false });
+
+      if (selectedClient) {
+        query = query.eq('client_id', selectedClient);
+      }
+
+      const { data: documentsData, error } = await query;
 
       if (error) {
         console.error('Error fetching documents:', error);
+        setDocuments([]);
         return;
       }
 
-      setDocuments(data || []);
+      if (!documentsData || documentsData.length === 0) {
+        setDocuments([]);
+        return;
+      }
+
+      // Get client names from profiles
+      const clientIds = [...new Set(documentsData.map(doc => doc.client_id).filter(Boolean))];
+      let clientsData: any[] = [];
+      
+      if (clientIds.length > 0) {
+        const { data, error: clientsError } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name')
+          .in('id', clientIds);
+
+        if (!clientsError) {
+          clientsData = data || [];
+        }
+      }
+
+      // Combine documents with client names
+      const documentsWithClients = documentsData.map(doc => {
+        const client = clientsData.find(c => c.id === doc.client_id);
+        return {
+          ...doc,
+          client_name: client ? `${client.first_name} ${client.last_name}` : 'Unknown Client'
+        };
+      });
+
+      // Apply search filter
+      let filteredDocuments = documentsWithClients;
+      if (searchTerm) {
+        filteredDocuments = documentsWithClients.filter(doc =>
+          doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (doc.description && doc.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (doc.client_name && doc.client_name.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+      }
+
+      setDocuments(filteredDocuments);
     } catch (error) {
       console.error('Error:', error);
+      setDocuments([]);
     } finally {
       setLoading(false);
     }
@@ -57,63 +112,7 @@ export function DocumentsTable() {
 
   useEffect(() => {
     fetchDocuments();
-  }, []);
-
-  const handleDownloadDocument = async (document: DocumentFile) => {
-    try {
-      const { data, error } = await supabase.storage
-        .from('documents')
-        .download(document.file_path);
-
-      if (error) {
-        console.error('Error downloading file:', error);
-        return;
-      }
-
-      const url = window.URL.createObjectURL(data);
-      const a = window.document.createElement('a');
-      a.href = url;
-      a.download = document.file_name;
-      window.document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      window.document.body.removeChild(a);
-    } catch (error) {
-      console.error('Error downloading document:', error);
-    }
-  };
-
-  const handleDeleteDocument = async (documentId: string, filePath: string) => {
-    if (!confirm('Are you sure you want to delete this document?')) return;
-
-    try {
-      // Delete from storage
-      const { error: storageError } = await supabase.storage
-        .from('documents')
-        .remove([filePath]);
-
-      if (storageError) {
-        console.error('Error deleting from storage:', storageError);
-        return;
-      }
-
-      // Delete from database
-      const { error: dbError } = await supabase
-        .from('documents')
-        .delete()
-        .eq('id', documentId);
-
-      if (dbError) {
-        console.error('Error deleting from database:', dbError);
-        return;
-      }
-
-      // Refresh the data
-      fetchDocuments();
-    } catch (error) {
-      console.error('Error deleting document:', error);
-    }
-  };
+  }, [searchTerm, selectedClient, refreshTrigger]);
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
@@ -123,26 +122,46 @@ export function DocumentsTable() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  const getFileTypeColor = (mimeType: string) => {
+    if (mimeType?.includes('pdf')) return 'bg-red-100 text-red-800';
+    if (mimeType?.includes('image')) return 'bg-green-100 text-green-800';
+    if (mimeType?.includes('word') || mimeType?.includes('document')) return 'bg-blue-100 text-blue-800';
+    return 'bg-gray-100 text-gray-800';
+  };
+
+  const handleDownload = async (document: DocumentFile) => {
+    try {
+      if (!document.file_path) return;
+      
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .download(document.file_path);
+
+      if (error) {
+        console.error('Error downloading file:', error);
+        return;
+      }
+
+      // Create download link
+      const url = URL.createObjectURL(data);
+      const a = window.document.createElement('a');
+      a.href = url;
+      a.download = document.name;
+      window.document.body.appendChild(a);
+      a.click();
+      window.document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading document:', error);
+    }
   };
 
   if (loading) {
-    return <div className="flex justify-center p-8">Loading documents...</div>;
-  }
-
-  if (documents.length === 0) {
     return (
-      <div className="text-center p-8">
-        <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-        <h3 className="text-lg font-medium mb-2">No documents found</h3>
-        <p className="text-gray-600">Upload your first document to get started.</p>
+      <div className="space-y-4">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="h-16 bg-gray-100 rounded animate-pulse" />
+        ))}
       </div>
     );
   }
@@ -151,70 +170,67 @@ export function DocumentsTable() {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Document Name</TableHead>
+          <TableHead>Document</TableHead>
           <TableHead>Client</TableHead>
           <TableHead>Type</TableHead>
           <TableHead>Size</TableHead>
           <TableHead>Upload Date</TableHead>
-          <TableHead>Tags</TableHead>
           <TableHead>Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        {documents.map((document) => (
-          <TableRow key={document.id}>
-            <TableCell>
-              <div>
-                <p className="font-medium">{document.file_name}</p>
-                {document.description && (
-                  <p className="text-sm text-gray-600">{document.description}</p>
-                )}
-              </div>
-            </TableCell>
-            <TableCell>
-              <div>
-                <p className="font-medium">{document.client.full_name}</p>
-                <p className="text-sm text-gray-600">{document.client.email}</p>
-              </div>
-            </TableCell>
-            <TableCell>
-              <Badge variant="outline">{document.file_type}</Badge>
-            </TableCell>
-            <TableCell>{formatFileSize(document.file_size)}</TableCell>
-            <TableCell>{formatDate(document.upload_date)}</TableCell>
-            <TableCell>
-              {document.tags && document.tags.length > 0 ? (
-                <div className="flex gap-1 flex-wrap">
-                  {document.tags.map((tag, index) => (
-                    <Badge key={index} variant="secondary" className="text-xs">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              ) : (
-                <span className="text-gray-400">No tags</span>
-              )}
-            </TableCell>
-            <TableCell>
-              <div className="flex space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDownloadDocument(document)}
-                >
-                  <Download className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDeleteDocument(document.id, document.file_path)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
+        {documents.length === 0 ? (
+          <TableRow>
+            <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+              No documents found
             </TableCell>
           </TableRow>
-        ))}
+        ) : (
+          documents.map((doc) => (
+            <TableRow key={doc.id}>
+              <TableCell>
+                <div className="flex items-center space-x-3">
+                  <FileText className="h-8 w-8 text-blue-500" />
+                  <div>
+                    <div className="font-medium">{doc.name}</div>
+                    {doc.description && (
+                      <div className="text-sm text-gray-500">{doc.description}</div>
+                    )}
+                  </div>
+                </div>
+              </TableCell>
+              <TableCell>{doc.client_name}</TableCell>
+              <TableCell>
+                <Badge className={getFileTypeColor(doc.mime_type)}>
+                  {doc.mime_type?.split('/')[1]?.toUpperCase() || 'Unknown'}
+                </Badge>
+              </TableCell>
+              <TableCell>{formatFileSize(doc.file_size)}</TableCell>
+              <TableCell>
+                {format(new Date(doc.created_at), 'MMM dd, yyyy')}
+              </TableCell>
+              <TableCell>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => handleDownload(doc)}>
+                      <Download className="mr-2 h-4 w-4" />
+                      Download
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Eye className="mr-2 h-4 w-4" />
+                      View
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TableCell>
+            </TableRow>
+          ))
+        )}
       </TableBody>
     </Table>
   );

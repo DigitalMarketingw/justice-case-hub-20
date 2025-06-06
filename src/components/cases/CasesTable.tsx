@@ -24,13 +24,13 @@ import { CaseDocumentsDialog } from "./CaseDocumentsDialog";
 interface Case {
   id: string;
   title: string;
-  casenumber: string;
+  case_number: string;
   status: string;
-  casetype: string;
+  case_type: string;
   description?: string;
-  opendate: string;
-  courtdate?: string;
-  clientid: string;
+  created_at: string;
+  court_date?: string;
+  client_id: string;
   client_name?: string;
   client_email?: string;
 }
@@ -54,10 +54,10 @@ export function CasesTable({ searchTerm }: CasesTableProps) {
       let casesQuery = supabase
         .from('cases')
         .select('*')
-        .order('opendate', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (searchTerm) {
-        casesQuery = casesQuery.or(`title.ilike.%${searchTerm}%,casenumber.ilike.%${searchTerm}%`);
+        casesQuery = casesQuery.or(`title.ilike.%${searchTerm}%,case_number.ilike.%${searchTerm}%`);
       }
 
       const { data: casesData, error: casesError } = await casesQuery;
@@ -72,25 +72,29 @@ export function CasesTable({ searchTerm }: CasesTableProps) {
         return;
       }
 
-      // Get client details for each case
-      const clientIds = casesData.map(c => c.clientid);
+      // Get client details for each case from profiles
+      const clientIds = casesData.map(c => c.client_id);
       const { data: clientsData, error: clientsError } = await supabase
-        .from('clients')
-        .select('id, full_name, email')
+        .from('profiles')
+        .select('id, first_name, last_name, email')
         .in('id', clientIds);
 
       if (clientsError) {
         console.error('Error fetching clients:', clientsError);
-        setCases(casesData.map(caseItem => ({ ...caseItem, client_name: 'Unknown', client_email: '' })));
+        setCases(casesData.map(caseItem => ({ 
+          ...caseItem, 
+          client_name: 'Unknown', 
+          client_email: '' 
+        })));
         return;
       }
 
       // Combine cases with client data
       const casesWithClients = casesData.map(caseItem => {
-        const client = clientsData?.find(c => c.id === caseItem.clientid);
+        const client = clientsData?.find(c => c.id === caseItem.client_id);
         return {
           ...caseItem,
-          client_name: client?.full_name || 'Unknown',
+          client_name: client ? `${client.first_name} ${client.last_name}` : 'Unknown',
           client_email: client?.email || ''
         };
       });
@@ -100,7 +104,7 @@ export function CasesTable({ searchTerm }: CasesTableProps) {
       if (searchTerm) {
         filteredCases = casesWithClients.filter(caseItem => 
           caseItem.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          caseItem.casenumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          caseItem.case_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
           (caseItem.client_name && caseItem.client_name.toLowerCase().includes(searchTerm.toLowerCase()))
         );
       }
@@ -155,7 +159,7 @@ export function CasesTable({ searchTerm }: CasesTableProps) {
             <TableHead>Client</TableHead>
             <TableHead>Type</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Open Date</TableHead>
+            <TableHead>Created Date</TableHead>
             <TableHead>Court Date</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
@@ -171,27 +175,27 @@ export function CasesTable({ searchTerm }: CasesTableProps) {
             cases.map((caseItem) => (
               <TableRow key={caseItem.id}>
                 <TableCell className="font-medium">{caseItem.title}</TableCell>
-                <TableCell>{caseItem.casenumber}</TableCell>
+                <TableCell>{caseItem.case_number}</TableCell>
                 <TableCell>
                   <div>
                     <div className="font-medium">{caseItem.client_name}</div>
                     <div className="text-sm text-gray-500">{caseItem.client_email}</div>
                   </div>
                 </TableCell>
-                <TableCell className="capitalize">{caseItem.casetype}</TableCell>
+                <TableCell className="capitalize">{caseItem.case_type}</TableCell>
                 <TableCell>
                   <Badge className={getStatusBadge(caseItem.status)}>
                     {caseItem.status.replace('_', ' ')}
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  {format(new Date(caseItem.opendate), 'MMM dd, yyyy')}
+                  {format(new Date(caseItem.created_at), 'MMM dd, yyyy')}
                 </TableCell>
                 <TableCell>
-                  {caseItem.courtdate ? (
+                  {caseItem.court_date ? (
                     <div className="flex items-center">
                       <Calendar className="h-4 w-4 mr-1 text-gray-500" />
-                      {format(new Date(caseItem.courtdate), 'MMM dd, yyyy')}
+                      {format(new Date(caseItem.court_date), 'MMM dd, yyyy')}
                     </div>
                   ) : (
                     <span className="text-gray-400">Not scheduled</span>
@@ -205,7 +209,7 @@ export function CasesTable({ searchTerm }: CasesTableProps) {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleViewDocuments(caseItem.id, caseItem.clientid)}>
+                      <DropdownMenuItem onClick={() => handleViewDocuments(caseItem.id, caseItem.client_id)}>
                         <FileText className="mr-2 h-4 w-4" />
                         View Documents
                       </DropdownMenuItem>
