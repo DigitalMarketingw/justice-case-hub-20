@@ -1,10 +1,12 @@
+
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { User, MessageSquare } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { User, MessageSquare, Plus } from "lucide-react";
 
 interface Conversation {
   id: string;
@@ -20,9 +22,14 @@ interface Conversation {
 interface ConversationListProps {
   onSelectConversation: (conversationId: string) => void;
   selectedConversation: string | null;
+  onStartNewConversation?: () => void;
 }
 
-export const ConversationList = ({ onSelectConversation, selectedConversation }: ConversationListProps) => {
+export const ConversationList = ({ 
+  onSelectConversation, 
+  selectedConversation,
+  onStartNewConversation 
+}: ConversationListProps) => {
   const { user, profile } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -133,20 +140,48 @@ export const ConversationList = ({ onSelectConversation, selectedConversation }:
 
   return (
     <div className="h-full flex flex-col">
-      <div className="p-4 border-b">
-        <h2 className="text-lg font-semibold flex items-center gap-2">
-          <MessageSquare className="h-5 w-5" />
-          Conversations
-        </h2>
+      <div className="p-4 border-b bg-gray-50">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <MessageSquare className="h-5 w-5" />
+            Conversations
+          </h2>
+          {profile?.role === 'attorney' && (
+            <Button 
+              size="sm" 
+              variant="ghost"
+              onClick={onStartNewConversation}
+              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+        {profile?.role === 'attorney' && conversations.length === 0 && (
+          <p className="text-xs text-gray-500 mt-1">Click + to start messaging clients</p>
+        )}
       </div>
       
       <div className="flex-1 overflow-y-auto">
         {conversations.length === 0 ? (
           <div className="p-4 text-center text-gray-500">
-            <p>No conversations yet</p>
-            {profile?.role === 'attorney' && (
-              <p className="text-sm mt-1">Start a new conversation with a client</p>
-            )}
+            <div className="py-8">
+              <MessageSquare className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+              <p className="text-sm">No conversations yet</p>
+              {profile?.role === 'attorney' && (
+                <div className="mt-3">
+                  <p className="text-xs mb-2">Start messaging your clients</p>
+                  <Button 
+                    size="sm" 
+                    onClick={onStartNewConversation}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    New Message
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <div className="p-2 space-y-2">
@@ -154,7 +189,7 @@ export const ConversationList = ({ onSelectConversation, selectedConversation }:
               <Card 
                 key={conversation.id}
                 className={`cursor-pointer hover:bg-gray-50 transition-colors ${
-                  selectedConversation === conversation.id ? 'ring-2 ring-blue-500' : ''
+                  selectedConversation === conversation.id ? 'ring-2 ring-blue-500 bg-blue-50' : ''
                 }`}
                 onClick={() => onSelectConversation(conversation.id)}
               >
