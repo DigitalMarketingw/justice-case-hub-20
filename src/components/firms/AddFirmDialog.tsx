@@ -9,12 +9,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 interface AddFirmDialogProps {
-  onFirmAdded: () => void;
+  onFirmAdded?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function AddFirmDialog({ onFirmAdded }: AddFirmDialogProps) {
+export function AddFirmDialog({ onFirmAdded, open, onOpenChange }: AddFirmDialogProps) {
   const { toast } = useToast();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -23,6 +25,10 @@ export function AddFirmDialog({ onFirmAdded }: AddFirmDialogProps) {
     address: "",
     website: "",
   });
+
+  const isControlled = open !== undefined && onOpenChange !== undefined;
+  const isOpen = isControlled ? open : internalOpen;
+  const setIsOpen = isControlled ? onOpenChange : setInternalOpen;
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -69,8 +75,8 @@ export function AddFirmDialog({ onFirmAdded }: AddFirmDialogProps) {
         address: "",
         website: "",
       });
-      setOpen(false);
-      onFirmAdded();
+      setIsOpen(false);
+      onFirmAdded?.();
 
     } catch (error: any) {
       console.error('Error creating firm:', error);
@@ -85,7 +91,7 @@ export function AddFirmDialog({ onFirmAdded }: AddFirmDialogProps) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button>
           <Plus className="mr-2 h-4 w-4" />

@@ -106,21 +106,29 @@ const AttorneyDashboard = () => {
               <StatsCard
                 title="Total Clients"
                 value={loading ? "..." : stats.totalClients.toString()}
+                change="+5% from last month"
+                trend="up"
                 icon={Users}
               />
               <StatsCard
                 title="Active Cases"
                 value={loading ? "..." : stats.activeCases.toString()}
+                change="+2% from last month"
+                trend="up"
                 icon={FileText}
               />
               <StatsCard
                 title="Upcoming Events"
                 value={loading ? "..." : stats.upcomingEvents.toString()}
+                change="No change"
+                trend="neutral"
                 icon={Calendar}
               />
               <StatsCard
                 title="Monthly Revenue"
                 value={loading ? "..." : `$${stats.monthlyRevenue.toLocaleString()}`}
+                change="+12% from last month"
+                trend="up"
                 icon={DollarSign}
               />
             </div>

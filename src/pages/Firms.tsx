@@ -14,6 +14,15 @@ function Firms() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddFirmDialogOpen, setIsAddFirmDialogOpen] = useState(false);
   const [isAddAdminDialogOpen, setIsAddAdminDialogOpen] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const handleFirmAdded = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
+
+  const handleAdminAdded = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
 
   return (
     <SidebarProvider>
@@ -58,11 +67,13 @@ function Firms() {
           <AddFirmDialog 
             open={isAddFirmDialogOpen} 
             onOpenChange={setIsAddFirmDialogOpen}
+            onFirmAdded={handleFirmAdded}
           />
           
           <AddFirmAdminDialog 
             open={isAddAdminDialogOpen} 
             onOpenChange={setIsAddAdminDialogOpen}
+            onAdminAdded={handleAdminAdded}
           />
         </main>
       </div>
