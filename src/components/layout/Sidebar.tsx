@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { 
@@ -68,16 +67,25 @@ const clientNavigation = [
 
 export function Sidebar({ className }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut, user, profile, loading } = useAuth();
 
   const handleSignOut = async () => {
+    if (isLoggingOut) return; // Prevent multiple logout attempts
+    
+    setIsLoggingOut(true);
+    console.log('Sidebar: Starting logout process for user:', user?.email);
+    
     try {
       await signOut();
-      navigate("/auth");
+      console.log('Sidebar: Logout successful, navigating to auth');
+      navigate("/auth", { replace: true });
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error('Sidebar: Error during logout:', error);
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
@@ -244,10 +252,11 @@ export function Sidebar({ className }: SidebarProps) {
             variant="ghost"
             size="sm"
             onClick={handleSignOut}
-            className="w-full justify-start text-slate-300 hover:bg-slate-800 hover:text-white"
+            disabled={isLoggingOut}
+            className="w-full justify-start text-slate-300 hover:bg-slate-800 hover:text-white disabled:opacity-50"
           >
             <LogOut className="h-4 w-4 mr-2" />
-            {!isCollapsed && "Sign Out"}
+            {!isCollapsed && (isLoggingOut ? "Signing Out..." : "Sign Out")}
           </Button>
         )}
       </div>

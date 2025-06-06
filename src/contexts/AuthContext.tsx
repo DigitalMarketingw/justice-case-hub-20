@@ -134,17 +134,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [fetchUserProfile]);
 
   const handleSignOut = async () => {
-    console.log('Starting sign out process');
+    console.log('AuthContext: Starting sign out process for user:', user?.email);
+    
     try {
-      // Clear state immediately to prevent stuck loading
-      setProfile(null);
+      // Clear state immediately to provide visual feedback
       setLoading(true);
       
+      // Call the auth sign out
       await authSignOut(setProfile);
       
-      // The auth state change handler will handle the rest
+      // Force clear all state (the auth state change handler should handle this, but being extra safe)
+      setSession(null);
+      setUser(null);
+      setProfile(null);
+      
+      console.log('AuthContext: Sign out completed successfully');
     } catch (error) {
-      console.error('Error during sign out:', error);
+      console.error('AuthContext: Error during sign out:', error);
       // Force clear state even if sign out fails
       setSession(null);
       setUser(null);
