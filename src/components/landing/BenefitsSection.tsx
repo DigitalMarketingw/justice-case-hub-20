@@ -22,7 +22,7 @@ const BenefitsSection = ({ onLoginClick }: BenefitsSectionProps) => {
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div>
             <h2 className="text-4xl font-bold text-white mb-8">
-              Why Law Firms Choose JusticeHub
+              Why Law Firms Choose LAWerp500
             </h2>
             <div className="space-y-6">
               {benefits.map((benefit, index) => (
@@ -40,7 +40,7 @@ const BenefitsSection = ({ onLoginClick }: BenefitsSectionProps) => {
               <CardHeader>
                 <CardTitle className="text-2xl mb-4">Ready to Transform Your Practice?</CardTitle>
                 <CardDescription className="text-gray-300 text-lg">
-                  Join hundreds of law firms already using JusticeHub to streamline their operations.
+                  Join hundreds of law firms already using LAWerp500 to streamline their operations.
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-6">

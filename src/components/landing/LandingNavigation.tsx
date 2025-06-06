@@ -12,7 +12,7 @@ const LandingNavigation = ({ onLoginClick }: LandingNavigationProps) => {
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         <div className="flex items-center space-x-2">
           <Scale className="h-8 w-8 text-blue-400" />
-          <span className="text-2xl font-bold text-white">JusticeHub</span>
+          <span className="text-2xl font-bold text-white">LAWerp500</span>
         </div>
         <Button 
           onClick={onLoginClick}

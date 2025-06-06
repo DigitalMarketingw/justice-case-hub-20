@@ -130,7 +130,7 @@ const Auth = () => {
       <div className="w-full max-w-md">
         <Card>
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold">Law Firm Management</CardTitle>
+            <CardTitle className="text-2xl font-bold">LAWerp500</CardTitle>
             <CardDescription>Login to access your dashboard</CardDescription>
           </CardHeader>
           
