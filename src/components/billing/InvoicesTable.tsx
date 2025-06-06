@@ -11,15 +11,15 @@ import { format } from "date-fns";
 interface Invoice {
   id: string;
   invoice_number: string;
-  invoice_date: string;
+  created_at: string;
   due_date: string;
   status: string;
-  subtotal: number;
-  tax_rate: number;
+  amount: number;
   tax_amount: number;
   total_amount: number;
   client: {
-    full_name: string;
+    first_name: string;
+    last_name: string;
   };
 }
 
@@ -41,10 +41,9 @@ export function InvoicesTable() {
         .from('invoices')
         .select(`
           *,
-          client:clients(full_name)
+          client:profiles!invoices_client_id_fkey(first_name, last_name)
         `)
-        .eq('user_id', user.id)
-        .order('invoice_date', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       setInvoices(data || []);
@@ -111,25 +110,25 @@ export function InvoicesTable() {
 </head>
 <body>
     <div class="header">
-        <h1>LawFirm ERP</h1>
+        <h1>LAWerp500</h1>
         <h2>Invoice</h2>
     </div>
     
     <div class="invoice-details">
         <p><strong>Invoice Number:</strong> ${invoice.invoice_number}</p>
-        <p><strong>Invoice Date:</strong> ${format(new Date(invoice.invoice_date), 'MMM dd, yyyy')}</p>
+        <p><strong>Invoice Date:</strong> ${format(new Date(invoice.created_at), 'MMM dd, yyyy')}</p>
         <p><strong>Due Date:</strong> ${format(new Date(invoice.due_date), 'MMM dd, yyyy')}</p>
         <p><strong>Status:</strong> ${invoice.status.toUpperCase()}</p>
     </div>
     
     <div class="client-details">
         <h3>Bill To:</h3>
-        <p>${invoice.client.full_name}</p>
+        <p>${invoice.client.first_name} ${invoice.client.last_name}</p>
     </div>
     
     <div class="totals">
-        <p>Subtotal: $${invoice.subtotal.toFixed(2)}</p>
-        ${invoice.tax_rate > 0 ? `<p>Tax (${invoice.tax_rate}%): $${invoice.tax_amount.toFixed(2)}</p>` : ''}
+        <p>Subtotal: $${invoice.amount.toFixed(2)}</p>
+        ${invoice.tax_amount > 0 ? `<p>Tax: $${invoice.tax_amount.toFixed(2)}</p>` : ''}
         <p class="total-row">Total: $${invoice.total_amount.toFixed(2)}</p>
     </div>
 </body>
@@ -176,8 +175,13 @@ export function InvoicesTable() {
             invoices.map((invoice) => (
               <TableRow key={invoice.id}>
                 <TableCell className="font-medium">{invoice.invoice_number}</TableCell>
-                <TableCell>{invoice.client?.full_name}</TableCell>
-                <TableCell>{format(new Date(invoice.invoice_date), 'MMM dd, yyyy')}</TableCell>
+                <TableCell>
+                  {invoice.client ? 
+                    `${invoice.client.first_name} ${invoice.client.last_name}` : 
+                    'Unknown Client'
+                  }
+                </TableCell>
+                <TableCell>{format(new Date(invoice.created_at), 'MMM dd, yyyy')}</TableCell>
                 <TableCell>{format(new Date(invoice.due_date), 'MMM dd, yyyy')}</TableCell>
                 <TableCell>
                   <Badge variant={getStatusColor(invoice.status)}>

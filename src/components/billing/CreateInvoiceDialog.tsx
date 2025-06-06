@@ -21,18 +21,23 @@ interface FormData {
 
 interface Client {
   id: string;
-  full_name: string;
+  first_name: string;
+  last_name: string;
 }
 
-interface BillableHour {
+interface BillingEntry {
   id: string;
   description: string;
   hours_worked: number;
   hourly_rate: number;
   total_amount: number;
-  work_date: string;
-  client: {
-    full_name: string;
+  date_worked: string;
+  case: {
+    title: string;
+    client: {
+      first_name: string;
+      last_name: string;
+    };
   };
 }
 
@@ -40,14 +45,14 @@ export function CreateInvoiceDialog() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
-  const [unbilledHours, setUnbilledHours] = useState<BillableHour[]>([]);
+  const [unbilledHours, setUnbilledHours] = useState<BillingEntry[]>([]);
   const [selectedClient, setSelectedClient] = useState<string>("");
   const { toast } = useToast();
 
   const form = useForm<FormData>({
     defaultValues: {
       client_id: "",
-      due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now
+      due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       tax_rate: 0,
       notes: "",
       selectedHours: [],
@@ -72,10 +77,10 @@ export function CreateInvoiceDialog() {
       if (!user) return;
 
       const { data, error } = await supabase
-        .from('clients')
-        .select('id, full_name')
-        .eq('user_id', user.id)
-        .order('full_name');
+        .from('profiles')
+        .select('id, first_name, last_name')
+        .eq('role', 'client')
+        .order('first_name');
 
       if (error) throw error;
       setClients(data || []);
@@ -90,28 +95,36 @@ export function CreateInvoiceDialog() {
       if (!user) return;
 
       const { data, error } = await supabase
-        .from('billable_hours')
+        .from('billing_entries')
         .select(`
           *,
-          client:clients(full_name)
+          case:cases(
+            title,
+            client:profiles!cases_client_id_fkey(first_name, last_name)
+          )
         `)
-        .eq('user_id', user.id)
-        .eq('client_id', clientId)
-        .eq('is_invoiced', false)
-        .order('work_date');
+        .eq('is_billable', true)
+        .eq('case.client_id', clientId)
+        .order('date_worked');
 
       if (error) throw error;
       setUnbilledHours(data || []);
     } catch (error) {
       console.error('Error fetching unbilled hours:', error);
+      setUnbilledHours([]);
     }
+  };
+
+  const generateInvoiceNumber = () => {
+    const timestamp = Date.now().toString();
+    return `INV-${timestamp.slice(-8)}`;
   };
 
   const onSubmit = async (data: FormData) => {
     if (data.selectedHours.length === 0) {
       toast({
         title: "Error",
-        description: "Please select at least one billable hour entry",
+        description: "Please select at least one billing entry",
         variant: "destructive",
       });
       return;
@@ -123,44 +136,37 @@ export function CreateInvoiceDialog() {
       if (!user) throw new Error('Not authenticated');
 
       // Calculate subtotal from selected hours
-      const selectedHourObjects = unbilledHours.filter(hour => data.selectedHours.includes(hour.id));
-      const subtotal = selectedHourObjects.reduce((sum, hour) => sum + Number(hour.total_amount), 0);
+      const selectedEntries = unbilledHours.filter(entry => data.selectedHours.includes(entry.id));
+      const subtotal = selectedEntries.reduce((sum, entry) => sum + Number(entry.total_amount), 0);
+      const taxAmount = subtotal * (data.tax_rate / 100);
+      const totalAmount = subtotal + taxAmount;
+
+      // Find a case for this client (use the first one from selected entries)
+      const firstEntry = selectedEntries[0];
+      if (!firstEntry?.case) {
+        throw new Error('No case found for selected entries');
+      }
 
       // Generate invoice number
-      const { data: invoiceNumber, error: numberError } = await supabase.rpc('generate_invoice_number');
-      if (numberError) throw numberError;
+      const invoiceNumber = generateInvoiceNumber();
 
       // Create invoice
       const { data: invoice, error: invoiceError } = await supabase
         .from('invoices')
         .insert({
-          user_id: user.id,
           client_id: data.client_id,
+          attorney_id: user.id,
+          case_id: firstEntry.case.id || '',
           invoice_number: invoiceNumber,
           due_date: data.due_date,
-          tax_rate: data.tax_rate,
-          subtotal: subtotal,
+          amount: subtotal,
+          tax_amount: taxAmount,
           notes: data.notes || null,
         })
         .select()
         .single();
 
       if (invoiceError) throw invoiceError;
-
-      // Create line items for each selected billable hour
-      const lineItems = selectedHourObjects.map(hour => ({
-        invoice_id: invoice.id,
-        billable_hour_id: hour.id,
-        description: hour.description,
-        quantity: hour.hours_worked,
-        rate: hour.hourly_rate,
-      }));
-
-      const { error: lineItemsError } = await supabase
-        .from('invoice_line_items')
-        .insert(lineItems);
-
-      if (lineItemsError) throw lineItemsError;
 
       toast({
         title: "Success",
@@ -171,7 +177,7 @@ export function CreateInvoiceDialog() {
       setSelectedClient("");
       setUnbilledHours([]);
       setOpen(false);
-      window.location.reload(); // Refresh to show new data
+      window.location.reload();
     } catch (error) {
       console.error('Error creating invoice:', error);
       toast({
@@ -191,10 +197,10 @@ export function CreateInvoiceDialog() {
   };
 
   const calculateTotal = () => {
-    const selectedHourObjects = unbilledHours.filter(hour => 
-      form.watch('selectedHours').includes(hour.id)
+    const selectedEntries = unbilledHours.filter(entry => 
+      form.watch('selectedHours').includes(entry.id)
     );
-    const subtotal = selectedHourObjects.reduce((sum, hour) => sum + Number(hour.total_amount), 0);
+    const subtotal = selectedEntries.reduce((sum, entry) => sum + Number(entry.total_amount), 0);
     const taxAmount = subtotal * (form.watch('tax_rate') / 100);
     return subtotal + taxAmount;
   };
@@ -231,7 +237,7 @@ export function CreateInvoiceDialog() {
                     <SelectContent>
                       {clients.map((client) => (
                         <SelectItem key={client.id} value={client.id}>
-                          {client.full_name}
+                          {client.first_name} {client.last_name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -247,24 +253,24 @@ export function CreateInvoiceDialog() {
                 name="selectedHours"
                 render={() => (
                   <FormItem>
-                    <FormLabel>Select Billable Hours to Invoice</FormLabel>
+                    <FormLabel>Select Billing Entries to Invoice</FormLabel>
                     <div className="border rounded-lg p-4 max-h-40 overflow-y-auto">
-                      {unbilledHours.map((hour) => (
+                      {unbilledHours.map((entry) => (
                         <FormField
-                          key={hour.id}
+                          key={entry.id}
                           control={form.control}
                           name="selectedHours"
                           render={({ field }) => (
                             <FormItem className="flex flex-row items-start space-x-3 space-y-0 py-2">
                               <FormControl>
                                 <Checkbox
-                                  checked={field.value?.includes(hour.id)}
+                                  checked={field.value?.includes(entry.id)}
                                   onCheckedChange={(checked) => {
                                     return checked
-                                      ? field.onChange([...field.value, hour.id])
+                                      ? field.onChange([...field.value, entry.id])
                                       : field.onChange(
                                           field.value?.filter(
-                                            (value) => value !== hour.id
+                                            (value) => value !== entry.id
                                           )
                                         );
                                   }}
@@ -272,7 +278,7 @@ export function CreateInvoiceDialog() {
                               </FormControl>
                               <div className="space-y-1 leading-none flex-1">
                                 <FormLabel className="text-sm font-normal">
-                                  {hour.description} - {hour.hours_worked}h @ ${hour.hourly_rate}/h = ${hour.total_amount}
+                                  {entry.description} - {entry.hours_worked}h @ ${entry.hourly_rate}/h = ${entry.total_amount}
                                 </FormLabel>
                               </div>
                             </FormItem>
