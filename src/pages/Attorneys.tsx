@@ -13,15 +13,15 @@ import { AddAttorneyDialog } from "@/components/attorneys/AddAttorneyDialog";
 
 interface Attorney {
   id: string;
-  full_name: string;
+  first_name: string;
+  last_name: string;
   email: string;
   phone?: string;
-  specialization?: string;
+  bar_number?: string;
+  specialization?: string[];
   years_of_experience?: number;
-  office_location?: string;
-  bio?: string;
+  hourly_rate?: number;
   created_at: string;
-  user_id?: string;
 }
 
 const Attorneys = () => {
@@ -33,8 +33,22 @@ const Attorneys = () => {
   const fetchAttorneys = async () => {
     try {
       const { data, error } = await supabase
-        .from('attorneys')
-        .select('*')
+        .from('profiles')
+        .select(`
+          id,
+          first_name,
+          last_name,
+          email,
+          phone,
+          created_at,
+          attorneys (
+            bar_number,
+            specialization,
+            years_of_experience,
+            hourly_rate
+          )
+        `)
+        .eq('role', 'attorney')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -42,7 +56,21 @@ const Attorneys = () => {
         return;
       }
 
-      setAttorneys(data || []);
+      // Flatten the data structure
+      const formattedAttorneys = data.map(profile => ({
+        id: profile.id,
+        first_name: profile.first_name || '',
+        last_name: profile.last_name || '',
+        email: profile.email,
+        phone: profile.phone,
+        created_at: profile.created_at,
+        bar_number: profile.attorneys?.bar_number,
+        specialization: profile.attorneys?.specialization,
+        years_of_experience: profile.attorneys?.years_of_experience,
+        hourly_rate: profile.attorneys?.hourly_rate,
+      }));
+
+      setAttorneys(formattedAttorneys);
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -55,9 +83,11 @@ const Attorneys = () => {
   }, []);
 
   const filteredAttorneys = attorneys.filter(attorney =>
-    attorney.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    `${attorney.first_name} ${attorney.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
     attorney.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (attorney.specialization && attorney.specialization.toLowerCase().includes(searchTerm.toLowerCase()))
+    (attorney.specialization && attorney.specialization.some(spec => 
+      spec.toLowerCase().includes(searchTerm.toLowerCase())
+    ))
   );
 
   const avgExperience = attorneys.length > 0 

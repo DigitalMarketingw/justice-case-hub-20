@@ -12,64 +12,71 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 interface FormData {
-  client_id: string;
+  case_id: string;
   attorney_id?: string;
   description: string;
   hours_worked: number;
   hourly_rate: number;
-  work_date: string;
+  date_worked: string;
 }
 
 interface Client {
   id: string;
-  full_name: string;
+  first_name: string;
+  last_name: string;
 }
 
 interface Attorney {
   id: string;
-  full_name: string;
+  first_name: string;
+  last_name: string;
+}
+
+interface Case {
+  id: string;
+  title: string;
+  case_number: string;
 }
 
 export function AddBillableHourDialog() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [clients, setClients] = useState<Client[]>([]);
+  const [cases, setCases] = useState<Case[]>([]);
   const [attorneys, setAttorneys] = useState<Attorney[]>([]);
   const { toast } = useToast();
 
   const form = useForm<FormData>({
     defaultValues: {
-      client_id: "",
+      case_id: "",
       attorney_id: "",
       description: "",
       hours_worked: 0,
       hourly_rate: 150,
-      work_date: new Date().toISOString().split('T')[0],
+      date_worked: new Date().toISOString().split('T')[0],
     },
   });
 
   useEffect(() => {
     if (open) {
-      fetchClients();
+      fetchCases();
       fetchAttorneys();
     }
   }, [open]);
 
-  const fetchClients = async () => {
+  const fetchCases = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const { data, error } = await supabase
-        .from('clients')
-        .select('id, full_name')
-        .eq('user_id', user.id)
-        .order('full_name');
+        .from('cases')
+        .select('id, title, case_number')
+        .order('title');
 
       if (error) throw error;
-      setClients(data || []);
+      setCases(data || []);
     } catch (error) {
-      console.error('Error fetching clients:', error);
+      console.error('Error fetching cases:', error);
     }
   };
 
@@ -79,10 +86,10 @@ export function AddBillableHourDialog() {
       if (!user) return;
 
       const { data, error } = await supabase
-        .from('attorneys')
-        .select('id, full_name')
-        .eq('user_id', user.id)
-        .order('full_name');
+        .from('profiles')
+        .select('id, first_name, last_name')
+        .eq('role', 'attorney')
+        .order('first_name');
 
       if (error) throw error;
       setAttorneys(data || []);
@@ -98,32 +105,31 @@ export function AddBillableHourDialog() {
       if (!user) throw new Error('Not authenticated');
 
       const { error } = await supabase
-        .from('billable_hours')
+        .from('billing_entries')
         .insert({
-          user_id: user.id,
-          client_id: data.client_id,
-          attorney_id: data.attorney_id || null,
+          case_id: data.case_id,
+          attorney_id: data.attorney_id || user.id,
           description: data.description,
           hours_worked: data.hours_worked,
           hourly_rate: data.hourly_rate,
-          work_date: data.work_date,
+          date_worked: data.date_worked,
         });
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: "Billable hour added successfully",
+        description: "Billing entry added successfully",
       });
 
       form.reset();
       setOpen(false);
       window.location.reload(); // Refresh to show new data
     } catch (error) {
-      console.error('Error adding billable hour:', error);
+      console.error('Error adding billing entry:', error);
       toast({
         title: "Error",
-        description: "Failed to add billable hour",
+        description: "Failed to add billing entry",
         variant: "destructive",
       });
     } finally {
@@ -143,27 +149,27 @@ export function AddBillableHourDialog() {
         <DialogHeader>
           <DialogTitle>Add Billable Hour</DialogTitle>
           <DialogDescription>
-            Record time spent on client work.
+            Record time spent on case work.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="client_id"
+              name="case_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Client</FormLabel>
+                  <FormLabel>Case</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a client" />
+                        <SelectValue placeholder="Select a case" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {clients.map((client) => (
-                        <SelectItem key={client.id} value={client.id}>
-                          {client.full_name}
+                      {cases.map((case_item) => (
+                        <SelectItem key={case_item.id} value={case_item.id}>
+                          {case_item.case_number} - {case_item.title}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -188,7 +194,7 @@ export function AddBillableHourDialog() {
                     <SelectContent>
                       {attorneys.map((attorney) => (
                         <SelectItem key={attorney.id} value={attorney.id}>
-                          {attorney.full_name}
+                          {attorney.first_name} {attorney.last_name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -258,7 +264,7 @@ export function AddBillableHourDialog() {
 
             <FormField
               control={form.control}
-              name="work_date"
+              name="date_worked"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Work Date</FormLabel>

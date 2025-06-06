@@ -14,14 +14,19 @@ interface BillableHour {
   hours_worked: number;
   hourly_rate: number;
   total_amount: number;
-  work_date: string;
+  date_worked: string;
   is_billable: boolean;
-  is_invoiced: boolean;
-  client: {
-    full_name: string;
+  case: {
+    title: string;
+    case_number: string;
+    client: {
+      first_name: string;
+      last_name: string;
+    };
   };
-  attorney?: {
-    full_name: string;
+  attorney: {
+    first_name: string;
+    last_name: string;
   };
 }
 
@@ -40,22 +45,25 @@ export function BillableHoursTable() {
       if (!user) return;
 
       const { data, error } = await supabase
-        .from('billable_hours')
+        .from('billing_entries')
         .select(`
           *,
-          client:clients(full_name),
-          attorney:attorneys(full_name)
+          case:cases(
+            title,
+            case_number,
+            client:profiles!cases_client_id_fkey(first_name, last_name)
+          ),
+          attorney:profiles!billing_entries_attorney_id_fkey(first_name, last_name)
         `)
-        .eq('user_id', user.id)
-        .order('work_date', { ascending: false });
+        .order('date_worked', { ascending: false });
 
       if (error) throw error;
       setBillableHours(data || []);
     } catch (error) {
-      console.error('Error fetching billable hours:', error);
+      console.error('Error fetching billing entries:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch billable hours",
+        description: "Failed to fetch billing entries",
         variant: "destructive",
       });
     } finally {
@@ -66,7 +74,7 @@ export function BillableHoursTable() {
   const deleteBillableHour = async (id: string) => {
     try {
       const { error } = await supabase
-        .from('billable_hours')
+        .from('billing_entries')
         .delete()
         .eq('id', id);
 
@@ -75,20 +83,20 @@ export function BillableHoursTable() {
       setBillableHours(prev => prev.filter(hour => hour.id !== id));
       toast({
         title: "Success",
-        description: "Billable hour deleted successfully",
+        description: "Billing entry deleted successfully",
       });
     } catch (error) {
-      console.error('Error deleting billable hour:', error);
+      console.error('Error deleting billing entry:', error);
       toast({
         title: "Error",
-        description: "Failed to delete billable hour",
+        description: "Failed to delete billing entry",
         variant: "destructive",
       });
     }
   };
 
   if (loading) {
-    return <div className="text-center py-4">Loading billable hours...</div>;
+    return <div className="text-center py-4">Loading billing entries...</div>;
   }
 
   return (
@@ -97,6 +105,7 @@ export function BillableHoursTable() {
         <TableHeader>
           <TableRow>
             <TableHead>Date</TableHead>
+            <TableHead>Case</TableHead>
             <TableHead>Client</TableHead>
             <TableHead>Attorney</TableHead>
             <TableHead>Description</TableHead>
@@ -110,23 +119,39 @@ export function BillableHoursTable() {
         <TableBody>
           {billableHours.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={9} className="text-center py-4 text-gray-500">
-                No billable hours found
+              <TableCell colSpan={10} className="text-center py-4 text-gray-500">
+                No billing entries found
               </TableCell>
             </TableRow>
           ) : (
             billableHours.map((hour) => (
               <TableRow key={hour.id}>
-                <TableCell>{format(new Date(hour.work_date), 'MMM dd, yyyy')}</TableCell>
-                <TableCell>{hour.client?.full_name}</TableCell>
-                <TableCell>{hour.attorney?.full_name || '-'}</TableCell>
+                <TableCell>{format(new Date(hour.date_worked), 'MMM dd, yyyy')}</TableCell>
+                <TableCell>
+                  <div>
+                    <div className="font-medium">{hour.case?.case_number}</div>
+                    <div className="text-sm text-gray-500">{hour.case?.title}</div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  {hour.case?.client ? 
+                    `${hour.case.client.first_name} ${hour.case.client.last_name}` : 
+                    '-'
+                  }
+                </TableCell>
+                <TableCell>
+                  {hour.attorney ? 
+                    `${hour.attorney.first_name} ${hour.attorney.last_name}` : 
+                    '-'
+                  }
+                </TableCell>
                 <TableCell className="max-w-xs truncate">{hour.description}</TableCell>
                 <TableCell>{hour.hours_worked}</TableCell>
                 <TableCell>${hour.hourly_rate}</TableCell>
                 <TableCell>${hour.total_amount}</TableCell>
                 <TableCell>
-                  <Badge variant={hour.is_invoiced ? "default" : "secondary"}>
-                    {hour.is_invoiced ? "Invoiced" : "Unbilled"}
+                  <Badge variant={hour.is_billable ? "default" : "secondary"}>
+                    {hour.is_billable ? "Billable" : "Non-billable"}
                   </Badge>
                 </TableCell>
                 <TableCell>
@@ -138,7 +163,6 @@ export function BillableHoursTable() {
                       variant="ghost" 
                       size="sm"
                       onClick={() => deleteBillableHour(hour.id)}
-                      disabled={hour.is_invoiced}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

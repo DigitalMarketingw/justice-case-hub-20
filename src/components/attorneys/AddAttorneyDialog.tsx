@@ -25,13 +25,15 @@ export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAt
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const [formData, setFormData] = useState({
-    full_name: "",
     email: "",
+    password: "",
+    first_name: "",
+    last_name: "",
     phone: "",
+    bar_number: "",
     specialization: "",
     years_of_experience: "",
-    office_location: "",
-    bio: "",
+    hourly_rate: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,22 +41,48 @@ export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAt
     setLoading(true);
 
     try {
-      const attorneyData = {
-        full_name: formData.full_name,
+      // First create the user account
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
-        phone: formData.phone || null,
-        specialization: formData.specialization || null,
-        years_of_experience: formData.years_of_experience ? parseInt(formData.years_of_experience) : null,
-        office_location: formData.office_location || null,
-        bio: formData.bio || null,
-      };
+        password: formData.password,
+        options: {
+          data: {
+            first_name: formData.first_name,
+            last_name: formData.last_name,
+            role: 'attorney'
+          }
+        }
+      });
 
-      const { error } = await supabase
-        .from('attorneys')
-        .insert([attorneyData]);
+      if (authError) throw authError;
 
-      if (error) {
-        throw error;
+      if (authData.user) {
+        // Create the profile
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: authData.user.id,
+            email: formData.email,
+            first_name: formData.first_name,
+            last_name: formData.last_name,
+            phone: formData.phone || null,
+            role: 'attorney'
+          });
+
+        if (profileError) throw profileError;
+
+        // Create attorney-specific data
+        const { error: attorneyError } = await supabase
+          .from('attorneys')
+          .insert({
+            id: authData.user.id,
+            bar_number: formData.bar_number || null,
+            specialization: formData.specialization ? [formData.specialization] : null,
+            years_of_experience: formData.years_of_experience ? parseInt(formData.years_of_experience) : null,
+            hourly_rate: formData.hourly_rate ? parseFloat(formData.hourly_rate) : null,
+          });
+
+        if (attorneyError) throw attorneyError;
       }
 
       toast({
@@ -64,13 +92,15 @@ export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAt
 
       // Reset form
       setFormData({
-        full_name: "",
         email: "",
+        password: "",
+        first_name: "",
+        last_name: "",
         phone: "",
+        bar_number: "",
         specialization: "",
         years_of_experience: "",
-        office_location: "",
-        bio: "",
+        hourly_rate: "",
       });
 
       onAttorneyAdded();
@@ -103,14 +133,26 @@ export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAt
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="full_name">Full Name *</Label>
+              <Label htmlFor="first_name">First Name *</Label>
               <Input
-                id="full_name"
-                value={formData.full_name}
-                onChange={(e) => handleChange("full_name", e.target.value)}
+                id="first_name"
+                value={formData.first_name}
+                onChange={(e) => handleChange("first_name", e.target.value)}
                 required
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="last_name">Last Name *</Label>
+              <Input
+                id="last_name"
+                value={formData.last_name}
+                onChange={(e) => handleChange("last_name", e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email *</Label>
               <Input
@@ -118,6 +160,16 @@ export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAt
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleChange("email", e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password *</Label>
+              <Input
+                id="password"
+                type="password"
+                value={formData.password}
+                onChange={(e) => handleChange("password", e.target.value)}
                 required
               />
             </div>
@@ -133,6 +185,17 @@ export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAt
               />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="bar_number">Bar Number</Label>
+              <Input
+                id="bar_number"
+                value={formData.bar_number}
+                onChange={(e) => handleChange("bar_number", e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
               <Label htmlFor="specialization">Specialization</Label>
               <Input
                 id="specialization"
@@ -141,9 +204,6 @@ export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAt
                 placeholder="e.g. Corporate Law, Criminal Defense"
               />
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="years_of_experience">Years of Experience</Label>
               <Input
@@ -154,25 +214,17 @@ export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAt
                 onChange={(e) => handleChange("years_of_experience", e.target.value)}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="office_location">Office Location</Label>
-              <Input
-                id="office_location"
-                value={formData.office_location}
-                onChange={(e) => handleChange("office_location", e.target.value)}
-                placeholder="e.g. Downtown Office, Floor 5"
-              />
-            </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="bio">Bio</Label>
-            <Textarea
-              id="bio"
-              value={formData.bio}
-              onChange={(e) => handleChange("bio", e.target.value)}
-              placeholder="Brief professional biography..."
-              rows={3}
+            <Label htmlFor="hourly_rate">Hourly Rate ($)</Label>
+            <Input
+              id="hourly_rate"
+              type="number"
+              min="0"
+              step="0.01"
+              value={formData.hourly_rate}
+              onChange={(e) => handleChange("hourly_rate", e.target.value)}
             />
           </div>
 

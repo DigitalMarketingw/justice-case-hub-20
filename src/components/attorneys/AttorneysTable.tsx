@@ -7,15 +7,15 @@ import { Mail, Phone, MapPin, Award, MoreHorizontal } from "lucide-react";
 
 interface Attorney {
   id: string;
-  full_name: string;
+  first_name: string;
+  last_name: string;
   email: string;
   phone?: string;
-  specialization?: string;
+  bar_number?: string;
+  specialization?: string[];
   years_of_experience?: number;
-  office_location?: string;
-  bio?: string;
+  hourly_rate?: number;
   created_at: string;
-  user_id?: string;
 }
 
 interface AttorneysTableProps {
@@ -61,7 +61,7 @@ export function AttorneysTable({ attorneys, loading, onRefresh }: AttorneysTable
                 <TableHead>Contact</TableHead>
                 <TableHead>Specialization</TableHead>
                 <TableHead>Experience</TableHead>
-                <TableHead>Office</TableHead>
+                <TableHead>Rate</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
@@ -70,7 +70,12 @@ export function AttorneysTable({ attorneys, loading, onRefresh }: AttorneysTable
                 <TableRow key={attorney.id} className="hover:bg-gray-50">
                   <TableCell>
                     <div>
-                      <div className="font-medium text-gray-900">{attorney.full_name}</div>
+                      <div className="font-medium text-gray-900">
+                        {attorney.first_name} {attorney.last_name}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {attorney.bar_number && `Bar #${attorney.bar_number}`}
+                      </div>
                       <div className="text-sm text-gray-500">
                         Joined {new Date(attorney.created_at).toLocaleDateString()}
                       </div>
@@ -91,8 +96,12 @@ export function AttorneysTable({ attorneys, loading, onRefresh }: AttorneysTable
                     </div>
                   </TableCell>
                   <TableCell>
-                    {attorney.specialization ? (
-                      <Badge variant="secondary">{attorney.specialization}</Badge>
+                    {attorney.specialization && attorney.specialization.length > 0 ? (
+                      <div className="space-y-1">
+                        {attorney.specialization.map((spec, index) => (
+                          <Badge key={index} variant="secondary">{spec}</Badge>
+                        ))}
+                      </div>
                     ) : (
                       <span className="text-gray-400">Not specified</span>
                     )}
@@ -108,13 +117,10 @@ export function AttorneysTable({ attorneys, loading, onRefresh }: AttorneysTable
                     )}
                   </TableCell>
                   <TableCell>
-                    {attorney.office_location ? (
-                      <div className="flex items-center text-sm">
-                        <MapPin className="mr-1 h-3 w-3 text-gray-400" />
-                        {attorney.office_location}
-                      </div>
+                    {attorney.hourly_rate ? (
+                      <span className="font-medium">${attorney.hourly_rate}/hr</span>
                     ) : (
-                      <span className="text-gray-400">Not specified</span>
+                      <span className="text-gray-400">Not set</span>
                     )}
                   </TableCell>
                   <TableCell>

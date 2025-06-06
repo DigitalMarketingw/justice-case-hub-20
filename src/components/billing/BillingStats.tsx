@@ -32,35 +32,31 @@ export function BillingStats() {
       const { data: paidInvoices } = await supabase
         .from('invoices')
         .select('total_amount')
-        .eq('user_id', user.id)
         .eq('status', 'paid');
 
       const totalRevenue = paidInvoices?.reduce((sum, inv) => sum + Number(inv.total_amount), 0) || 0;
 
-      // Get unbilled hours
-      const { data: unbilledHours } = await supabase
-        .from('billable_hours')
+      // Get unbilled hours from billing entries
+      const { data: unbilledEntries } = await supabase
+        .from('billing_entries')
         .select('hours_worked')
-        .eq('user_id', user.id)
-        .eq('is_invoiced', false);
+        .eq('is_billable', true);
 
-      const totalUnbilledHours = unbilledHours?.reduce((sum, hour) => sum + Number(hour.hours_worked), 0) || 0;
+      const totalUnbilledHours = unbilledEntries?.reduce((sum, entry) => sum + Number(entry.hours_worked), 0) || 0;
 
       // Get pending invoices count
       const { data: pendingInvoices } = await supabase
         .from('invoices')
         .select('id')
-        .eq('user_id', user.id)
-        .in('status', ['draft', 'sent']);
+        .in('status', ['pending', 'sent']);
 
-      // Get average hourly rate
-      const { data: allHours } = await supabase
-        .from('billable_hours')
-        .select('hourly_rate')
-        .eq('user_id', user.id);
+      // Get average hourly rate from billing entries
+      const { data: allEntries } = await supabase
+        .from('billing_entries')
+        .select('hourly_rate');
 
-      const avgRate = allHours?.length 
-        ? allHours.reduce((sum, hour) => sum + Number(hour.hourly_rate), 0) / allHours.length 
+      const avgRate = allEntries?.length 
+        ? allEntries.reduce((sum, entry) => sum + Number(entry.hourly_rate), 0) / allEntries.length 
         : 0;
 
       setStats({
@@ -105,7 +101,7 @@ export function BillingStats() {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{stats.pendingInvoices}</div>
-          <p className="text-xs text-muted-foreground">Draft and sent invoices</p>
+          <p className="text-xs text-muted-foreground">Pending and sent invoices</p>
         </CardContent>
       </Card>
 
