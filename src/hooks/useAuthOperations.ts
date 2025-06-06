@@ -79,18 +79,28 @@ export const useAuthOperations = () => {
   };
 
   const signOut = async (setProfile: (profile: any) => void) => {
-    console.log('Signing out user');
+    console.log('Starting signOut process');
     try {
-      const { error } = await supabase.auth.signOut();
+      // Clear profile immediately
+      setProfile(null);
+      
+      // Clear local storage
+      localStorage.clear();
+      
+      // Sign out from Supabase
+      const { error } = await supabase.auth.signOut({ scope: 'global' });
+      
       if (error) {
-        console.error('Sign out error:', error);
+        console.error('Supabase sign out error:', error);
       }
       
-      setProfile(null);
+      console.log('Sign out completed');
       
       toast({
         title: "Signed out successfully",
       });
+      
+      return { error: null };
     } catch (error) {
       console.error('Sign out error:', error);
       toast({
@@ -98,6 +108,7 @@ export const useAuthOperations = () => {
         description: "There was an issue signing out",
         variant: "destructive",
       });
+      return { error };
     }
   };
 
