@@ -48,6 +48,26 @@ export const MessagingDashboard = () => {
   // For attorneys and clients, show their direct conversations
   return (
     <div className="h-[calc(100vh-200px)] flex flex-col">
+      {/* Header with Start Conversation Button for Attorneys */}
+      {profile?.role === 'attorney' && (
+        <div className="p-4 border-b bg-white">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-lg font-semibold">Your Conversations</h2>
+              <p className="text-sm text-gray-600">Manage communications with your clients</p>
+            </div>
+            <Button 
+              onClick={handleStartNewConversation}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+              size="default"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Start New Conversation
+            </Button>
+          </div>
+        </div>
+      )}
+
       <div className="flex-1 flex">
         <div className="w-1/3 border-r">
           <ConversationList 
