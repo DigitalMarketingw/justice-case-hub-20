@@ -14,13 +14,12 @@ interface Client {
 
 interface DocumentFile {
   id: string;
-  file_name: string;
+  name: string;
   file_size: number;
-  file_type: string;
+  mime_type: string;
   file_path: string;
-  upload_date: string;
+  created_at: string;
   description?: string;
-  tags?: string[];
 }
 
 interface ClientWithDocuments extends Client {
@@ -66,7 +65,12 @@ export function ClientDocumentCard({ client, onUploadClick, onDocumentDeleted }:
             {client.documents.map((doc) => (
               <DocumentItem
                 key={doc.id}
-                document={doc}
+                document={{
+                  ...doc,
+                  file_name: doc.name,
+                  file_type: doc.mime_type,
+                  upload_date: doc.created_at
+                }}
                 onDocumentDeleted={onDocumentDeleted}
               />
             ))}

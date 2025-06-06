@@ -105,27 +105,23 @@ const AttorneyDashboard = () => {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <StatsCard
                 title="Total Clients"
-                value={stats.totalClients.toString()}
+                value={loading ? "..." : stats.totalClients.toString()}
                 icon={Users}
-                loading={loading}
               />
               <StatsCard
                 title="Active Cases"
-                value={stats.activeCases.toString()}
+                value={loading ? "..." : stats.activeCases.toString()}
                 icon={FileText}
-                loading={loading}
               />
               <StatsCard
                 title="Upcoming Events"
-                value={stats.upcomingEvents.toString()}
+                value={loading ? "..." : stats.upcomingEvents.toString()}
                 icon={Calendar}
-                loading={loading}
               />
               <StatsCard
                 title="Monthly Revenue"
-                value={`$${stats.monthlyRevenue.toLocaleString()}`}
+                value={loading ? "..." : `$${stats.monthlyRevenue.toLocaleString()}`}
                 icon={DollarSign}
-                loading={loading}
               />
             </div>
 

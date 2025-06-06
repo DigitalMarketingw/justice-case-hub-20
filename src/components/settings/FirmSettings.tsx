@@ -47,7 +47,7 @@ export function FirmSettings() {
       // Add firm_code if it doesn't exist in the data
       const firmDataWithCode = {
         ...data,
-        firm_code: data.firm_code || data.id.slice(0, 8).toUpperCase()
+        firm_code: data.id.slice(0, 8).toUpperCase()
       };
       
       setFirmData(firmDataWithCode);
