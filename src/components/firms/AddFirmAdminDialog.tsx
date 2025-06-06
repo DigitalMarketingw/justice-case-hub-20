@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -44,9 +44,10 @@ const formSchema = z.object({
 interface AddFirmAdminDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onAdminAdded?: () => void;
 }
 
-export function AddFirmAdminDialog({ open, onOpenChange }: AddFirmAdminDialogProps) {
+export function AddFirmAdminDialog({ open, onOpenChange, onAdminAdded }: AddFirmAdminDialogProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -125,6 +126,7 @@ export function AddFirmAdminDialog({ open, onOpenChange }: AddFirmAdminDialogPro
       queryClient.invalidateQueries({ queryKey: ['firms-stats'] });
       form.reset();
       onOpenChange(false);
+      onAdminAdded?.();
     },
     onError: (error: any) => {
       console.error('Error creating firm admin:', error);
