@@ -237,6 +237,74 @@ export type Database = {
           },
         ]
       }
+      client_assignments: {
+        Row: {
+          assigned_by: string
+          assigned_date: string
+          attorney_id: string | null
+          client_id: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          reason: string | null
+          unassigned_by: string | null
+          unassigned_date: string | null
+        }
+        Insert: {
+          assigned_by: string
+          assigned_date?: string
+          attorney_id?: string | null
+          client_id: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          reason?: string | null
+          unassigned_by?: string | null
+          unassigned_date?: string | null
+        }
+        Update: {
+          assigned_by?: string
+          assigned_date?: string
+          attorney_id?: string | null
+          client_id?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          reason?: string | null
+          unassigned_by?: string | null
+          unassigned_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_assignments_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_assignments_attorney_id_fkey"
+            columns: ["attorney_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_assignments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_assignments_unassigned_by_fkey"
+            columns: ["unassigned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           address: string | null
@@ -600,42 +668,68 @@ export type Database = {
       }
       profiles: {
         Row: {
+          assigned_attorney_id: string | null
           created_at: string | null
+          dropped_by: string | null
+          dropped_date: string | null
           email: string
           firm_id: string | null
           first_name: string | null
           id: string
           is_active: boolean | null
+          is_dropped: boolean | null
           last_name: string | null
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string | null
         }
         Insert: {
+          assigned_attorney_id?: string | null
           created_at?: string | null
+          dropped_by?: string | null
+          dropped_date?: string | null
           email: string
           firm_id?: string | null
           first_name?: string | null
           id: string
           is_active?: boolean | null
+          is_dropped?: boolean | null
           last_name?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
         }
         Update: {
+          assigned_attorney_id?: string | null
           created_at?: string | null
+          dropped_by?: string | null
+          dropped_date?: string | null
           email?: string
           firm_id?: string | null
           first_name?: string | null
           id?: string
           is_active?: boolean | null
+          is_dropped?: boolean | null
           last_name?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_assigned_attorney_id_fkey"
+            columns: ["assigned_attorney_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_dropped_by_fkey"
+            columns: ["dropped_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_firm_id_fkey"
             columns: ["firm_id"]

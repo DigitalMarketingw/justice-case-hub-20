@@ -11,6 +11,8 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { User, Mail, Phone, Building, MoreHorizontal, RefreshCw } from "lucide-react";
+import { DropClientDialog } from "./DropClientDialog";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Client {
   id: string;
@@ -25,6 +27,7 @@ interface Client {
   is_dropped: boolean;
   dropped_date?: string;
   assigned_attorney_id?: string;
+  assigned_attorney_name?: string;
 }
 
 interface ClientsTableProps {
@@ -34,6 +37,12 @@ interface ClientsTableProps {
 }
 
 export function ClientsTable({ clients, loading, onRefresh }: ClientsTableProps) {
+  const { profile } = useAuth();
+  const isFirmAdmin = profile?.role === 'firm_admin' || profile?.role === 'super_admin';
+  
+  // Filter out dropped clients - they'll be shown in the dropped section
+  const activeClients = clients.filter(client => !client.is_dropped);
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
   };
@@ -49,12 +58,12 @@ export function ClientsTable({ clients, loading, onRefresh }: ClientsTableProps)
     );
   }
 
-  if (clients.length === 0) {
+  if (activeClients.length === 0) {
     return (
       <Card>
         <CardContent className="p-8 text-center">
           <User className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No clients found</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">No active clients found</h3>
           <p className="text-gray-600 mb-4">Get started by adding your first client.</p>
           <Button onClick={onRefresh} variant="outline">
             <RefreshCw className="h-4 w-4 mr-2" />
@@ -69,7 +78,7 @@ export function ClientsTable({ clients, loading, onRefresh }: ClientsTableProps)
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <span>Client Directory ({clients.length})</span>
+          <span>Active Clients ({activeClients.length})</span>
           <Button onClick={onRefresh} variant="outline" size="sm">
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
@@ -83,13 +92,14 @@ export function ClientsTable({ clients, loading, onRefresh }: ClientsTableProps)
               <TableHead>Client</TableHead>
               <TableHead>Contact</TableHead>
               <TableHead>Company</TableHead>
+              <TableHead>Assigned Attorney</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Added</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {clients.map((client) => (
+            {activeClients.map((client) => (
               <TableRow key={client.id} className="hover:bg-gray-50">
                 <TableCell>
                   <div className="flex items-center space-x-3">
@@ -135,17 +145,31 @@ export function ClientsTable({ clients, loading, onRefresh }: ClientsTableProps)
                   )}
                 </TableCell>
                 <TableCell>
-                  <Badge variant={client.is_dropped ? "destructive" : "default"}>
-                    {client.is_dropped ? "Dropped" : "Active"}
-                  </Badge>
+                  {client.assigned_attorney_name ? (
+                    <span className="text-sm text-gray-900">{client.assigned_attorney_name}</span>
+                  ) : (
+                    <span className="text-gray-400">Unassigned</span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <Badge variant="default">Active</Badge>
                 </TableCell>
                 <TableCell className="text-sm text-gray-600">
                   {formatDate(client.created_at)}
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button variant="ghost" size="sm">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
+                  <div className="flex justify-end space-x-2">
+                    {isFirmAdmin && (
+                      <DropClientDialog
+                        clientId={client.id}
+                        clientName={client.full_name}
+                        onClientDropped={onRefresh}
+                      />
+                    )}
+                    <Button variant="ghost" size="sm">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

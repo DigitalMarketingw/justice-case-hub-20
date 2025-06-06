@@ -5,10 +5,12 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { ClientsTable } from "@/components/clients/ClientsTable";
 import { AddClientDialog } from "@/components/clients/AddClientDialog";
 import { ClientsStats } from "@/components/clients/ClientsStats";
+import { DroppedClientsSection } from "@/components/clients/DroppedClientsSection";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Client {
   id: string;
@@ -25,24 +27,44 @@ interface Client {
   tags?: string[];
   dropped_date?: string;
   assigned_attorney_id?: string;
+  assigned_attorney_name?: string;
 }
 
 const Clients = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const { profile } = useAuth();
+
+  const isFirmAdmin = profile?.role === 'firm_admin' || profile?.role === 'super_admin';
 
   useEffect(() => {
     fetchClients();
-  }, []);
+  }, [profile?.firm_id]);
 
   const fetchClients = async () => {
+    if (!profile?.firm_id) return;
+
     try {
       setLoading(true);
+      
+      // Fetch clients with their assigned attorney information
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, email, phone, created_at')
+        .select(`
+          id, 
+          first_name, 
+          last_name, 
+          email, 
+          phone, 
+          created_at,
+          is_dropped,
+          dropped_date,
+          assigned_attorney_id,
+          assigned_attorney:assigned_attorney_id(first_name, last_name)
+        `)
         .eq('role', 'client')
+        .eq('firm_id', profile.firm_id)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -54,13 +76,13 @@ const Clients = () => {
       const transformedClients: Client[] = (data || []).map(client => ({
         ...client,
         full_name: `${client.first_name} ${client.last_name}`,
-        is_dropped: false, // Default value since we don't have this field in profiles
         company_name: undefined,
         address: undefined,
         notes: undefined,
         tags: undefined,
-        dropped_date: undefined,
-        assigned_attorney_id: undefined
+        assigned_attorney_name: client.assigned_attorney ? 
+          `${client.assigned_attorney.first_name} ${client.assigned_attorney.last_name}` : 
+          undefined
       }));
 
       setClients(transformedClients);
@@ -106,8 +128,8 @@ const Clients = () => {
               <CardHeader>
                 <div className="flex justify-between items-center">
                   <div>
-                    <CardTitle>All Clients</CardTitle>
-                    <CardDescription>View and manage all your clients</CardDescription>
+                    <CardTitle>Active Clients</CardTitle>
+                    <CardDescription>View and manage all your active clients</CardDescription>
                   </div>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -124,6 +146,10 @@ const Clients = () => {
                 <ClientsTable clients={filteredClients} loading={loading} onRefresh={fetchClients} />
               </CardContent>
             </Card>
+
+            {isFirmAdmin && (
+              <DroppedClientsSection onClientReassigned={fetchClients} />
+            )}
           </div>
         </main>
       </div>
