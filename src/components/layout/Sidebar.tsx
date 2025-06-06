@@ -1,5 +1,3 @@
-
-
 import { useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { 
@@ -81,19 +79,16 @@ export function Sidebar({ className }: SidebarProps) {
     console.log('Sidebar: Starting logout process for user:', user?.email);
     
     try {
-      // First navigate to auth page
-      navigate("/auth", { replace: true });
-      
-      // Then sign out
+      // Sign out first
       await signOut();
       console.log('Sidebar: Logout successful');
       
-      // Force page reload to ensure clean state
-      window.location.href = "/auth";
+      // Navigate to auth page using React Router (faster than window.location)
+      navigate("/auth", { replace: true });
     } catch (error) {
       console.error('Sidebar: Error during logout:', error);
-      // Even if logout fails, navigate to auth page
-      window.location.href = "/auth";
+      // Navigate to auth page even if logout fails
+      navigate("/auth", { replace: true });
     } finally {
       setIsLoggingOut(false);
     }

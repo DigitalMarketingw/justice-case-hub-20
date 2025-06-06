@@ -1,4 +1,5 @@
 
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
@@ -54,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               setProfileLoading(false);
               setLoading(false);
             }
-          }, 5000); // 5 second timeout
+          }, 3000); // Reduced to 3 seconds for faster loading
 
           try {
             console.log('Fetching profile for user:', currentSession.user.id);
@@ -97,7 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               setProfileLoading(false);
               setLoading(false);
             }
-          }, 5000);
+          }, 3000); // Reduced timeout
           
           try {
             console.log('Fetching profile for initial session:', currentSession.user.id);
@@ -137,16 +138,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     console.log('AuthContext: Starting sign out process for user:', user?.email);
     
     try {
-      // Clear state immediately to provide visual feedback
-      setLoading(true);
-      
-      // Call the auth sign out
+      // Call the auth sign out (this will clear profile immediately)
       await authSignOut(setProfile);
-      
-      // Force clear all state (the auth state change handler should handle this, but being extra safe)
-      setSession(null);
-      setUser(null);
-      setProfile(null);
       
       console.log('AuthContext: Sign out completed successfully');
     } catch (error) {
@@ -155,8 +148,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(null);
       setUser(null);
       setProfile(null);
-    } finally {
-      setLoading(false);
     }
   };
 
