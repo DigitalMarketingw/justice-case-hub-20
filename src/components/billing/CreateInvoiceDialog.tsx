@@ -33,6 +33,7 @@ interface BillingEntry {
   total_amount: number;
   date_worked: string;
   case: {
+    id: string;
     title: string;
     client: {
       first_name: string;
@@ -99,6 +100,7 @@ export function CreateInvoiceDialog() {
         .select(`
           *,
           case:cases(
+            id,
             title,
             client:profiles!cases_client_id_fkey(first_name, last_name)
           )
@@ -143,7 +145,7 @@ export function CreateInvoiceDialog() {
 
       // Find a case for this client (use the first one from selected entries)
       const firstEntry = selectedEntries[0];
-      if (!firstEntry?.case) {
+      if (!firstEntry?.case?.id) {
         throw new Error('No case found for selected entries');
       }
 
@@ -156,11 +158,12 @@ export function CreateInvoiceDialog() {
         .insert({
           client_id: data.client_id,
           attorney_id: user.id,
-          case_id: firstEntry.case.id || '',
+          case_id: firstEntry.case.id,
           invoice_number: invoiceNumber,
           due_date: data.due_date,
           amount: subtotal,
           tax_amount: taxAmount,
+          total_amount: totalAmount,
           notes: data.notes || null,
         })
         .select()

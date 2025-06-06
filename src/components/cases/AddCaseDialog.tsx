@@ -1,50 +1,65 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Plus } from "lucide-react";
+import { useForm } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+
+interface FormData {
+  title: string;
+  case_number: string;
+  client_id: string;
+  case_type: string;
+  status: string;
+  description: string;
+  priority: string;
+  court_name: string;
+  judge_name: string;
+  court_date: string;
+  filing_date: string;
+  estimated_hours: number;
+  billable_rate: number;
+}
+
+interface Client {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+}
 
 interface AddCaseDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-interface Client {
-  id: string;
-  full_name: string;
-  email: string;
-}
-
 export function AddCaseDialog({ open, onOpenChange }: AddCaseDialogProps) {
-  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
-  const [formData, setFormData] = useState({
-    title: "",
-    casenumber: "",
-    clientid: "",
-    casetype: "",
-    status: "active",
-    description: "",
-    notes: ""
+  const { toast } = useToast();
+
+  const form = useForm<FormData>({
+    defaultValues: {
+      title: "",
+      case_number: "",
+      client_id: "",
+      case_type: "",
+      status: "pending",
+      description: "",
+      priority: "medium",
+      court_name: "",
+      judge_name: "",
+      court_date: "",
+      filing_date: "",
+      estimated_hours: 0,
+      billable_rate: 0,
+    },
   });
 
   useEffect(() => {
@@ -56,91 +71,58 @@ export function AddCaseDialog({ open, onOpenChange }: AddCaseDialogProps) {
   const fetchClients = async () => {
     try {
       const { data, error } = await supabase
-        .from('clients')
-        .select('id, full_name, email')
-        .order('full_name');
+        .from('profiles')
+        .select('id, first_name, last_name, email')
+        .eq('role', 'client')
+        .order('first_name');
 
-      if (error) {
-        console.error('Error fetching clients:', error);
-        return;
-      }
-
+      if (error) throw error;
       setClients(data || []);
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error fetching clients:', error);
     }
   };
 
-  const generateCaseNumber = () => {
-    const year = new Date().getFullYear();
-    const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-    return `CASE-${year}-${random}`;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.title || !formData.clientid || !formData.casetype) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const onSubmit = async (data: FormData) => {
     setLoading(true);
-
     try {
-      const caseNumber = formData.casenumber || generateCaseNumber();
-      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
       const { error } = await supabase
         .from('cases')
-        .insert([
-          {
-            title: formData.title,
-            casenumber: caseNumber,
-            clientid: formData.clientid,
-            casetype: formData.casetype,
-            status: formData.status,
-            description: formData.description,
-            notes: formData.notes,
-            opendate: new Date().toISOString()
-          }
-        ]);
-
-      if (error) {
-        console.error('Error creating case:', error);
-        toast({
-          title: "Error",
-          description: "Failed to create case",
-          variant: "destructive",
+        .insert({
+          title: data.title,
+          case_number: data.case_number,
+          client_id: data.client_id,
+          attorney_id: user.id,
+          case_type: data.case_type,
+          status: data.status as any,
+          description: data.description,
+          priority: data.priority as any,
+          court_name: data.court_name || null,
+          judge_name: data.judge_name || null,
+          court_date: data.court_date || null,
+          filing_date: data.filing_date || null,
+          estimated_hours: data.estimated_hours || null,
+          billable_rate: data.billable_rate || null,
         });
-        return;
-      }
+
+      if (error) throw error;
 
       toast({
         title: "Success",
         description: "Case created successfully",
       });
 
-      setFormData({
-        title: "",
-        casenumber: "",
-        clientid: "",
-        casetype: "",
-        status: "active",
-        description: "",
-        notes: ""
-      });
-      
+      form.reset();
       onOpenChange(false);
-      window.location.reload(); // Refresh the cases list
+      window.location.reload();
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error creating case:', error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred",
+        description: "Failed to create case",
         variant: "destructive",
       });
     } finally {
@@ -150,121 +132,257 @@ export function AddCaseDialog({ open, onOpenChange }: AddCaseDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Case</DialogTitle>
           <DialogDescription>
-            Create a new legal case for a client. Fill in the details below.
+            Create a new legal case and assign it to a client.
           </DialogDescription>
         </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">Case Title *</Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="Enter case title"
-                required
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Case Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter case title..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="case_number"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Case Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter case number..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="casenumber">Case Number</Label>
-              <Input
-                id="casenumber"
-                value={formData.casenumber}
-                onChange={(e) => setFormData({ ...formData, casenumber: e.target.value })}
-                placeholder="Auto-generated if empty"
+
+            <FormField
+              control={form.control}
+              name="client_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Client</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a client" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {clients.map((client) => (
+                        <SelectItem key={client.id} value={client.id}>
+                          {client.first_name} {client.last_name} ({client.email})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="case_type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Case Type</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Criminal, Civil, Family..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="on_hold">On Hold</SelectItem>
+                        <SelectItem value="closed">Closed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="client">Client *</Label>
-            <Select value={formData.clientid} onValueChange={(value) => setFormData({ ...formData, clientid: value })}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a client" />
-              </SelectTrigger>
-              <SelectContent>
-                {clients.map((client) => (
-                  <SelectItem key={client.id} value={client.id}>
-                    {client.full_name} ({client.email})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="casetype">Case Type *</Label>
-              <Select value={formData.casetype} onValueChange={(value) => setFormData({ ...formData, casetype: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select case type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="civil">Civil</SelectItem>
-                  <SelectItem value="criminal">Criminal</SelectItem>
-                  <SelectItem value="family">Family</SelectItem>
-                  <SelectItem value="corporate">Corporate</SelectItem>
-                  <SelectItem value="immigration">Immigration</SelectItem>
-                  <SelectItem value="personal_injury">Personal Injury</SelectItem>
-                  <SelectItem value="real_estate">Real Estate</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="on_hold">On Hold</SelectItem>
-                  <SelectItem value="closed">Closed</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Brief description of the case"
-              rows={3}
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Enter case description..." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              placeholder="Additional notes"
-              rows={2}
-            />
-          </div>
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="priority"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Priority</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select priority" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="low">Low</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="urgent">Urgent</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Creating..." : "Create Case"}
-            </Button>
-          </DialogFooter>
-        </form>
+              <FormField
+                control={form.control}
+                name="court_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Court Name (Optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter court name..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="judge_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Judge Name (Optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter judge name..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="court_date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Court Date (Optional)</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="filing_date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Filing Date (Optional)</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="estimated_hours"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Estimated Hours</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        min="0"
+                        step="0.1"
+                        {...field}
+                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="billable_rate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Billable Rate ($)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        min="0"
+                        step="0.01"
+                        {...field}
+                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <DialogFooter>
+              <Button type="submit" disabled={loading}>
+                {loading ? "Creating..." : "Create Case"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
