@@ -8,6 +8,14 @@ import { DocumentsStats } from "./DocumentsStats";
 import { ClientDocuments } from "./ClientDocuments";
 
 export function DocumentsDashboard() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedClient, setSelectedClient] = useState("");
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const handleDocumentUploaded = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -37,11 +45,15 @@ export function DocumentsDashboard() {
                   <CardTitle>All Documents</CardTitle>
                   <CardDescription>View and manage all uploaded documents</CardDescription>
                 </div>
-                <UploadDocumentDialog />
+                <UploadDocumentDialog onDocumentUploaded={handleDocumentUploaded} />
               </div>
             </CardHeader>
             <CardContent>
-              <DocumentsTable />
+              <DocumentsTable 
+                searchTerm={searchTerm}
+                selectedClient={selectedClient}
+                refreshTrigger={refreshTrigger}
+              />
             </CardContent>
           </Card>
         </TabsContent>

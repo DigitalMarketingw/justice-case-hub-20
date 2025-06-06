@@ -3,204 +3,140 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
+import { StatsCard } from "@/components/dashboard/StatsCard";
+import { QuickActions } from "@/components/dashboard/QuickActions";
+import { RecentActivity } from "@/components/dashboard/RecentActivity";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Users, FileText, Calendar, DollarSign } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
-const AttorneyDashboard = () => {
-  const { profile, signOut, user, loading: authLoading } = useAuth();
-  const [clientCount, setClientCount] = useState(0);
-  const [pendingMessages, setPendingMessages] = useState(0);
-  const [upcomingEvents, setUpcomingEvents] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+interface AttorneyStats {
+  totalClients: number;
+  activeCases: number;
+  upcomingEvents: number;
+  monthlyRevenue: number;
+}
 
-  console.log('AttorneyDashboard - Auth state:', {
-    user: user?.email,
-    profile: profile?.role,
-    authLoading,
-    profileId: profile?.id
+const AttorneyDashboard = () => {
+  const { user } = useAuth();
+  const [stats, setStats] = useState<AttorneyStats>({
+    totalClients: 0,
+    activeCases: 0,
+    upcomingEvents: 0,
+    monthlyRevenue: 0
   });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchData = async () => {
-      console.log('AttorneyDashboard - Starting data fetch');
-      
-      if (authLoading) {
-        console.log('AttorneyDashboard - Auth still loading, waiting...');
-        return;
-      }
+    if (user) {
+      fetchStats();
+    }
+  }, [user]);
 
-      if (!user) {
-        console.log('AttorneyDashboard - No user found');
-        setError('No user found');
-        setLoading(false);
-        return;
-      }
-
+  const fetchStats = async () => {
+    try {
       setLoading(true);
-      setError(null);
-      
-      try {
-        // Get attorney details
-        console.log('AttorneyDashboard - Fetching attorney data for profile:', profile?.id);
-        
-        if (profile?.id) {
-          const { data: attorneyData, error: attorneyError } = await supabase
-            .from('attorneys')
-            .select('id')
-            .eq('profile_id', profile.id)
-            .single();
-            
-          console.log('AttorneyDashboard - Attorney data result:', { attorneyData, attorneyError });
-            
-          if (attorneyError) {
-            console.log('AttorneyDashboard - No attorney record found, this might be normal for demo users');
-            // Don't treat this as an error for demo purposes
-          }
-          
-          if (attorneyData) {
-            // Count assigned clients
-            const { count: clientCount, error: clientError } = await supabase
-              .from('clients')
-              .select('*', { count: 'exact', head: true })
-              .eq('assigned_attorney_id', attorneyData.id);
-              
-            if (!clientError) {
-              setClientCount(clientCount || 0);
-            }
-            
-            // Count unread messages
-            const { count: messageCount, error: messageError } = await supabase
-              .from('messages')
-              .select('*', { count: 'exact', head: true })
-              .eq('recipient_id', profile.id)
-              .eq('is_read', false);
-              
-            if (!messageError) {
-              setPendingMessages(messageCount || 0);
-            }
-            
-            // Count upcoming calendar events
-            const today = new Date();
-            const { count: eventCount, error: eventError } = await supabase
-              .from('calendar_events')
-              .select('*', { count: 'exact', head: true })
-              .eq('attorney_id', attorneyData.id)
-              .gte('start_time', today.toISOString());
-              
-            if (!eventError) {
-              setUpcomingEvents(eventCount || 0);
-            }
-          }
-        }
-      } catch (err) {
-        console.error('AttorneyDashboard - Error fetching data:', err);
-        setError('Failed to load dashboard data');
-      } finally {
-        setLoading(false);
+
+      // Get cases count
+      const { data: casesData, error: casesError } = await supabase
+        .from('cases')
+        .select('id, status')
+        .eq('attorney_id', user?.id);
+
+      if (casesError) {
+        console.error('Error fetching cases:', casesError);
       }
-    };
 
-    fetchData();
-  }, [profile, user, authLoading]);
+      const activeCases = casesData?.filter(c => c.status === 'active').length || 0;
+      const totalCases = casesData?.length || 0;
 
-  // Show loading while auth is loading
-  if (authLoading) {
-    console.log('AttorneyDashboard - Rendering auth loading state');
-    return (
-      <div className="flex h-screen items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-lg">Loading authentication...</p>
-        </div>
-      </div>
-    );
-  }
+      // Get billing entries for revenue calculation
+      const { data: billingData, error: billingError } = await supabase
+        .from('billing_entries')
+        .select('total_amount, date_worked')
+        .eq('attorney_id', user?.id);
 
-  // Show error if there's an authentication error
-  if (error) {
-    console.log('AttorneyDashboard - Rendering error state:', error);
-    return (
-      <div className="flex h-screen items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <p className="text-lg text-red-600 mb-4">{error}</p>
-          <Button onClick={() => window.location.reload()}>Reload Page</Button>
-        </div>
-      </div>
-    );
-  }
+      if (billingError) {
+        console.error('Error fetching billing:', billingError);
+      }
 
-  console.log('AttorneyDashboard - Rendering main dashboard');
+      // Calculate this month's revenue
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+      const monthlyRevenue = billingData
+        ?.filter(entry => {
+          const entryDate = new Date(entry.date_worked);
+          return entryDate.getMonth() === currentMonth && entryDate.getFullYear() === currentYear;
+        })
+        ?.reduce((sum, entry) => sum + (entry.total_amount || 0), 0) || 0;
+
+      // Get unique clients from cases
+      const uniqueClientIds = new Set(casesData?.map(c => c.client_id) || []);
+      const totalClients = uniqueClientIds.size;
+
+      // Mock upcoming events since calendar_events table doesn't exist
+      const upcomingEvents = 3; // Mock data
+
+      setStats({
+        totalClients,
+        activeCases,
+        upcomingEvents,
+        monthlyRevenue
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gray-50">
         <Sidebar />
         <main className="flex-1 p-6">
-          <div className="flex justify-between items-center mb-6">
+          <div className="space-y-6">
             <div>
               <h1 className="text-3xl font-bold">Attorney Dashboard</h1>
-              <p className="text-gray-600">
-                Welcome, {profile?.first_name || user?.email?.split('@')[0] || 'Attorney'}
-                {profile?.last_name && ` ${profile.last_name}`}
-              </p>
+              <p className="text-gray-600">Welcome back! Here's an overview of your practice.</p>
             </div>
-            <Button variant="outline" onClick={signOut}>Sign Out</Button>
-          </div>
 
-          {/* Stats Cards */}
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-6">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">My Clients</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{loading ? '...' : clientCount}</div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Unread Messages</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{loading ? '...' : pendingMessages}</div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Upcoming Events</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{loading ? '...' : upcomingEvents}</div>
-              </CardContent>
-            </Card>
-          </div>
+            {/* Stats Grid */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <StatsCard
+                title="Total Clients"
+                value={stats.totalClients}
+                description="Active clients"
+                icon={Users}
+                loading={loading}
+              />
+              <StatsCard
+                title="Active Cases"
+                value={stats.activeCases}
+                description="Currently handling"
+                icon={FileText}
+                loading={loading}
+              />
+              <StatsCard
+                title="Upcoming Events"
+                value={stats.upcomingEvents}
+                description="This week"
+                icon={Calendar}
+                loading={loading}
+              />
+              <StatsCard
+                title="Monthly Revenue"
+                value={`$${stats.monthlyRevenue.toLocaleString()}`}
+                description="This month"
+                icon={DollarSign}
+                loading={loading}
+              />
+            </div>
 
-          <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Log Billable Hours</CardTitle>
-                <CardDescription>Track your work for clients</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 mb-4">Record billable hours for your assigned clients.</p>
-                <Button>Log Hours</Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Client Documents</CardTitle>
-                <CardDescription>View and manage client documents</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 mb-4">Access and upload documents for your clients.</p>
-                <Button>View Documents</Button>
-              </CardContent>
-            </Card>
+            <div className="grid gap-6 md:grid-cols-2">
+              <QuickActions />
+              <RecentActivity />
+            </div>
           </div>
         </main>
       </div>

@@ -23,7 +23,8 @@ import { useToast } from "@/hooks/use-toast";
 
 interface Client {
   id: string;
-  full_name: string;
+  first_name: string;
+  last_name: string;
   email: string;
 }
 
@@ -55,25 +56,12 @@ export const StartConversationDialog = ({
   const fetchClients = async () => {
     setFetchingClients(true);
     try {
-      let query = supabase
-        .from('clients')
-        .select('id, full_name, email')
-        .eq('is_dropped', false);
-
-      // For attorneys, only show their assigned clients
-      if (profile?.role === 'attorney') {
-        const { data: attorneyData } = await supabase
-          .from('attorneys')
-          .select('id')
-          .eq('profile_id', profile.id)
-          .single();
-          
-        if (attorneyData) {
-          query = query.eq('assigned_attorney_id', attorneyData.id);
-        }
-      }
-
-      const { data, error } = await query.order('full_name');
+      // Get clients from profiles table
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name, email')
+        .eq('role', 'client')
+        .order('first_name');
 
       if (error) throw error;
       setClients(data || []);
@@ -101,34 +89,15 @@ export const StartConversationDialog = ({
 
     setLoading(true);
     try {
-      // Get attorney ID based on user role
-      let attorneyId = user?.id;
-      if (profile?.role === 'attorney') {
-        const { data: attorneyData } = await supabase
-          .from('attorneys')
-          .select('profile_id')
-          .eq('profile_id', profile.id)
-          .single();
-        attorneyId = attorneyData?.profile_id || user?.id;
-      }
-
-      // Get client's profile_id
-      const { data: clientData } = await supabase
-        .from('clients')
-        .select('profile_id')
-        .eq('id', selectedClientId)
+      // Create conversation
+      const { data: conversationData, error: convError } = await supabase
+        .from('conversations')
+        .insert({
+          client_id: selectedClientId,
+          attorney_id: user?.id
+        })
+        .select()
         .single();
-
-      if (!clientData?.profile_id) {
-        throw new Error('Client profile not found');
-      }
-
-      // Create or get conversation using the database function
-      const { data: conversationId, error: convError } = await supabase
-        .rpc('get_or_create_conversation', {
-          p_client_id: clientData.profile_id,
-          p_attorney_id: attorneyId
-        });
 
       if (convError) throw convError;
 
@@ -137,9 +106,8 @@ export const StartConversationDialog = ({
         .from('messages')
         .insert({
           sender_id: user?.id,
-          recipient_id: clientData.profile_id,
-          client_id: selectedClientId,
-          conversation_id: conversationId,
+          recipient_id: selectedClientId,
+          conversation_id: conversationData.id,
           content: message.trim()
         });
 
@@ -193,7 +161,7 @@ export const StartConversationDialog = ({
               <SelectContent>
                 {clients.map((client) => (
                   <SelectItem key={client.id} value={client.id}>
-                    {client.full_name} ({client.email})
+                    {client.first_name} {client.last_name} ({client.email})
                   </SelectItem>
                 ))}
               </SelectContent>

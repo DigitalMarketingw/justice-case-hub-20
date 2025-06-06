@@ -4,20 +4,19 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface Client {
   id: string;
-  full_name: string;
+  first_name: string;
+  last_name: string;
   email: string;
-  company_name?: string;
 }
 
 interface DocumentFile {
   id: string;
-  file_name: string;
+  name: string;
   file_size: number;
-  file_type: string;
+  mime_type: string;
   file_path: string;
-  upload_date: string;
+  created_at: string;
   description?: string;
-  tags?: string[];
 }
 
 interface ClientWithDocuments extends Client {
@@ -33,11 +32,12 @@ export function useClientDocuments(searchTerm: string) {
     try {
       setLoading(true);
       
-      // First get all clients
+      // First get all clients from profiles
       const { data: clients, error: clientsError } = await supabase
-        .from('clients')
-        .select('id, full_name, email, company_name')
-        .order('full_name');
+        .from('profiles')
+        .select('id, first_name, last_name, email')
+        .eq('role', 'client')
+        .order('first_name');
 
       if (clientsError) {
         console.error('Error fetching clients:', clientsError);
@@ -49,9 +49,9 @@ export function useClientDocuments(searchTerm: string) {
         (clients || []).map(async (client) => {
           const { data: documents, error: docsError } = await supabase
             .from('documents')
-            .select('id, file_name, file_size, file_type, file_path, upload_date, description, tags')
+            .select('id, name, file_size, mime_type, file_path, created_at, description')
             .eq('client_id', client.id)
-            .order('upload_date', { ascending: false });
+            .order('created_at', { ascending: false });
 
           if (docsError) {
             console.error('Error fetching documents for client:', client.id, docsError);
@@ -68,9 +68,9 @@ export function useClientDocuments(searchTerm: string) {
       // Filter to only show clients that have documents or match search
       const filteredClients = clientsWithDocs.filter(client => 
         client.documentCount > 0 || 
-        client.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (client.company_name && client.company_name.toLowerCase().includes(searchTerm.toLowerCase()))
+        client.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        client.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        client.email.toLowerCase().includes(searchTerm.toLowerCase())
       );
 
       setClientsWithDocuments(filteredClients);
