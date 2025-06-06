@@ -14,24 +14,39 @@ const Index = () => {
 
   // Redirect authenticated users to their role-specific dashboard
   useEffect(() => {
-    if (!loading && isAuthenticated && user && profile) {
-      console.log('Index: User is authenticated, profile role:', profile.role);
+    console.log('Index useEffect - Auth state:', {
+      loading,
+      isAuthenticated,
+      user: user?.email,
+      profile: profile?.role
+    });
+
+    if (!loading && isAuthenticated && user) {
+      console.log('User is authenticated, checking profile...');
       
-      const redirectMap = {
-        "super_admin": "/super-admin",
-        "firm_admin": "/firm-admin", 
-        "attorney": "/attorney",
-        "client": "/client"
-      };
-      
-      const redirectPath = redirectMap[profile.role];
-      if (redirectPath) {
-        console.log('Redirecting to:', redirectPath);
-        navigate(redirectPath, { replace: true });
+      if (profile) {
+        console.log('Profile found, redirecting based on role:', profile.role);
+        
+        const redirectMap = {
+          "super_admin": "/super-admin",
+          "firm_admin": "/firm-admin", 
+          "attorney": "/attorney",
+          "client": "/client"
+        };
+        
+        const redirectPath = redirectMap[profile.role];
+        if (redirectPath) {
+          console.log('Redirecting to:', redirectPath);
+          navigate(redirectPath, { replace: true });
+        } else {
+          // Fallback to attorney dashboard for unknown roles
+          console.log('Unknown role, redirecting to attorney dashboard');
+          navigate("/attorney", { replace: true });
+        }
       } else {
-        // Fallback to attorney dashboard for unknown roles
-        console.log('Unknown role, redirecting to attorney dashboard');
-        navigate("/attorney", { replace: true });
+        console.log('No profile yet, waiting...');
+        // If user is authenticated but profile is still loading, wait a bit more
+        // This handles the case where the profile fetch is still in progress
       }
     }
   }, [isAuthenticated, profile, user, loading, navigate]);
@@ -42,6 +57,7 @@ const Index = () => {
 
   // Show loading while checking auth state
   if (loading) {
+    console.log('Index - Showing loading state (auth loading)');
     return (
       <div className="flex h-screen items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
         <div className="text-center text-white">
@@ -52,8 +68,22 @@ const Index = () => {
     );
   }
 
-  // If authenticated, show brief loading until redirect happens
-  if (isAuthenticated && user) {
+  // If authenticated but no profile yet, show loading
+  if (isAuthenticated && user && !profile) {
+    console.log('Index - Showing loading state (waiting for profile)');
+    return (
+      <div className="flex h-screen items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
+        <div className="text-center text-white">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto mb-4"></div>
+          <p className="text-lg">Loading your profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If authenticated with profile, show brief loading until redirect happens
+  if (isAuthenticated && user && profile) {
+    console.log('Index - Showing loading state (redirecting)');
     return (
       <div className="flex h-screen items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
         <div className="text-center text-white">
@@ -65,6 +95,7 @@ const Index = () => {
   }
 
   // Not authenticated - show landing page
+  console.log('Index - Showing landing page (not authenticated)');
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
       <LandingNavigation onLoginClick={handleLoginClick} />
