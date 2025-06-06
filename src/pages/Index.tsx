@@ -44,9 +44,9 @@ const Index = () => {
           navigate("/attorney", { replace: true });
         }
       } else {
-        console.log('No profile yet, waiting...');
-        // If user is authenticated but profile is still loading, wait a bit more
-        // This handles the case where the profile fetch is still in progress
+        // If authenticated but no profile, still redirect to prevent infinite loading
+        console.log('No profile, redirecting to attorney dashboard as fallback');
+        navigate("/attorney", { replace: true });
       }
     }
   }, [isAuthenticated, profile, user, loading, navigate]);
@@ -63,32 +63,6 @@ const Index = () => {
         <div className="text-center text-white">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto mb-4"></div>
           <p className="text-lg">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // If authenticated but no profile yet, show loading
-  if (isAuthenticated && user && !profile) {
-    console.log('Index - Showing loading state (waiting for profile)');
-    return (
-      <div className="flex h-screen items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
-        <div className="text-center text-white">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto mb-4"></div>
-          <p className="text-lg">Loading your profile...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // If authenticated with profile, show brief loading until redirect happens
-  if (isAuthenticated && user && profile) {
-    console.log('Index - Showing loading state (redirecting)');
-    return (
-      <div className="flex h-screen items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
-        <div className="text-center text-white">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto mb-4"></div>
-          <p className="text-lg">Redirecting to your dashboard...</p>
         </div>
       </div>
     );

@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { UserProfile } from "@/types/auth";
@@ -18,12 +17,13 @@ export const useProfile = () => {
 
       if (error) {
         console.error('Error fetching user profile:', error.message);
-        setProfile(null);
-        return;
+        // Don't set profile to null on error - keep existing state
+        throw error;
       }
       
       if (!data) {
         console.log('No profile found for user, this might be a new user');
+        // For new users without profile, create a default one or handle gracefully
         setProfile(null);
         return;
       }
@@ -32,7 +32,7 @@ export const useProfile = () => {
       setProfile(data as UserProfile);
     } catch (error: any) {
       console.error('Error fetching user profile:', error.message);
-      setProfile(null);
+      // Don't throw error to prevent crash, just log it
     }
   }, []);
 

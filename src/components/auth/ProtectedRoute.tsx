@@ -38,7 +38,7 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to="/auth" replace />;
   }
 
-  // If specific roles are required and user doesn't have one of them
+  // If specific roles are required and user has a profile, check role
   if (allowedRoles && profile && !allowedRoles.includes(profile.role)) {
     console.log('ProtectedRoute - User role not allowed, redirecting based on role');
     // Redirect to appropriate dashboard based on role
@@ -53,7 +53,7 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to={redirectPath || "/attorney"} replace />;
   }
 
-  // User is authenticated - allow access regardless of profile loading status
+  // User is authenticated - allow access (with or without profile)
   console.log('ProtectedRoute - Access granted, rendering children');
   return <>{children}</>;
 };
