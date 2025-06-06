@@ -14,7 +14,7 @@ const LandingNavigation = ({ onLoginClick }: LandingNavigationProps) => {
           alt="LAWerp500 Logo" 
           className="h-10 w-auto"
         />
-        <span className="text-xl font-bold text-white">LAWerp500</span>
+        
       </div>
       <div className="flex items-center space-x-4">
         <Button 
