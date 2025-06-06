@@ -154,7 +154,7 @@ const Auth = () => {
                 alt="LAWerp500 Logo" 
                 className="h-8 w-auto"
               />
-              <CardTitle className="text-2xl font-bold">LAWerp500</CardTitle>
+              {/* <CardTitle className="text-2xl font-bold">LAWerp500</CardTitle> */}
             </div>
             <CardDescription>Login to access your dashboard</CardDescription>
           </CardHeader>
