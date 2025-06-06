@@ -41,10 +41,12 @@ export const createDemoUsers = async () => {
     try {
       console.log(`Creating ${user.role}: ${user.email}`);
       
+      // Create user with email confirmation bypassed
       const { data, error } = await supabase.auth.signUp({
         email: user.email,
         password: user.password,
         options: {
+          emailRedirectTo: `${window.location.origin}/`,
           data: {
             first_name: user.firstName,
             last_name: user.lastName,
@@ -55,26 +57,50 @@ export const createDemoUsers = async () => {
 
       if (error) {
         console.error(`Error creating ${user.role}:`, error.message);
+        
+        // If user already exists, try to sign them in to verify the account works
+        if (error.message.includes('already registered')) {
+          console.log(`User ${user.email} already exists, testing login...`);
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email: user.email,
+            password: user.password
+          });
+          
+          if (signInError) {
+            console.error(`Login test failed for ${user.email}:`, signInError.message);
+          } else {
+            console.log(`Login test successful for ${user.email}`);
+            // Sign out immediately after test
+            await supabase.auth.signOut();
+          }
+        }
       } else {
         console.log(`Successfully created ${user.role}: ${user.email}`);
         
-        // If this is the firm admin, associate them with the demo firm
-        if (user.role === 'firm_admin' && data.user) {
-          try {
-            const { error: updateError } = await supabase
-              .from('profiles')
-              .update({ 
-                firm_id: '00000000-0000-0000-0000-000000000001' 
-              })
-              .eq('id', data.user.id);
+        if (data.user) {
+          console.log(`User created with ID: ${data.user.id}`);
+          
+          // If this is the firm admin, associate them with the demo firm
+          if (user.role === 'firm_admin') {
+            try {
+              // Wait a moment for the profile to be created by the trigger
+              await new Promise(resolve => setTimeout(resolve, 1000));
               
-            if (updateError) {
-              console.error(`Error associating ${user.role} with firm:`, updateError.message);
-            } else {
-              console.log(`Successfully associated ${user.role} with demo firm`);
+              const { error: updateError } = await supabase
+                .from('profiles')
+                .update({ 
+                  firm_id: '00000000-0000-0000-0000-000000000001' 
+                })
+                .eq('id', data.user.id);
+                
+              if (updateError) {
+                console.error(`Error associating ${user.role} with firm:`, updateError.message);
+              } else {
+                console.log(`Successfully associated ${user.role} with demo firm`);
+              }
+            } catch (updateError) {
+              console.error(`Failed to associate ${user.role} with firm:`, updateError);
             }
-          } catch (updateError) {
-            console.error(`Failed to associate ${user.role} with firm:`, updateError);
           }
         }
       }

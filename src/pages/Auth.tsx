@@ -8,11 +8,14 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { createDemoUsers } from "@/utils/createDemoUsers";
+import { useToast } from "@/hooks/use-toast";
 
 const Auth = () => {
   const { signIn, isAuthenticated, profile, user, loading } = useAuth();
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [showCreateDemo, setShowCreateDemo] = useState(false);
+  const [creatingDemo, setCreatingDemo] = useState(false);
   
   // Login form state
   const [loginEmail, setLoginEmail] = useState("");
@@ -108,19 +111,34 @@ const Auth = () => {
     const result = await signIn(email, password);
     console.log('Demo login result:', result);
     
+    if (result.error) {
+      toast({
+        title: "Login failed",
+        description: "Demo user might not exist. Try creating demo users first.",
+        variant: "destructive",
+      });
+    }
+    
     setIsLoading(false);
   };
 
   const handleCreateDemoUsers = async () => {
-    setIsLoading(true);
+    setCreatingDemo(true);
     try {
       await createDemoUsers();
-      alert('Demo users created successfully! You can now login with the demo credentials.');
+      toast({
+        title: "Demo users created successfully!",
+        description: "You can now login with the demo credentials.",
+      });
     } catch (error) {
       console.error('Error creating demo users:', error);
-      alert('Error creating demo users. Check console for details.');
+      toast({
+        title: "Error creating demo users",
+        description: "Check console for details.",
+        variant: "destructive",
+      });
     } finally {
-      setIsLoading(false);
+      setCreatingDemo(false);
       setShowCreateDemo(false);
     }
   };
@@ -201,7 +219,7 @@ const Auth = () => {
                 size="sm"
                 className="w-full"
                 onClick={() => setShowCreateDemo(!showCreateDemo)}
-                disabled={isLoading}
+                disabled={isLoading || creatingDemo}
               >
                 {showCreateDemo ? 'Cancel' : 'Need to create demo users?'}
               </Button>
@@ -211,9 +229,9 @@ const Auth = () => {
                   size="sm"
                   className="w-full bg-green-600 hover:bg-green-700"
                   onClick={handleCreateDemoUsers}
-                  disabled={isLoading}
+                  disabled={isLoading || creatingDemo}
                 >
-                  {isLoading ? 'Creating...' : 'Create Demo Users'}
+                  {creatingDemo ? 'Creating Users...' : 'Create Demo Users'}
                 </Button>
               )}
             </div>
