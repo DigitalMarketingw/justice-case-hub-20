@@ -13,6 +13,9 @@ export const MessagingDashboard = () => {
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [showStartDialog, setShowStartDialog] = useState(false);
 
+  console.log('Current user profile:', profile);
+  console.log('Current user:', user);
+
   const handleConversationCreated = (conversationId: string) => {
     setSelectedConversation(conversationId);
   };
@@ -48,25 +51,34 @@ export const MessagingDashboard = () => {
   // For attorneys and clients, show their direct conversations
   return (
     <div className="h-[calc(100vh-200px)] flex flex-col">
-      {/* Header with Start Conversation Button for Attorneys */}
-      {profile?.role === 'attorney' && (
-        <div className="p-4 border-b bg-white">
-          <div className="flex justify-between items-center">
-            <div>
-              <h2 className="text-lg font-semibold">Your Conversations</h2>
-              <p className="text-sm text-gray-600">Manage communications with your clients</p>
-            </div>
+      {/* Always show header for better visibility */}
+      <div className="p-6 border-b bg-white shadow-sm">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">
+              {profile?.role === 'attorney' ? 'Your Client Conversations' : 'Your Messages'}
+            </h2>
+            <p className="text-gray-600 mt-1">
+              {profile?.role === 'attorney' 
+                ? 'Manage communications with your clients' 
+                : 'View your conversations with attorneys'
+              }
+            </p>
+          </div>
+          
+          {/* Show Start Conversation Button for Attorneys */}
+          {profile?.role === 'attorney' && (
             <Button 
               onClick={handleStartNewConversation}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-              size="default"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 text-lg font-medium shadow-lg"
+              size="lg"
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-5 w-5 mr-2" />
               Start New Conversation
             </Button>
-          </div>
+          )}
         </div>
-      )}
+      </div>
 
       <div className="flex-1 flex">
         <div className="w-1/3 border-r">
