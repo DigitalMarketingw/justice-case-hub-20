@@ -17,6 +17,14 @@ interface Client {
   email: string;
   phone?: string;
   created_at: string;
+  full_name: string;
+  is_dropped: boolean;
+  company_name?: string;
+  address?: string;
+  notes?: string;
+  tags?: string[];
+  dropped_date?: string;
+  assigned_attorney_id?: string;
 }
 
 const Clients = () => {
@@ -42,7 +50,20 @@ const Clients = () => {
         return;
       }
 
-      setClients(data || []);
+      // Transform the data to match the Client interface
+      const transformedClients: Client[] = (data || []).map(client => ({
+        ...client,
+        full_name: `${client.first_name} ${client.last_name}`,
+        is_dropped: false, // Default value since we don't have this field in profiles
+        company_name: undefined,
+        address: undefined,
+        notes: undefined,
+        tags: undefined,
+        dropped_date: undefined,
+        assigned_attorney_id: undefined
+      }));
+
+      setClients(transformedClients);
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -55,6 +76,11 @@ const Clients = () => {
     client.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     client.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Calculate stats for ClientsStats component
+  const totalClients = clients.length;
+  const activeClients = clients.filter(client => !client.is_dropped).length;
+  const droppedClients = clients.filter(client => client.is_dropped).length;
 
   return (
     <SidebarProvider>
@@ -70,7 +96,11 @@ const Clients = () => {
               <AddClientDialog onClientAdded={fetchClients} />
             </div>
 
-            <ClientsStats />
+            <ClientsStats 
+              totalClients={totalClients}
+              activeClients={activeClients}
+              droppedClients={droppedClients}
+            />
 
             <Card>
               <CardHeader>
@@ -91,7 +121,7 @@ const Clients = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <ClientsTable clients={filteredClients} loading={loading} />
+                <ClientsTable clients={filteredClients} loading={loading} onRefresh={fetchClients} />
               </CardContent>
             </Card>
           </div>

@@ -43,7 +43,14 @@ export function FirmSettings() {
         .single();
 
       if (error) throw error;
-      setFirmData(data);
+      
+      // Add firm_code if it doesn't exist in the data
+      const firmDataWithCode = {
+        ...data,
+        firm_code: data.firm_code || data.id.slice(0, 8).toUpperCase()
+      };
+      
+      setFirmData(firmDataWithCode);
     } catch (error: any) {
       console.error('Error fetching firm data:', error);
       toast({

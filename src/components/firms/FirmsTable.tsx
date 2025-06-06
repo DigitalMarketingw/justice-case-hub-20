@@ -44,7 +44,7 @@ export function FirmsTable({ searchTerm }: FirmsTableProps) {
         .order('created_at', { ascending: false });
 
       if (searchTerm) {
-        query = query.or(`name.ilike.%${searchTerm}%,firm_code.ilike.%${searchTerm}%,address.ilike.%${searchTerm}%`);
+        query = query.or(`name.ilike.%${searchTerm}%,address.ilike.%${searchTerm}%`);
       }
 
       const { data, error } = await query;
@@ -95,7 +95,7 @@ export function FirmsTable({ searchTerm }: FirmsTableProps) {
                 <TableCell>
                   <div className="space-y-1">
                     <div className="font-medium">{firm.name}</div>
-                    <div className="text-sm text-gray-500">Code: {firm.firm_code}</div>
+                    <div className="text-sm text-gray-500">ID: {firm.id.slice(0, 8)}...</div>
                     {firm.address && (
                       <div className="text-sm text-gray-500">{firm.address}</div>
                     )}

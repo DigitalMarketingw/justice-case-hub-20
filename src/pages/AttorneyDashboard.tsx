@@ -40,7 +40,7 @@ const AttorneyDashboard = () => {
       // Get cases count
       const { data: casesData, error: casesError } = await supabase
         .from('cases')
-        .select('id, status')
+        .select('id, status, client_id')
         .eq('attorney_id', user?.id);
 
       if (casesError) {
@@ -105,29 +105,25 @@ const AttorneyDashboard = () => {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <StatsCard
                 title="Total Clients"
-                value={stats.totalClients}
-                description="Active clients"
+                value={stats.totalClients.toString()}
                 icon={Users}
                 loading={loading}
               />
               <StatsCard
                 title="Active Cases"
-                value={stats.activeCases}
-                description="Currently handling"
+                value={stats.activeCases.toString()}
                 icon={FileText}
                 loading={loading}
               />
               <StatsCard
                 title="Upcoming Events"
-                value={stats.upcomingEvents}
-                description="This week"
+                value={stats.upcomingEvents.toString()}
                 icon={Calendar}
                 loading={loading}
               />
               <StatsCard
                 title="Monthly Revenue"
                 value={`$${stats.monthlyRevenue.toLocaleString()}`}
-                description="This month"
                 icon={DollarSign}
                 loading={loading}
               />

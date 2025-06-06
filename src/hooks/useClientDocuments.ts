@@ -20,6 +20,7 @@ interface DocumentFile {
 }
 
 interface ClientWithDocuments extends Client {
+  full_name: string;
   documents: DocumentFile[];
   documentCount: number;
 }
@@ -59,6 +60,7 @@ export function useClientDocuments(searchTerm: string) {
 
           return {
             ...client,
+            full_name: `${client.first_name} ${client.last_name}`,
             documents: documents || [],
             documentCount: documents?.length || 0
           };

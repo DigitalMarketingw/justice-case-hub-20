@@ -33,11 +33,12 @@ const FirmAdminDashboard = () => {
         setFirmName(firmData.name);
       }
       
-      // Count attorneys in the firm
+      // Count attorneys in the firm from profiles table
       const { count: attorneyCount, error: attorneyError } = await supabase
-        .from('attorneys')
+        .from('profiles')
         .select('*', { count: 'exact', head: true })
-        .eq('firm_id', profile.firm_id);
+        .eq('firm_id', profile.firm_id)
+        .eq('role', 'attorney');
         
       if (attorneyError) {
         console.error('Error fetching attorneys:', attorneyError);
@@ -45,11 +46,12 @@ const FirmAdminDashboard = () => {
         setAttorneyCount(attorneyCount || 0);
       }
       
-      // Count clients in the firm
+      // Count clients in the firm from profiles table
       const { count: clientCount, error: clientError } = await supabase
-        .from('clients')
+        .from('profiles')
         .select('*', { count: 'exact', head: true })
-        .eq('firm_id', profile.firm_id);
+        .eq('firm_id', profile.firm_id)
+        .eq('role', 'client');
         
       if (clientError) {
         console.error('Error fetching clients:', clientError);
