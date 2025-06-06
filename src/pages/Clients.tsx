@@ -48,41 +48,46 @@ const Clients = () => {
     try {
       setLoading(true);
       
-      // Fetch clients with their assigned attorney information
-      const { data, error } = await supabase
+      // First fetch clients
+      const { data: clientsData, error: clientsError } = await supabase
         .from('profiles')
-        .select(`
-          id, 
-          first_name, 
-          last_name, 
-          email, 
-          phone, 
-          created_at,
-          is_dropped,
-          dropped_date,
-          assigned_attorney_id,
-          assigned_attorney:assigned_attorney_id(first_name, last_name)
-        `)
+        .select('id, first_name, last_name, email, phone, created_at, is_dropped, dropped_date, assigned_attorney_id')
         .eq('role', 'client')
         .eq('firm_id', profile.firm_id)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching clients:', error);
+      if (clientsError) {
+        console.error('Error fetching clients:', clientsError);
         return;
       }
 
+      // Get unique attorney IDs
+      const attorneyIds = [...new Set(clientsData?.map(c => c.assigned_attorney_id).filter(Boolean) || [])];
+      
+      // Fetch attorney names separately
+      let attorneysMap = new Map();
+      if (attorneyIds.length > 0) {
+        const { data: attorneys, error: attorneysError } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name')
+          .in('id', attorneyIds);
+
+        if (attorneysError) {
+          console.error('Error fetching attorneys:', attorneysError);
+        } else {
+          attorneysMap = new Map(attorneys?.map(a => [a.id, `${a.first_name} ${a.last_name}`]) || []);
+        }
+      }
+
       // Transform the data to match the Client interface
-      const transformedClients: Client[] = (data || []).map(client => ({
+      const transformedClients: Client[] = (clientsData || []).map(client => ({
         ...client,
         full_name: `${client.first_name} ${client.last_name}`,
         company_name: undefined,
         address: undefined,
         notes: undefined,
         tags: undefined,
-        assigned_attorney_name: client.assigned_attorney ? 
-          `${client.assigned_attorney.first_name} ${client.assigned_attorney.last_name}` : 
-          undefined
+        assigned_attorney_name: attorneysMap.get(client.assigned_attorney_id) || undefined
       }));
 
       setClients(transformedClients);

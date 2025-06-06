@@ -39,29 +39,32 @@ export function DroppedClientsSection({ onClientReassigned }: DroppedClientsSect
 
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // First get the dropped clients
+      const { data: clients, error: clientsError } = await supabase
         .from('profiles')
-        .select(`
-          id,
-          first_name,
-          last_name,
-          email,
-          dropped_date,
-          dropped_by,
-          dropper:dropped_by(first_name, last_name)
-        `)
+        .select('id, first_name, last_name, email, dropped_date, dropped_by')
         .eq('role', 'client')
         .eq('firm_id', profile.firm_id)
         .eq('is_dropped', true)
         .order('dropped_date', { ascending: false });
 
-      if (error) throw error;
+      if (clientsError) throw clientsError;
 
-      const transformedData: DroppedClient[] = (data || []).map(client => ({
+      // Get the dropper names separately
+      const dropperIds = [...new Set(clients?.map(c => c.dropped_by).filter(Boolean) || [])];
+      const { data: droppers, error: droppersError } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name')
+        .in('id', dropperIds);
+
+      if (droppersError) throw droppersError;
+
+      // Map dropper names to clients
+      const droppersMap = new Map(droppers?.map(d => [d.id, `${d.first_name} ${d.last_name}`]) || []);
+
+      const transformedData: DroppedClient[] = (clients || []).map(client => ({
         ...client,
-        dropper_name: client.dropper ? 
-          `${client.dropper.first_name} ${client.dropper.last_name}` : 
-          'Unknown'
+        dropper_name: droppersMap.get(client.dropped_by) || 'Unknown'
       }));
 
       setDroppedClients(transformedData);
