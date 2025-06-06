@@ -1,6 +1,5 @@
 
 import { Button } from "@/components/ui/button";
-import { Scale, ArrowRight } from "lucide-react";
 
 interface LandingNavigationProps {
   onLoginClick: () => void;
@@ -8,18 +7,39 @@ interface LandingNavigationProps {
 
 const LandingNavigation = ({ onLoginClick }: LandingNavigationProps) => {
   return (
-    <nav className="relative z-10 p-6">
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
-        <div className="flex items-center space-x-2">
-          <Scale className="h-8 w-8 text-blue-400" />
-          <span className="text-2xl font-bold text-white">LAWerp500</span>
-        </div>
+    <nav className="flex items-center justify-between p-6">
+      <div className="flex items-center space-x-3">
+        <img 
+          src="/lovable-uploads/bbf7762d-182e-48ac-b791-d3c06762a94c.png" 
+          alt="LAWerp500 Logo" 
+          className="h-10 w-auto"
+        />
+        <span className="text-xl font-bold text-white">LAWerp500</span>
+      </div>
+      <div className="flex items-center space-x-4">
+        <Button 
+          variant="ghost" 
+          className="text-white hover:bg-white/10"
+        >
+          Features
+        </Button>
+        <Button 
+          variant="ghost" 
+          className="text-white hover:bg-white/10"
+        >
+          Pricing
+        </Button>
+        <Button 
+          variant="ghost" 
+          className="text-white hover:bg-white/10"
+        >
+          About
+        </Button>
         <Button 
           onClick={onLoginClick}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-all duration-300 transform hover:scale-105"
+          className="bg-blue-600 hover:bg-blue-700 text-white"
         >
-          Login / Register
-          <ArrowRight className="ml-2 h-4 w-4" />
+          Login
         </Button>
       </div>
     </nav>

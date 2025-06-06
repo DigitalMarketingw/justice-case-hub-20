@@ -148,7 +148,14 @@ const Auth = () => {
       <div className="w-full max-w-md">
         <Card>
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold">LAWerp500</CardTitle>
+            <div className="flex items-center justify-center space-x-3 mb-4">
+              <img 
+                src="/lovable-uploads/bbf7762d-182e-48ac-b791-d3c06762a94c.png" 
+                alt="LAWerp500 Logo" 
+                className="h-8 w-auto"
+              />
+              <CardTitle className="text-2xl font-bold">LAWerp500</CardTitle>
+            </div>
             <CardDescription>Login to access your dashboard</CardDescription>
           </CardHeader>
           

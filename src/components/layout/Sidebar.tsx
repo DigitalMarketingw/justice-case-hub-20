@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { 
@@ -172,9 +173,16 @@ export function Sidebar({ className }: SidebarProps) {
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-slate-700">
         {!isCollapsed && (
-          <h1 className="text-xl font-bold">
-            {getTitle()}
-          </h1>
+          <div className="flex items-center space-x-3">
+            <img 
+              src="/lovable-uploads/bbf7762d-182e-48ac-b791-d3c06762a94c.png" 
+              alt="LAWerp500 Logo" 
+              className="h-6 w-auto"
+            />
+            <h1 className="text-xl font-bold">
+              {getTitle()}
+            </h1>
+          </div>
         )}
         <Button
           variant="ghost"
