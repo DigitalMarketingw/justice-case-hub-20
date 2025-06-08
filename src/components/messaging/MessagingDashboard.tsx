@@ -33,7 +33,7 @@ export const MessagingDashboard = () => {
   const isAdmin = profile?.role === 'super_admin' || profile?.role === 'firm_admin' || user?.email === 'superadmin@demo.com';
   console.log('MessagingDashboard - Is admin?', isAdmin);
 
-  // Check if user is specifically an attorney (not just email contains attorney)
+  // Check roles specifically
   const isAttorney = profile?.role === 'attorney';
   const isClient = profile?.role === 'client';
 
