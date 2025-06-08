@@ -12,6 +12,7 @@ export interface UserProfile {
   firm_id: string | null;
   is_active: boolean;
   phone: string | null;
+  last_login: string | null;
 }
 
 export interface AuthContextType {
