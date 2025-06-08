@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { UserRole } from "@/types/auth";
 
 // This is a utility function to create demo users with the specified credentials
 // Note: This should only be run once to set up demo data
@@ -43,7 +44,7 @@ export const createDemoUsers = async () => {
     {
       email: "superadmin@demo.com",
       password: "admin123",
-      role: "super_admin",
+      role: "super_admin" as UserRole,
       firstName: "Super",
       lastName: "Admin",
       firmId: null // Super admin doesn't belong to a specific firm
@@ -51,7 +52,7 @@ export const createDemoUsers = async () => {
     {
       email: "firmadmin@demo.com", 
       password: "admin123",
-      role: "firm_admin",
+      role: "firm_admin" as UserRole,
       firstName: "Firm",
       lastName: "Admin",
       firmId: demoFirmId
@@ -59,7 +60,7 @@ export const createDemoUsers = async () => {
     {
       email: "attorney@demo.com",
       password: "password",
-      role: "attorney", 
+      role: "attorney" as UserRole, 
       firstName: "John",
       lastName: "Attorney",
       firmId: demoFirmId
@@ -67,7 +68,7 @@ export const createDemoUsers = async () => {
     {
       email: "client@demo.com",
       password: "password",
-      role: "client",
+      role: "client" as UserRole,
       firstName: "Jane",
       lastName: "Client",
       firmId: demoFirmId
@@ -78,11 +79,14 @@ export const createDemoUsers = async () => {
     try {
       console.log(`Creating/updating ${user.role}: ${user.email}`);
       
-      // First check if user already exists in auth
-      const { data: existingAuthUser } = await supabase.auth.admin.listUsers();
-      const userExists = existingAuthUser.users?.some(u => u.email === user.email);
+      // First check if user already exists by trying to get their profile
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id, email')
+        .eq('email', user.email)
+        .single();
       
-      if (!userExists) {
+      if (!existingProfile) {
         // Create user with email confirmation bypassed
         const { data, error } = await supabase.auth.signUp({
           email: user.email,
@@ -204,29 +208,19 @@ export const createDemoData = async () => {
             case_number: 'PI-2024-001',
             client_id: clientProfile.id,
             attorney_id: attorneyProfile.id,
-            firm_id: '00000000-0000-0000-0000-000000000001',
-            status: 'active',
-            priority: 'high',
+            status: 'active' as const,
             case_type: 'Personal Injury',
             description: 'Vehicle accident case involving multiple parties',
-            filing_date: '2024-01-15',
-            court_date: '2024-06-20',
-            estimated_hours: 120,
-            billable_rate: 350
+            court_date: '2024-06-20T10:00:00Z'
           },
           {
             title: 'Contract Dispute - Business Agreement',
             case_number: 'CD-2024-002',
             client_id: clientProfile.id,
             attorney_id: attorneyProfile.id,
-            firm_id: '00000000-0000-0000-0000-000000000001',
-            status: 'pending',
-            priority: 'medium',
+            status: 'pending' as const,
             case_type: 'Contract Law',
-            description: 'Dispute over commercial contract terms',
-            filing_date: '2024-02-01',
-            estimated_hours: 80,
-            billable_rate: 350
+            description: 'Dispute over commercial contract terms'
           }
         ];
         

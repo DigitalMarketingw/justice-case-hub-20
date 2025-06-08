@@ -12,7 +12,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [profileLoading, setProfileLoading] = useState<boolean>(false);
   
   const { profile, setProfile, fetchUserProfile } = useProfile();
   const { signIn, signUp, signOut: authSignOut } = useAuthOperations();
@@ -35,7 +34,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(null);
           setProfile(null);
           setLoading(false);
-          setProfileLoading(false);
           return;
         }
 
@@ -45,8 +43,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         // Fetch profile for authenticated users with simplified error handling
         if (currentSession?.user) {
-          setProfileLoading(true);
-          
           // Shorter timeout to prevent stuck loading states
           profileFetchTimeout = setTimeout(() => {
             if (mounted) {
@@ -64,10 +60,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 last_login: new Date().toISOString(), // Set current time to prevent onboarding loop
               };
               setProfile(fallbackProfile);
-              setProfileLoading(false);
               setLoading(false);
             }
-          }, 2000); // Reduced from 5 seconds to 2 seconds
+          }, 2000);
 
           try {
             console.log('Fetching profile for user:', currentSession.user.id);
@@ -132,7 +127,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           } finally {
             if (mounted) {
               clearTimeout(profileFetchTimeout);
-              setProfileLoading(false);
               setLoading(false);
             }
           }
@@ -196,9 +190,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Determine if actually loading - simplified logic
-  const isActuallyLoading = loading && !user;
-
   return (
     <AuthContext.Provider
       value={{
@@ -208,7 +199,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signIn,
         signUp,
         signOut: handleSignOut,
-        loading: isActuallyLoading,
+        loading,
         isAuthenticated: !!user,
       }}
     >
