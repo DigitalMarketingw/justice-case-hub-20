@@ -17,7 +17,7 @@ const LandingNavigation = ({ onLoginClick, onContactClick }: LandingNavigationPr
   ];
 
   return (
-    <nav className="sticky top-0 z-50 bg-background/50 backdrop-blur-lg border-b border-border/20">
+    <nav className="sticky top-0 z-50 bg-background/40 backdrop-blur-lg border-b border-border/20">
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between h-20">
           {/* Logo and Brand */}
