@@ -4,7 +4,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { UserPlus } from "lucide-react";
@@ -47,7 +46,6 @@ export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAt
     const fetchFirms = async () => {
       if (!dialogOpen) return;
 
-      // Only super admins can select firms, firm admins are limited to their firm
       if (profile?.role === 'super_admin') {
         const { data: firmData, error: firmError } = await supabase
           .from('firms')
@@ -65,7 +63,6 @@ export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAt
     fetchFirms();
   }, [dialogOpen, profile]);
 
-  // Generate a secure temporary password
   const generateTemporaryPassword = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
     let password = '';
@@ -77,6 +74,7 @@ export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAt
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     
     if (!formData.firstName || !formData.lastName || !formData.email) {
       toast({
@@ -87,7 +85,6 @@ export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAt
       return;
     }
 
-    // Validate firm assignment
     const targetFirmId = formData.firmId || profile?.firm_id;
     if (!targetFirmId) {
       toast({
@@ -98,7 +95,6 @@ export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAt
       return;
     }
 
-    // Ensure firm admin can only create attorneys in their firm
     if (profile?.role === 'firm_admin' && profile?.firm_id !== targetFirmId) {
       toast({
         title: "Error",
@@ -113,7 +109,6 @@ export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAt
 
       const temporaryPassword = generateTemporaryPassword();
 
-      // Create the user in auth with proper metadata
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: temporaryPassword,
@@ -145,7 +140,6 @@ export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAt
         return;
       }
 
-      // Update the profile with additional info
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
@@ -160,7 +154,6 @@ export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAt
         console.error('Error updating profile:', profileError);
       }
 
-      // Update the attorney record with professional info
       const { error: attorneyError } = await supabase
         .from('attorneys')
         .update({
@@ -175,7 +168,6 @@ export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAt
         console.error('Error updating attorney info:', attorneyError);
       }
 
-      // Log the activity
       await supabase.rpc('log_user_activity', {
         p_user_id: authData.user.id,
         p_action: 'ATTORNEY_CREATED',
@@ -193,7 +185,6 @@ export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAt
         duration: 10000
       });
 
-      // Reset form
       setFormData({
         firstName: "",
         lastName: "",
@@ -224,7 +215,6 @@ export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAt
     }
   };
 
-  // Only show to admins
   if (!profile || !['super_admin', 'firm_admin'].includes(profile.role)) {
     return null;
   }
@@ -239,7 +229,7 @@ export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAt
           </Button>
         </DialogTrigger>
       )}
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg" onClick={(e) => e.stopPropagation()}>
         <DialogHeader>
           <DialogTitle>Add New Attorney</DialogTitle>
         </DialogHeader>
@@ -286,7 +276,6 @@ export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAt
             />
           </div>
 
-          {/* Firm selection - only for super admin */}
           {profile?.role === 'super_admin' && (
             <div className="space-y-2">
               <Label htmlFor="firm">Firm *</Label>

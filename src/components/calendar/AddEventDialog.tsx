@@ -1,12 +1,11 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { CalendarIcon, Plus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -33,17 +32,6 @@ interface Attorney {
   id: string;
   first_name: string;
   last_name: string;
-}
-
-interface CalendarEvent {
-  id: string;
-  title: string;
-  description?: string;
-  start_time: string;
-  end_time: string;
-  client_id?: string;
-  attorney_id?: string;
-  case_id?: string;
 }
 
 interface AddEventDialogProps {
@@ -118,8 +106,6 @@ export function AddEventDialog({ open, onOpenChange, onEventAdded }: AddEventDia
       const startDateTime = `${data.start_date}T${data.start_time}:00`;
       const endDateTime = `${data.end_date}T${data.end_time}:00`;
 
-      // For now, we'll create a simple record in a messages table or another existing table
-      // Since calendar_events doesn't exist, we'll use a workaround or create mock data
       console.log('Calendar event data:', {
         title: data.title,
         description: data.description,
@@ -151,9 +137,15 @@ export function AddEventDialog({ open, onOpenChange, onEventAdded }: AddEventDia
     }
   };
 
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    form.handleSubmit(onSubmit)(e);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px]" onClick={(e) => e.stopPropagation()}>
         <DialogHeader>
           <DialogTitle>Add Calendar Event</DialogTitle>
           <DialogDescription>
@@ -161,7 +153,7 @@ export function AddEventDialog({ open, onOpenChange, onEventAdded }: AddEventDia
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleFormSubmit} className="space-y-4">
             <FormField
               control={form.control}
               name="title"

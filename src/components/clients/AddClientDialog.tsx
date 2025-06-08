@@ -4,7 +4,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { UserPlus } from "lucide-react";
@@ -17,88 +16,51 @@ interface Attorney {
   last_name: string;
 }
 
-interface Firm {
-  id: string;
-  name: string;
-}
-
 interface AddClientDialogProps {
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
   onClientAdded?: () => void;
 }
 
-export function AddClientDialog({ open, onOpenChange, onClientAdded }: AddClientDialogProps) {
+export function AddClientDialog({ onClientAdded }: AddClientDialogProps) {
   const { toast } = useToast();
   const { profile, user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [attorneys, setAttorneys] = useState<Attorney[]>([]);
-  const [firms, setFirms] = useState<Firm[]>([]);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
     phone: "",
-    address: "",
-    notes: "",
     assignedAttorneyId: "",
-    firmId: profile?.firm_id || "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const dialogOpen = open !== undefined ? open : isOpen;
-  const setDialogOpen = onOpenChange || setIsOpen;
-
   useEffect(() => {
-    const fetchData = async () => {
-      if (!dialogOpen) return;
+    if (isOpen) {
+      fetchAttorneys();
+    }
+  }, [isOpen, profile?.firm_id]);
 
-      // Fetch attorneys based on user role
-      let attorneyQuery = supabase
+  const fetchAttorneys = async () => {
+    if (!profile?.firm_id) return;
+
+    try {
+      const { data, error } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, firm_id')
+        .select('id, first_name, last_name')
         .eq('role', 'attorney')
-        .eq('is_active', true)
+        .eq('firm_id', profile.firm_id)
         .order('first_name');
 
-      // If firm admin, only show attorneys from their firm
-      if (profile?.role === 'firm_admin' && profile?.firm_id) {
-        attorneyQuery = attorneyQuery.eq('firm_id', profile.firm_id);
+      if (error) {
+        console.error('Error fetching attorneys:', error);
+      } else {
+        setAttorneys(data || []);
       }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
 
-      const { data: attorneyData, error: attorneyError } = await attorneyQuery;
-
-      if (attorneyError) {
-        console.error('Error fetching attorneys:', attorneyError);
-        toast({
-          title: "Error",
-          description: "Failed to load attorneys",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      setAttorneys(attorneyData || []);
-
-      // Only super admins can select firms, firm admins are limited to their firm
-      if (profile?.role === 'super_admin') {
-        const { data: firmData, error: firmError } = await supabase
-          .from('firms')
-          .select('id, name')
-          .order('name');
-
-        if (firmError) {
-          console.error('Error fetching firms:', firmError);
-        } else {
-          setFirms(firmData || []);
-        }
-      }
-    };
-
-    fetchData();
-  }, [dialogOpen, profile]);
-
-  // Generate a secure temporary password
   const generateTemporaryPassword = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
     let password = '';
@@ -110,6 +72,7 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded }: AddClient
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     
     if (!formData.firstName || !formData.lastName || !formData.email) {
       toast({
@@ -120,22 +83,10 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded }: AddClient
       return;
     }
 
-    // Validate firm assignment
-    const targetFirmId = formData.firmId || profile?.firm_id;
-    if (!targetFirmId) {
+    if (!profile?.firm_id) {
       toast({
         title: "Error",
-        description: "No firm selected or available",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Ensure firm admin can only create clients in their firm
-    if (profile?.role === 'firm_admin' && profile?.firm_id !== targetFirmId) {
-      toast({
-        title: "Error",
-        description: "You can only create clients for your firm",
+        description: "No firm associated with your account",
         variant: "destructive"
       });
       return;
@@ -146,7 +97,6 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded }: AddClient
 
       const temporaryPassword = generateTemporaryPassword();
 
-      // Create the user in auth with proper metadata
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: temporaryPassword,
@@ -155,7 +105,7 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded }: AddClient
             first_name: formData.firstName,
             last_name: formData.lastName,
             role: 'client',
-            firm_id: targetFirmId
+            firm_id: profile.firm_id
           }
         }
       });
@@ -178,7 +128,6 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded }: AddClient
         return;
       }
 
-      // Update the profile with additional client info
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
@@ -194,50 +143,32 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded }: AddClient
         console.error('Error updating profile:', profileError);
       }
 
-      // Update the client record with additional info
-      const { error: clientError } = await supabase
-        .from('clients')
-        .update({
-          address: formData.address || null,
-          notes: formData.notes || null,
-        })
-        .eq('id', authData.user.id);
-
-      if (clientError) {
-        console.error('Error updating client info:', clientError);
-      }
-
-      // Log the activity
       await supabase.rpc('log_user_activity', {
         p_user_id: authData.user.id,
         p_action: 'CLIENT_CREATED',
         p_details: {
           client_name: `${formData.firstName} ${formData.lastName}`,
-          firm_id: targetFirmId,
+          firm_id: profile.firm_id,
           assigned_attorney_id: formData.assignedAttorneyId || null,
-          temporary_password: temporaryPassword // Include for admin reference
+          temporary_password: temporaryPassword
         }
       });
 
       toast({
         title: "Success",
         description: `Client created successfully. Temporary password: ${temporaryPassword}`,
-        duration: 10000 // Show longer so admin can copy password
+        duration: 10000
       });
 
-      // Reset form
       setFormData({
         firstName: "",
         lastName: "",
         email: "",
         phone: "",
-        address: "",
-        notes: "",
         assignedAttorneyId: "",
-        firmId: profile?.firm_id || "",
       });
 
-      setDialogOpen(false);
+      setIsOpen(false);
 
       if (onClientAdded) {
         onClientAdded();
@@ -255,22 +186,19 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded }: AddClient
     }
   };
 
-  // Only show to admins
   if (!profile || !['super_admin', 'firm_admin'].includes(profile.role)) {
     return null;
   }
 
   return (
-    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      {!open && (
-        <DialogTrigger asChild>
-          <Button>
-            <UserPlus className="mr-2 h-4 w-4" />
-            Add Client
-          </Button>
-        </DialogTrigger>
-      )}
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <UserPlus className="mr-2 h-4 w-4" />
+          Add Client
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-lg" onClick={(e) => e.stopPropagation()}>
         <DialogHeader>
           <DialogTitle>Add New Client</DialogTitle>
         </DialogHeader>
@@ -317,30 +245,8 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded }: AddClient
             />
           </div>
 
-          {/* Firm selection - only for super admin */}
-          {profile?.role === 'super_admin' && (
-            <div className="space-y-2">
-              <Label htmlFor="firm">Firm *</Label>
-              <Select
-                value={formData.firmId}
-                onValueChange={(value) => setFormData({ ...formData, firmId: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a firm" />
-                </SelectTrigger>
-                <SelectContent>
-                  {firms.map((firm) => (
-                    <SelectItem key={firm.id} value={firm.id}>
-                      {firm.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
           <div className="space-y-2">
-            <Label htmlFor="assignedAttorney">Assigned Attorney</Label>
+            <Label htmlFor="attorney">Assigned Attorney</Label>
             <Select
               value={formData.assignedAttorneyId}
               onValueChange={(value) => setFormData({ ...formData, assignedAttorneyId: value })}
@@ -356,26 +262,6 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded }: AddClient
                 ))}
               </SelectContent>
             </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="address">Address</Label>
-            <Textarea
-              id="address"
-              value={formData.address}
-              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              rows={2}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              rows={3}
-            />
           </div>
 
           <Button type="submit" className="w-full" disabled={isSubmitting}>
