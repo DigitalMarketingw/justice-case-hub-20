@@ -1,0 +1,32 @@
+
+import { Menu, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+interface SidebarHeaderProps {
+  isCollapsed: boolean;
+  onToggleCollapse: () => void;
+}
+
+export function SidebarHeader({ isCollapsed, onToggleCollapse }: SidebarHeaderProps) {
+  return (
+    <div className="flex items-center justify-between p-4 border-b border-slate-700">
+      {!isCollapsed && (
+        <div className="flex items-center space-x-3">
+          <img 
+            src="/lovable-uploads/bbf7762d-182e-48ac-b791-d3c06762a94c.png" 
+            alt="LAWerp500 Logo" 
+            className="h-6 w-auto"
+          />
+        </div>
+      )}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onToggleCollapse}
+        className="text-white hover:bg-slate-800"
+      >
+        {isCollapsed ? <Menu size={20} /> : <X size={20} />}
+      </Button>
+    </div>
+  );
+}
