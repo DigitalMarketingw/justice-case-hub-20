@@ -10,14 +10,15 @@ import {
   DollarSign,
   Shield,
   Award,
-  CheckCircle
+  CheckCircle,
+  Mail
 } from "lucide-react";
 
 interface HeroSectionProps {
-  onLoginClick: () => void;
+  onContactClick: () => void;
 }
 
-const HeroSection = ({ onLoginClick }: HeroSectionProps) => {
+const HeroSection = ({ onContactClick }: HeroSectionProps) => {
   const trustIndicators = [
     "SOC 2 Type II Compliant",
     "ABA Technology Partner",
@@ -61,7 +62,7 @@ const HeroSection = ({ onLoginClick }: HeroSectionProps) => {
                 </span>
                 Management Suite
               </h1>
-              <p className="text-xl lg:text-2xl text-muted-foreground leading-relaxed font-medium">
+              <p className="text-xl lg:text-2xl text-slate-200 leading-relaxed font-medium">
                 Trusted by top law firms to streamline operations, increase billable hours, 
                 and deliver exceptional client experiences. Join the legal technology revolution.
               </p>
@@ -77,37 +78,31 @@ const HeroSection = ({ onLoginClick }: HeroSectionProps) => {
               ].map((benefit, index) => (
                 <div key={index} className="flex items-center space-x-3">
                   <CheckCircle className="w-5 h-5 text-success-500 flex-shrink-0" />
-                  <span className="text-foreground font-medium">{benefit}</span>
+                  <span className="text-slate-200 font-medium">{benefit}</span>
                 </div>
               ))}
             </div>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 pt-4">
+            {/* CTA Button */}
+            <div className="flex justify-center lg:justify-start pt-4">
               <Button 
-                onClick={onLoginClick}
+                onClick={onContactClick}
                 size="xl"
                 variant="gradient"
                 className="group relative overflow-hidden"
               >
                 <span className="relative z-10 flex items-center">
-                  Start Free 30-Day Trial
+                  <Mail className="mr-2 h-5 w-5" />
+                  Contact Us Today
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </span>
-              </Button>
-              <Button 
-                variant="outline" 
-                size="xl"
-                className="border-border/50 text-foreground hover:bg-muted/50 backdrop-blur-sm"
-              >
-                Watch 3-Min Demo
               </Button>
             </div>
 
             {/* Social Proof */}
             <div className="pt-8 border-t border-border/20">
-              <p className="text-sm text-muted-foreground mb-4">Trusted by leading law firms including:</p>
-              <div className="flex items-center space-x-6 text-muted-foreground/60">
+              <p className="text-sm text-slate-300 mb-4">Trusted by leading law firms including:</p>
+              <div className="flex items-center space-x-6 text-slate-400">
                 <span className="font-semibold text-lg">BigLaw Partners</span>
                 <span className="font-semibold text-lg">Legal Associates</span>
                 <span className="font-semibold text-lg">Family Law Group</span>

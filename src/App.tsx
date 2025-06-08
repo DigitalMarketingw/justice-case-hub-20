@@ -11,6 +11,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 // Pages
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import Contact from "./pages/Contact";
 import Clients from "./pages/Clients";
 import Attorneys from "./pages/Attorneys";
 import Calendar from "./pages/Calendar";
@@ -48,6 +49,7 @@ function App() {
             <Routes>
               {/* Public Routes */}
               <Route path="/auth" element={<Auth />} />
+              <Route path="/contact" element={<Contact />} />
               <Route path="/" element={<Index />} />
               
               {/* Role-Specific Dashboard Routes */}

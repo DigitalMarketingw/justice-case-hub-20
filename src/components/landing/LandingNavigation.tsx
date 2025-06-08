@@ -5,9 +5,10 @@ import { Shield, Phone } from "lucide-react";
 
 interface LandingNavigationProps {
   onLoginClick: () => void;
+  onContactClick: () => void;
 }
 
-const LandingNavigation = ({ onLoginClick }: LandingNavigationProps) => {
+const LandingNavigation = ({ onLoginClick, onContactClick }: LandingNavigationProps) => {
   const navItems = [
     { label: "Features", href: "#features" },
     { label: "Pricing", href: "#pricing" },
@@ -63,10 +64,11 @@ const LandingNavigation = ({ onLoginClick }: LandingNavigationProps) => {
             {/* Action Buttons */}
             <div className="flex items-center space-x-3">
               <Button 
+                onClick={onContactClick}
                 variant="ghost" 
                 className="text-muted-foreground hover:text-foreground hover:bg-muted/50"
               >
-                Demo
+                Contact Us
               </Button>
               <Button 
                 onClick={onLoginClick}

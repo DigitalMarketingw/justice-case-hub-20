@@ -55,6 +55,10 @@ const Index = () => {
     navigate("/auth");
   };
 
+  const handleContactClick = () => {
+    navigate("/contact");
+  };
+
   // Show loading while checking auth state
   if (loading) {
     console.log('Index - Showing loading state (auth loading)');
@@ -72,8 +76,8 @@ const Index = () => {
   console.log('Index - Showing landing page (not authenticated)');
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
-      <LandingNavigation onLoginClick={handleLoginClick} />
-      <HeroSection onLoginClick={handleLoginClick} />
+      <LandingNavigation onLoginClick={handleLoginClick} onContactClick={handleContactClick} />
+      <HeroSection onContactClick={handleContactClick} />
       <FeaturesSection />
       <BenefitsSection onLoginClick={handleLoginClick} />
       <LandingFooter />

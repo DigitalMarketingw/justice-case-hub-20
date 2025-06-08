@@ -50,7 +50,7 @@ const LandingFooter = () => {
   ];
 
   return (
-    <footer className="bg-muted/30 border-t border-border/20">
+    <footer className="bg-slate-900 border-t border-slate-700">
       <div className="max-w-7xl mx-auto px-6">
         {/* Main Footer Content */}
         <div className="py-16">
@@ -58,36 +58,36 @@ const LandingFooter = () => {
             {/* Brand Column */}
             <div className="lg:col-span-1 space-y-6">
               <div className="flex items-center space-x-3">
-                <Scale className="h-8 w-8 text-primary-500" />
-                <span className="text-2xl font-display font-bold text-foreground">LAWerp500</span>
+                <Scale className="h-8 w-8 text-primary-400" />
+                <span className="text-2xl font-display font-bold text-white">LAWerp500</span>
               </div>
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-slate-300 leading-relaxed">
                 Empowering law firms worldwide with comprehensive practice management solutions 
                 that increase efficiency and ensure compliance.
               </p>
               
               {/* Contact Info */}
               <div className="space-y-3">
-                <div className="flex items-center space-x-3 text-sm text-muted-foreground">
-                  <Phone className="w-4 h-4 text-primary-500" />
+                <div className="flex items-center space-x-3 text-sm text-slate-300">
+                  <Phone className="w-4 h-4 text-primary-400" />
                   <span>(555) 123-LEGAL</span>
                 </div>
-                <div className="flex items-center space-x-3 text-sm text-muted-foreground">
-                  <Mail className="w-4 h-4 text-primary-500" />
+                <div className="flex items-center space-x-3 text-sm text-slate-300">
+                  <Mail className="w-4 h-4 text-primary-400" />
                   <span>support@lawerp500.com</span>
                 </div>
-                <div className="flex items-center space-x-3 text-sm text-muted-foreground">
-                  <MapPin className="w-4 h-4 text-primary-500" />
+                <div className="flex items-center space-x-3 text-sm text-slate-300">
+                  <MapPin className="w-4 h-4 text-primary-400" />
                   <span>New York, NY • Los Angeles, CA</span>
                 </div>
               </div>
 
               {/* Social Links */}
               <div className="flex space-x-4">
-                <a href="#" className="text-muted-foreground hover:text-primary-500 transition-colors">
+                <a href="#" className="text-slate-300 hover:text-primary-400 transition-colors">
                   <Linkedin className="w-5 h-5" />
                 </a>
-                <a href="#" className="text-muted-foreground hover:text-primary-500 transition-colors">
+                <a href="#" className="text-slate-300 hover:text-primary-400 transition-colors">
                   <Twitter className="w-5 h-5" />
                 </a>
               </div>
@@ -96,13 +96,13 @@ const LandingFooter = () => {
             {/* Navigation Columns */}
             {footerSections.map((section) => (
               <div key={section.title} className="space-y-4">
-                <h4 className="text-lg font-semibold text-foreground">{section.title}</h4>
+                <h4 className="text-lg font-semibold text-white">{section.title}</h4>
                 <ul className="space-y-3">
                   {section.links.map((link) => (
                     <li key={link.label}>
                       <a 
                         href={link.href} 
-                        className="text-muted-foreground hover:text-foreground transition-colors"
+                        className="text-slate-300 hover:text-white transition-colors"
                       >
                         {link.label}
                       </a>
@@ -115,12 +115,12 @@ const LandingFooter = () => {
         </div>
 
         {/* Security & Compliance Section */}
-        <div className="py-8 border-t border-border/20">
+        <div className="py-8 border-t border-slate-700">
           <div className="text-center space-y-4">
-            <h5 className="text-sm font-semibold text-foreground">Security & Compliance Certifications</h5>
+            <h5 className="text-sm font-semibold text-white">Security & Compliance Certifications</h5>
             <div className="flex flex-wrap justify-center gap-3">
               {certifications.map((cert) => (
-                <Badge key={cert} variant="outline" className="bg-background/50">
+                <Badge key={cert} variant="outline" className="bg-slate-800 border-slate-600 text-slate-300">
                   {cert}
                 </Badge>
               ))}
@@ -129,17 +129,17 @@ const LandingFooter = () => {
         </div>
 
         {/* Bottom Footer */}
-        <div className="py-8 border-t border-border/20">
+        <div className="py-8 border-t border-slate-700">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="text-center md:text-left">
-              <p className="text-muted-foreground text-sm">
+              <p className="text-slate-300 text-sm">
                 © 2024 LAWerp500. All rights reserved. Professional legal practice management software.
               </p>
-              <p className="text-muted-foreground text-xs mt-1">
+              <p className="text-slate-400 text-xs mt-1">
                 Built by legal professionals, for legal professionals.
               </p>
             </div>
-            <div className="flex items-center space-x-6 text-xs text-muted-foreground">
+            <div className="flex items-center space-x-6 text-xs text-slate-400">
               <span>Attorney Advertising</span>
               <span>•</span>
               <span>Prior Results Do Not Guarantee Similar Outcomes</span>
