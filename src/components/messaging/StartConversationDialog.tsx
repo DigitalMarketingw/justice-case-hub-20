@@ -192,8 +192,16 @@ export const StartConversationDialog = ({
     }
   };
 
+  const handleDialogClose = () => {
+    setSelectedClientId("");
+    setSelectedClient(null);
+    setMessage("");
+    setSearchTerm("");
+    onOpenChange(false);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleDialogClose}>
       <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -205,7 +213,7 @@ export const StartConversationDialog = ({
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-6 py-4">
+        <div className="space-y-6 py-4" onClick={(e) => e.stopPropagation()}>
           {/* Client Selection */}
           <div className="space-y-3">
             <Label className="text-sm font-medium">Select Client</Label>
@@ -285,7 +293,7 @@ export const StartConversationDialog = ({
         </div>
 
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={handleDialogClose}>
             Cancel
           </Button>
           <Button 

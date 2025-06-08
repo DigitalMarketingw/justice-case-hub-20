@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -130,8 +129,13 @@ export function AddCaseDialog({ open, onOpenChange }: AddCaseDialogProps) {
     }
   };
 
+  const handleDialogClose = () => {
+    form.reset();
+    onOpenChange(false);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleDialogClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Case</DialogTitle>
@@ -140,7 +144,7 @@ export function AddCaseDialog({ open, onOpenChange }: AddCaseDialogProps) {
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" onClick={(e) => e.stopPropagation()}>
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -377,6 +381,9 @@ export function AddCaseDialog({ open, onOpenChange }: AddCaseDialogProps) {
             </div>
 
             <DialogFooter>
+              <Button type="button" variant="outline" onClick={handleDialogClose}>
+                Cancel
+              </Button>
               <Button type="submit" disabled={loading}>
                 {loading ? "Creating..." : "Create Case"}
               </Button>
