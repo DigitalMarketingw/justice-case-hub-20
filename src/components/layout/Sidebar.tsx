@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { 
@@ -76,19 +77,18 @@ export function Sidebar({ className }: SidebarProps) {
     if (isLoggingOut) return;
     
     setIsLoggingOut(true);
-    console.log('Sidebar: Starting logout process for user:', user?.email);
+    console.log('Sidebar: Starting enhanced logout process for user:', user?.email);
     
     try {
-      // Sign out first
+      // Call the enhanced sign out method
       await signOut();
-      console.log('Sidebar: Logout successful');
+      console.log('Sidebar: Enhanced logout successful');
       
-      // Navigate to auth page using React Router (faster than window.location)
-      navigate("/auth", { replace: true });
+      // The signOut function now handles navigation automatically
     } catch (error) {
       console.error('Sidebar: Error during logout:', error);
-      // Navigate to auth page even if logout fails
-      navigate("/auth", { replace: true });
+      // Force navigation to auth page even if logout fails
+      window.location.href = '/auth';
     } finally {
       setIsLoggingOut(false);
     }
@@ -120,8 +120,10 @@ export function Sidebar({ className }: SidebarProps) {
       return superAdminNavigation;
     }
     
-    // For other users, use their profile role
-    switch (profile?.role) {
+    // For other users, use their profile role with fallback
+    const userRole = profile?.role || 'attorney'; // Default to attorney if no profile
+    
+    switch (userRole) {
       case 'super_admin':
         return superAdminNavigation;
       case 'firm_admin':
@@ -143,7 +145,9 @@ export function Sidebar({ className }: SidebarProps) {
       return 'Super Admin';
     }
     
-    switch (profile?.role) {
+    const userRole = profile?.role || 'attorney';
+    
+    switch (userRole) {
       case 'super_admin':
         return 'Super Admin';
       case 'firm_admin':
@@ -228,7 +232,7 @@ export function Sidebar({ className }: SidebarProps) {
           )}
         </div>
         
-        {/* Logout Button */}
+        {/* Enhanced Logout Button */}
         {user && (
           <Button
             variant="ghost"

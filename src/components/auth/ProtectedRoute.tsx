@@ -2,6 +2,7 @@
 import { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -25,8 +26,8 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
     return (
       <div className="flex h-screen w-full items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-lg text-gray-600">Loading...</p>
+          <LoadingSpinner size="lg" />
+          <p className="text-lg text-gray-600 mt-4">Loading...</p>
         </div>
       </div>
     );
@@ -54,6 +55,7 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
   }
 
   // User is authenticated - allow access (with or without profile)
+  // If no profile, we'll use the fallback profile created in AuthContext
   console.log('ProtectedRoute - Access granted, rendering children');
   return <>{children}</>;
 };

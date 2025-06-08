@@ -90,19 +90,31 @@ export const useAuthOperations = () => {
   };
 
   const signOut = async (setProfile: (profile: any) => void) => {
-    console.log('Starting signOut process');
+    console.log('Starting enhanced signOut process');
     try {
       // Clear profile state immediately for instant UI feedback
       setProfile(null);
       
-      // Sign out from Supabase
-      const { error } = await supabase.auth.signOut();
+      // Force clear local storage to ensure clean state
+      localStorage.removeItem('supabase.auth.token');
+      localStorage.removeItem('sb-huvmdbffioxhizgzeecd-auth-token');
+      
+      // Sign out from Supabase with additional options
+      const { error } = await supabase.auth.signOut({
+        scope: 'global' // Sign out from all sessions
+      });
       
       if (error) {
         console.error('Supabase sign out error:', error);
+        // Don't throw error - continue with forced logout
       }
       
-      console.log('Sign out completed');
+      // Force refresh the page to ensure clean state
+      setTimeout(() => {
+        window.location.href = '/auth';
+      }, 100);
+      
+      console.log('Enhanced sign out completed');
       
       toast({
         title: "Signed out successfully",
@@ -111,8 +123,13 @@ export const useAuthOperations = () => {
       return { error: null };
     } catch (error) {
       console.error('Sign out error:', error);
-      // Clear profile even if error occurs
+      
+      // Force clear state even if error occurs
       setProfile(null);
+      localStorage.clear();
+      
+      // Force navigation to auth page
+      window.location.href = '/auth';
       
       toast({
         title: "Signed out successfully",
