@@ -15,7 +15,6 @@ const Auth = () => {
   const [authMode, setAuthMode] = useState<"login" | "signup" | "onboarding">("login");
   const [showCreateDemo, setShowCreateDemo] = useState(false);
   const [creatingDemo, setCreatingDemo] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Demo credentials for each role with the specified passwords
   const demoCredentials = [
@@ -52,9 +51,9 @@ const Auth = () => {
       profile: profile?.role,
       user: user?.email,
       loading,
-      showOnboarding
+      profileLastLogin: profile?.last_login
     });
-  }, [isAuthenticated, profile, user, loading, showOnboarding]);
+  }, [isAuthenticated, profile, user, loading]);
 
   // If loading, show loading state
   if (loading) {
@@ -68,15 +67,18 @@ const Auth = () => {
     );
   }
 
-  // If authenticated and we have a profile, check if onboarding should be shown
+  // If authenticated and we have a profile, redirect to dashboard
   if (isAuthenticated && user && profile) {
-    if (showOnboarding || (!profile.last_login && authMode !== "onboarding")) {
+    // Skip onboarding for existing users (users with last_login set)
+    // Only show onboarding for truly new users
+    const isNewUser = !profile.last_login || profile.last_login === null;
+    
+    if (isNewUser && authMode !== "onboarding") {
       return (
         <OnboardingFlow
           userRole={profile.role}
           onComplete={() => {
-            setShowOnboarding(false);
-            // Redirect to appropriate dashboard
+            // Redirect to appropriate dashboard after onboarding
             const redirectMap = {
               "super_admin": "/super-admin",
               "firm_admin": "/firm-admin",
@@ -91,7 +93,8 @@ const Auth = () => {
       );
     }
 
-    console.log('Auth: Redirecting based on profile role:', profile.role);
+    // For existing users, redirect directly to dashboard
+    console.log('Auth: Redirecting existing user based on profile role:', profile.role);
     const redirectMap = {
       "super_admin": "/super-admin",
       "firm_admin": "/firm-admin",

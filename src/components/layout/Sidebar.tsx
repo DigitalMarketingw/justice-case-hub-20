@@ -77,16 +77,22 @@ export function Sidebar({ className }: SidebarProps) {
     if (isLoggingOut) return;
     
     setIsLoggingOut(true);
-    console.log('Sidebar: Starting enhanced logout process for user:', user?.email);
+    console.log('Sidebar: Starting EMERGENCY logout process');
     
     try {
-      // Call the enhanced sign out method
+      // Force immediate logout - don't wait for anything
       await signOut();
-      console.log('Sidebar: Enhanced logout successful');
       
-      // The signOut function now handles navigation automatically
+      // The signOut function should handle navigation, but force it just in case
+      setTimeout(() => {
+        if (window.location.pathname !== '/auth') {
+          console.log('Sidebar: Forcing navigation to auth page');
+          window.location.href = '/auth';
+        }
+      }, 100);
+      
     } catch (error) {
-      console.error('Sidebar: Error during logout:', error);
+      console.error('Sidebar: Error during logout (forcing logout anyway):', error);
       // Force navigation to auth page even if logout fails
       window.location.href = '/auth';
     } finally {
@@ -232,19 +238,17 @@ export function Sidebar({ className }: SidebarProps) {
           )}
         </div>
         
-        {/* Enhanced Logout Button */}
-        {user && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleSignOut}
-            disabled={isLoggingOut}
-            className="w-full justify-start text-slate-300 hover:bg-slate-800 hover:text-white disabled:opacity-50"
-          >
-            <LogOut className="h-4 w-4 mr-2" />
-            {!isCollapsed && (isLoggingOut ? "Signing Out..." : "Sign Out")}
-          </Button>
-        )}
+        {/* EMERGENCY Logout Button */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleSignOut}
+          disabled={isLoggingOut}
+          className="w-full justify-start text-slate-300 hover:bg-red-800 hover:text-white disabled:opacity-50 bg-red-900/20 border border-red-800"
+        >
+          <LogOut className="h-4 w-4 mr-2" />
+          {!isCollapsed && (isLoggingOut ? "LOGGING OUT..." : "EMERGENCY LOGOUT")}
+        </Button>
       </div>
     </div>
   );

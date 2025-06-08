@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { UserRole } from "@/types/auth";
 
 export const useAuthOperations = () => {
@@ -89,51 +89,44 @@ export const useAuthOperations = () => {
     }
   };
 
-  const signOut = async (setProfile: (profile: any) => void) => {
-    console.log('Starting enhanced signOut process');
+  const signOut = async (setProfile?: (profile: any) => void) => {
+    console.log('Starting EMERGENCY sign out process');
+    
     try {
-      // Clear profile state immediately for instant UI feedback
-      setProfile(null);
-      
-      // Force clear local storage to ensure clean state
-      localStorage.removeItem('supabase.auth.token');
-      localStorage.removeItem('sb-huvmdbffioxhizgzeecd-auth-token');
-      
-      // Sign out from Supabase with additional options
-      const { error } = await supabase.auth.signOut({
-        scope: 'global' // Sign out from all sessions
-      });
-      
-      if (error) {
-        console.error('Supabase sign out error:', error);
-        // Don't throw error - continue with forced logout
+      // Immediately clear state - don't wait for anything
+      if (setProfile) {
+        setProfile(null);
       }
       
-      // Force refresh the page to ensure clean state
-      setTimeout(() => {
-        window.location.href = '/auth';
-      }, 100);
+      // Force clear all local storage
+      localStorage.clear();
+      sessionStorage.clear();
       
-      console.log('Enhanced sign out completed');
+      // Clear Supabase specific storage
+      try {
+        localStorage.removeItem('supabase.auth.token');
+        localStorage.removeItem('sb-huvmdbffioxhizgzeecd-auth-token');
+      } catch (e) {
+        console.log('Local storage already cleared');
+      }
       
-      toast({
-        title: "Signed out successfully",
+      // Attempt Supabase sign out but don't wait for it
+      supabase.auth.signOut().catch(error => {
+        console.error('Supabase sign out error (ignoring):', error);
       });
       
-      return { error: null };
-    } catch (error) {
-      console.error('Sign out error:', error);
-      
-      // Force clear state even if error occurs
-      setProfile(null);
-      localStorage.clear();
-      
-      // Force navigation to auth page
+      // Force immediate navigation to auth page
       window.location.href = '/auth';
       
-      toast({
-        title: "Signed out successfully",
-      });
+      return { error: null };
+      
+    } catch (error) {
+      console.error('Sign out error (forcing logout anyway):', error);
+      
+      // Even if everything fails, force logout
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = '/auth';
       
       return { error: null };
     }

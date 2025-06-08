@@ -43,47 +43,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
 
-        // Fetch profile for authenticated users with enhanced error handling
+        // Fetch profile for authenticated users with simplified error handling
         if (currentSession?.user) {
           setProfileLoading(true);
           
-          // Set a timeout to prevent infinite loading
+          // Shorter timeout to prevent stuck loading states
           profileFetchTimeout = setTimeout(() => {
             if (mounted) {
-              console.log('Profile fetch timeout, proceeding without profile');
-              setProfileLoading(false);
-              setLoading(false);
-            }
-          }, 5000); // Increased timeout to 5 seconds
-
-          try {
-            console.log('Fetching profile for user:', currentSession.user.id);
-            const fetchedProfile = await fetchUserProfile(currentSession.user.id);
-            
-            if (mounted) {
-              // If profile fetch failed but user is authenticated, create a minimal profile
-              if (!fetchedProfile && currentSession.user) {
-                console.log('Creating fallback profile for authenticated user');
-                const fallbackProfile = {
-                  id: currentSession.user.id,
-                  email: currentSession.user.email || '',
-                  first_name: null,
-                  last_name: null,
-                  role: 'attorney' as const, // Default role for authenticated users
-                  firm_id: null,
-                  is_active: true,
-                  phone: null,
-                  last_login: null,
-                };
-                setProfile(fallbackProfile);
-              }
-            }
-          } catch (error) {
-            console.error('Failed to fetch profile:', error);
-            
-            // Create fallback profile even on error if user is authenticated
-            if (mounted && currentSession.user) {
-              console.log('Creating fallback profile due to fetch error');
+              console.log('Profile fetch timeout, creating fallback profile');
+              // Create immediate fallback profile
               const fallbackProfile = {
                 id: currentSession.user.id,
                 email: currentSession.user.email || '',
@@ -93,7 +61,71 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 firm_id: null,
                 is_active: true,
                 phone: null,
-                last_login: null,
+                last_login: new Date().toISOString(), // Set current time to prevent onboarding loop
+              };
+              setProfile(fallbackProfile);
+              setProfileLoading(false);
+              setLoading(false);
+            }
+          }, 2000); // Reduced from 5 seconds to 2 seconds
+
+          try {
+            console.log('Fetching profile for user:', currentSession.user.id);
+            const fetchedProfile = await fetchUserProfile(currentSession.user.id);
+            
+            if (mounted) {
+              if (fetchedProfile) {
+                // Ensure last_login is set to prevent onboarding loops
+                if (!fetchedProfile.last_login) {
+                  const updatedProfile = {
+                    ...fetchedProfile,
+                    last_login: new Date().toISOString(),
+                  };
+                  setProfile(updatedProfile);
+                  
+                  // Update in database
+                  try {
+                    await supabase
+                      .from('profiles')
+                      .update({ last_login: new Date().toISOString() })
+                      .eq('id', currentSession.user.id);
+                  } catch (updateError) {
+                    console.error('Failed to update last_login:', updateError);
+                  }
+                } else {
+                  setProfile(fetchedProfile);
+                }
+              } else {
+                // Create fallback profile
+                const fallbackProfile = {
+                  id: currentSession.user.id,
+                  email: currentSession.user.email || '',
+                  first_name: null,
+                  last_name: null,
+                  role: 'attorney' as const,
+                  firm_id: null,
+                  is_active: true,
+                  phone: null,
+                  last_login: new Date().toISOString(),
+                };
+                setProfile(fallbackProfile);
+              }
+            }
+          } catch (error) {
+            console.error('Failed to fetch profile:', error);
+            
+            if (mounted) {
+              // Create fallback profile on error
+              const fallbackProfile = {
+                id: currentSession.user.id,
+                email: currentSession.user.email || '',
+                first_name: null,
+                last_name: null,
+                role: 'attorney' as const,
+                firm_id: null,
+                is_active: true,
+                phone: null,
+                last_login: new Date().toISOString(),
               };
               setProfile(fallbackProfile);
             }
@@ -124,61 +156,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (currentSession?.user) {
           setSession(currentSession);
           setUser(currentSession.user);
-          setProfileLoading(true);
-          
-          // Set timeout for initial profile fetch
-          profileFetchTimeout = setTimeout(() => {
-            if (mounted) {
-              console.log('Initial profile fetch timeout, proceeding without profile');
-              setProfileLoading(false);
-              setLoading(false);
-            }
-          }, 5000);
-          
-          try {
-            console.log('Fetching profile for initial session:', currentSession.user.id);
-            const fetchedProfile = await fetchUserProfile(currentSession.user.id);
-            
-            // Create fallback if needed
-            if (!fetchedProfile && mounted) {
-              const fallbackProfile = {
-                id: currentSession.user.id,
-                email: currentSession.user.email || '',
-                first_name: null,
-                last_name: null,
-                role: 'attorney' as const,
-                firm_id: null,
-                is_active: true,
-                phone: null,
-                last_login: null,
-              };
-              setProfile(fallbackProfile);
-            }
-          } catch (error) {
-            console.error('Failed to fetch profile on initial load:', error);
-            
-            // Create fallback profile on error
-            if (mounted && currentSession.user) {
-              const fallbackProfile = {
-                id: currentSession.user.id,
-                email: currentSession.user.email || '',
-                first_name: null,
-                last_name: null,
-                role: 'attorney' as const,
-                firm_id: null,
-                is_active: true,
-                phone: null,
-                last_login: null,
-              };
-              setProfile(fallbackProfile);
-            }
-          } finally {
-            if (mounted) {
-              clearTimeout(profileFetchTimeout);
-              setProfileLoading(false);
-              setLoading(false);
-            }
-          }
+          // The auth state change listener will handle profile fetching
         } else {
           setLoading(false);
         }
@@ -202,26 +180,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [fetchUserProfile]);
 
   const handleSignOut = async () => {
-    console.log('AuthContext: Starting enhanced sign out process for user:', user?.email);
+    console.log('AuthContext: Starting EMERGENCY sign out process');
     
     try {
-      // Call the enhanced auth sign out
+      // Call the emergency auth sign out
       await authSignOut(setProfile);
       
-      console.log('AuthContext: Enhanced sign out completed successfully');
     } catch (error) {
-      console.error('AuthContext: Error during sign out:', error);
-      // Force clear state even if sign out fails
+      console.error('AuthContext: Error during sign out (forcing logout):', error);
+      // Force clear state and navigation even if sign out fails
       setSession(null);
       setUser(null);
       setProfile(null);
-      
-      // Force navigation to auth page
       window.location.href = '/auth';
     }
   };
 
-  // Determine if actually loading - don't wait for profile if user is authenticated
+  // Determine if actually loading - simplified logic
   const isActuallyLoading = loading && !user;
 
   return (
