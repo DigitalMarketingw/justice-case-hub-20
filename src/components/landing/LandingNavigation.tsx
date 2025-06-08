@@ -28,12 +28,12 @@ const LandingNavigation = ({ onLoginClick, onContactClick }: LandingNavigationPr
                 alt="LAWerp500 Logo" 
                 className="h-12 w-auto"
               />
-              <div className="hidden sm:block">
+              {/* <div className="hidden sm:block">
                 <Badge variant="outline" className="text-xs text-primary-600 border-primary-200 bg-primary-50">
                   <Shield className="w-3 h-3 mr-1" />
                   ABA Compliant
                 </Badge>
-              </div>
+              </div> */}
             </div>
           </div>
 
