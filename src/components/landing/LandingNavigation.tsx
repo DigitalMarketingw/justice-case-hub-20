@@ -17,7 +17,7 @@ const LandingNavigation = ({ onLoginClick, onContactClick }: LandingNavigationPr
   ];
 
   return (
-    <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/20">
+    <nav className="sticky top-0 z-50 bg-background backdrop-blur-lg border-b border-border/20">
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between h-20">
           {/* Logo and Brand */}
@@ -56,8 +56,8 @@ const LandingNavigation = ({ onLoginClick, onContactClick }: LandingNavigationPr
             {/* Contact Info - Desktop */}
             <div className="hidden lg:flex items-center space-x-4 text-sm text-muted-foreground border-r border-border/20 pr-4">
               <div className="flex items-center space-x-1">
-                {/* <Phone className="w-4 h-4" />
-                <span>(555) 123-LEGAL</span> */}
+                <Phone className="w-4 h-4" />
+                <span>(555) 123-LEGAL</span>
               </div>
             </div>
 
