@@ -1,12 +1,11 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { StatsCard } from "@/components/dashboard/StatsCard";
-import { QuickActions } from "@/components/dashboard/QuickActions";
-import { RecentActivity } from "@/components/dashboard/RecentActivity";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { EnhancedStatsCard } from "@/components/dashboard/EnhancedStatsCard";
+import { EnhancedQuickActions } from "@/components/dashboard/EnhancedQuickActions";
+import { ActivityTimeline } from "@/components/dashboard/ActivityTimeline";
+import { PerformanceMetrics } from "@/components/dashboard/PerformanceMetrics";
 import { Users, FileText, Calendar, DollarSign } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -92,50 +91,69 @@ const AttorneyDashboard = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gray-50">
+      <div className="min-h-screen flex w-full bg-gradient-to-br from-gray-50 to-white">
         <Sidebar />
         <main className="flex-1 p-6">
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold">Attorney Dashboard</h1>
-              <p className="text-gray-600">Welcome back! Here's an overview of your practice.</p>
+          <div className="space-y-8">
+            {/* Header */}
+            <div className="space-y-2">
+              <h1 className="text-4xl font-bold font-display bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+                Attorney Dashboard
+              </h1>
+              <p className="text-lg text-gray-600">
+                Welcome back! Here's an overview of your practice.
+              </p>
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <StatsCard
+            {/* Enhanced Stats Grid */}
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+              <EnhancedStatsCard
                 title="Total Clients"
                 value={loading ? "..." : stats.totalClients.toString()}
                 change="+5% from last month"
                 trend="up"
                 icon={Users}
+                description="Active clients"
               />
-              <StatsCard
+              <EnhancedStatsCard
                 title="Active Cases"
                 value={loading ? "..." : stats.activeCases.toString()}
                 change="+2% from last month"
                 trend="up"
                 icon={FileText}
+                variant="gradient"
+                description="In progress"
               />
-              <StatsCard
+              <EnhancedStatsCard
                 title="Upcoming Events"
                 value={loading ? "..." : stats.upcomingEvents.toString()}
                 change="No change"
                 trend="neutral"
                 icon={Calendar}
+                description="This week"
               />
-              <StatsCard
+              <EnhancedStatsCard
                 title="Monthly Revenue"
                 value={loading ? "..." : `$${stats.monthlyRevenue.toLocaleString()}`}
                 change="+12% from last month"
                 trend="up"
                 icon={DollarSign}
+                variant="glass"
+                description="This month"
               />
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2">
-              <QuickActions />
-              <RecentActivity />
+            {/* Main Content Grid */}
+            <div className="grid gap-8 md:grid-cols-12">
+              <div className="md:col-span-5">
+                <ActivityTimeline />
+              </div>
+              <div className="md:col-span-3">
+                <EnhancedQuickActions />
+              </div>
+              <div className="md:col-span-4">
+                <PerformanceMetrics />
+              </div>
             </div>
           </div>
         </main>
