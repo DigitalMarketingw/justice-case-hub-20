@@ -20,17 +20,17 @@ interface HeroSectionProps {
 
 const HeroSection = ({ onContactClick }: HeroSectionProps) => {
   const trustIndicators = [
-    "SOC 2 Type II Compliant",
-    "ABA Technology Partner",
-    "99.9% Uptime SLA",
-    "Bank-Level Security"
+    // "SOC 2 Type II Compliant",
+    // "ABA Technology Partner",
+    // "99.9% Uptime SLA",
+    // "Bank-Level Security"
   ];
 
   const achievements = [
     { icon: Users, value: "2,500+", label: "Law Firms Trust Us", color: "text-primary-400" },
     { icon: Briefcase, value: "50K+", label: "Cases Managed", color: "text-secondary-400" },
-    { icon: Clock, value: "60%", label: "Time Saved Daily", color: "text-success-400" },
-    { icon: DollarSign, value: "$10M+", label: "Revenue Tracked", color: "text-warning-400" }
+    { icon: Clock, value: "60%", label: "Time Saved Daily", color: "text-secondary-400" },
+    { icon: DollarSign, value: "$10M+", label: "Revenue Tracked", color: "text-secondary-400" }
   ];
 
   return (
