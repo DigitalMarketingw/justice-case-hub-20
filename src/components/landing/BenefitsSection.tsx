@@ -82,7 +82,7 @@ const BenefitsSection = ({ onLoginClick }: BenefitsSectionProps) => {
               Choose LAWerp500
             </span>
           </h2>
-          <p className="text-xl text-slate-200 max-w-3xl mx-auto">
+          <p className="text-xl text-foreground/80 max-w-3xl mx-auto">
             Join thousands of legal professionals who have transformed their practice 
             with our comprehensive management platform.
           </p>
@@ -99,14 +99,14 @@ const BenefitsSection = ({ onLoginClick }: BenefitsSectionProps) => {
                   </div>
                   <CardTitle className="text-2xl font-display text-foreground">{benefit.title}</CardTitle>
                 </div>
-                <p className="text-muted-foreground leading-relaxed">{benefit.description}</p>
+                <p className="text-foreground/80 leading-relaxed">{benefit.description}</p>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
                   {benefit.features.map((feature, featureIndex) => (
                     <li key={featureIndex} className="flex items-center space-x-3">
                       <CheckCircle className="w-5 h-5 text-success-500 flex-shrink-0" />
-                      <span className="text-slate-200">{feature}</span>
+                      <span className="text-foreground/80">{feature}</span>
                     </li>
                   ))}
                 </ul>
@@ -121,7 +121,7 @@ const BenefitsSection = ({ onLoginClick }: BenefitsSectionProps) => {
             <h3 className="text-3xl font-display font-bold text-white mb-4">
               Trusted by Legal Professionals
             </h3>
-            <p className="text-slate-300">See what our clients say about their experience</p>
+            <p className="text-foreground/80">See what our clients say about their experience</p>
           </div>
           
           <div className="grid md:grid-cols-2 gap-8">
@@ -133,12 +133,12 @@ const BenefitsSection = ({ onLoginClick }: BenefitsSectionProps) => {
                       <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
                     ))}
                   </div>
-                  <blockquote className="text-lg text-slate-200 mb-6 italic">
+                  <blockquote className="text-lg text-foreground/80 mb-6 italic">
                     "{testimonial.quote}"
                   </blockquote>
                   <div className="border-t border-border/20 pt-4">
                     <div className="font-semibold text-foreground">{testimonial.name}</div>
-                    <div className="text-sm text-muted-foreground">{testimonial.title}</div>
+                    <div className="text-sm text-foreground/70">{testimonial.title}</div>
                     <div className="text-sm text-primary-400">{testimonial.firm}</div>
                   </div>
                 </CardContent>
@@ -155,7 +155,7 @@ const BenefitsSection = ({ onLoginClick }: BenefitsSectionProps) => {
               <h3 className="text-3xl lg:text-4xl font-display font-bold text-white mb-6">
                 Ready to Transform Your Practice?
               </h3>
-              <p className="text-xl text-slate-200 mb-8">
+              <p className="text-xl text-foreground/80 mb-8">
                 Join the legal technology revolution and see why LAWerp500 is the 
                 preferred choice for modern law firms.
               </p>

@@ -62,7 +62,7 @@ const HeroSection = ({ onContactClick }: HeroSectionProps) => {
                 </span>
                 Management Suite
               </h1>
-              <p className="text-xl lg:text-2xl text-slate-200 leading-relaxed font-medium">
+              <p className="text-xl lg:text-2xl text-foreground/80 leading-relaxed font-medium">
                 Trusted by top law firms to streamline operations, increase billable hours, 
                 and deliver exceptional client experiences. Join the legal technology revolution.
               </p>
@@ -78,7 +78,7 @@ const HeroSection = ({ onContactClick }: HeroSectionProps) => {
               ].map((benefit, index) => (
                 <div key={index} className="flex items-center space-x-3">
                   <CheckCircle className="w-5 h-5 text-success-500 flex-shrink-0" />
-                  <span className="text-slate-200 font-medium">{benefit}</span>
+                  <span className="text-foreground/80 font-medium">{benefit}</span>
                 </div>
               ))}
             </div>
@@ -101,8 +101,8 @@ const HeroSection = ({ onContactClick }: HeroSectionProps) => {
 
             {/* Social Proof */}
             <div className="pt-8 border-t border-border/20">
-              <p className="text-sm text-slate-300 mb-4">Trusted by leading law firms including:</p>
-              <div className="flex items-center space-x-6 text-slate-400">
+              <p className="text-sm text-foreground/70 mb-4">Trusted by leading law firms including:</p>
+              <div className="flex items-center space-x-6 text-primary-500">
                 <span className="font-semibold text-lg">BigLaw Partners</span>
                 <span className="font-semibold text-lg">Legal Associates</span>
                 <span className="font-semibold text-lg">Family Law Group</span>
@@ -119,7 +119,7 @@ const HeroSection = ({ onContactClick }: HeroSectionProps) => {
                 <h3 className="text-2xl font-display font-bold text-foreground mb-2">
                   Industry Leading Results
                 </h3>
-                <p className="text-muted-foreground">
+                <p className="text-foreground/70">
                   Real metrics from our law firm partners
                 </p>
               </div>
@@ -132,7 +132,7 @@ const HeroSection = ({ onContactClick }: HeroSectionProps) => {
                       <CardTitle className="text-2xl font-display">{achievement.value}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-sm text-muted-foreground font-medium">{achievement.label}</p>
+                      <p className="text-sm text-foreground/70 font-medium">{achievement.label}</p>
                     </CardContent>
                   </Card>
                 ))}

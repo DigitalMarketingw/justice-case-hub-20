@@ -101,7 +101,7 @@ const FeaturesSection = () => {
             Everything Your Law Firm Needs
             <span className="block text-primary-500">In One Powerful Platform</span>
           </h2>
-          <p className="text-xl text-muted-foreground max-w-4xl mx-auto leading-relaxed">
+          <p className="text-xl text-foreground/80 max-w-4xl mx-auto leading-relaxed">
             From case intake to final billing, LAWerp500 provides comprehensive tools designed specifically 
             for legal professionals. Increase efficiency, ensure compliance, and grow your practice.
           </p>
@@ -128,7 +128,7 @@ const FeaturesSection = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <CardDescription className="text-muted-foreground leading-relaxed">
+                <CardDescription className="text-foreground/80 leading-relaxed">
                   {feature.description}
                 </CardDescription>
                 <div className="space-y-2">
@@ -149,7 +149,7 @@ const FeaturesSection = () => {
 
         {/* Bottom CTA */}
         <div className="text-center mt-16">
-          <p className="text-muted-foreground mb-4">
+          <p className="text-foreground/70 mb-4">
             Ready to see how these features work together?
           </p>
           <Badge variant="outline" className="text-primary-600 border-primary-200 bg-primary-50">
