@@ -28,6 +28,11 @@ interface Client {
   dropped_date?: string;
   assigned_attorney_id?: string;
   assigned_attorney_name?: string;
+  firm_id?: string;
+  firm_name?: string;
+  created_by_name?: string;
+  last_login?: string;
+  is_active: boolean;
 }
 
 const Clients = () => {
@@ -39,7 +44,9 @@ const Clients = () => {
   const isFirmAdmin = profile?.role === 'firm_admin' || profile?.role === 'super_admin';
 
   useEffect(() => {
-    fetchClients();
+    if (profile?.firm_id) {
+      fetchClients();
+    }
   }, [profile?.firm_id]);
 
   const fetchClients = async () => {
@@ -51,7 +58,7 @@ const Clients = () => {
       // First fetch clients
       const { data: clientsData, error: clientsError } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, email, phone, created_at, is_dropped, dropped_date, assigned_attorney_id')
+        .select('id, first_name, last_name, email, phone, created_at, is_dropped, dropped_date, assigned_attorney_id, firm_id, is_active, last_login')
         .eq('role', 'client')
         .eq('firm_id', profile.firm_id)
         .order('created_at', { ascending: false });
@@ -87,7 +94,10 @@ const Clients = () => {
         address: undefined,
         notes: undefined,
         tags: undefined,
-        assigned_attorney_name: attorneysMap.get(client.assigned_attorney_id) || undefined
+        assigned_attorney_name: attorneysMap.get(client.assigned_attorney_id) || undefined,
+        firm_name: undefined,
+        created_by_name: undefined,
+        is_active: client.is_active
       }));
 
       setClients(transformedClients);

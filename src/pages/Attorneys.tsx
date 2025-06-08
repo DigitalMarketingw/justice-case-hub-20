@@ -10,18 +10,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { AttorneysTable } from "@/components/attorneys/AttorneysTable";
 import { AttorneysStats } from "@/components/attorneys/AttorneysStats";
 import { AddAttorneyDialog } from "@/components/attorneys/AddAttorneyDialog";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Attorney {
   id: string;
-  first_name: string;
-  last_name: string;
+  full_name: string;
   email: string;
   phone?: string;
   bar_number?: string;
   specialization?: string[];
   years_of_experience?: number;
   hourly_rate?: number;
+  firm_name?: string;
+  client_count?: number;
   created_at: string;
+  last_login?: string;
+  is_active: boolean;
 }
 
 const Attorneys = () => {
@@ -29,10 +33,16 @@ const Attorneys = () => {
   const [attorneys, setAttorneys] = useState<Attorney[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const { profile } = useAuth();
 
   const fetchAttorneys = async () => {
+    if (!profile?.firm_id) return;
+
     try {
-      const { data, error } = await supabase
+      setLoading(true);
+
+      // Build query based on user role
+      let query = supabase
         .from('profiles')
         .select(`
           id,
@@ -41,36 +51,52 @@ const Attorneys = () => {
           email,
           phone,
           created_at,
+          last_login,
+          is_active,
+          firm_id,
           attorneys (
             bar_number,
             specialization,
             years_of_experience,
             hourly_rate
+          ),
+          firms (
+            name
           )
         `)
         .eq('role', 'attorney')
         .order('created_at', { ascending: false });
+
+      // Filter by firm for firm admins
+      if (profile.role === 'firm_admin') {
+        query = query.eq('firm_id', profile.firm_id);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error('Error fetching attorneys:', error);
         return;
       }
 
-      // Flatten the data structure
-      const formattedAttorneys = data.map(profile => ({
-        id: profile.id,
-        first_name: profile.first_name || '',
-        last_name: profile.last_name || '',
-        email: profile.email,
-        phone: profile.phone,
-        created_at: profile.created_at,
-        bar_number: profile.attorneys?.bar_number,
-        specialization: profile.attorneys?.specialization,
-        years_of_experience: profile.attorneys?.years_of_experience,
-        hourly_rate: profile.attorneys?.hourly_rate,
+      // Transform the data to match the Attorney interface
+      const transformedAttorneys: Attorney[] = (data || []).map(attorney => ({
+        id: attorney.id,
+        full_name: `${attorney.first_name || ''} ${attorney.last_name || ''}`.trim(),
+        email: attorney.email,
+        phone: attorney.phone,
+        created_at: attorney.created_at,
+        last_login: attorney.last_login,
+        is_active: attorney.is_active,
+        bar_number: attorney.attorneys?.bar_number,
+        specialization: attorney.attorneys?.specialization,
+        years_of_experience: attorney.attorneys?.years_of_experience,
+        hourly_rate: attorney.attorneys?.hourly_rate,
+        firm_name: attorney.firms?.name,
+        client_count: 0 // Will be populated separately if needed
       }));
 
-      setAttorneys(formattedAttorneys);
+      setAttorneys(transformedAttorneys);
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -79,11 +105,13 @@ const Attorneys = () => {
   };
 
   useEffect(() => {
-    fetchAttorneys();
-  }, []);
+    if (profile?.firm_id) {
+      fetchAttorneys();
+    }
+  }, [profile?.firm_id]);
 
   const filteredAttorneys = attorneys.filter(attorney =>
-    `${attorney.first_name} ${attorney.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    attorney.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     attorney.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (attorney.specialization && attorney.specialization.some(spec => 
       spec.toLowerCase().includes(searchTerm.toLowerCase())

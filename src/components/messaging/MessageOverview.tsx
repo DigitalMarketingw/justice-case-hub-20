@@ -1,179 +1,203 @@
 
-import React, { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Users, Clock, Eye, Building } from "lucide-react";
+import { MessageCircle, User, Users, Clock, Mail } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
-interface ConversationOverview {
-  conversation_id: string;
-  client_id: string;
+interface MessageStats {
+  totalConversations: number;
+  unreadMessages: number;
+  activeClients: number;
+  todayMessages: number;
+}
+
+interface RecentConversation {
+  id: string;
   client_name: string;
   attorney_name: string;
-  message_count: number;
+  last_message_at: string;
   unread_count: number;
-  last_message_time: string;
-  last_message_content: string;
-  firm_name?: string;
+  case_title?: string;
 }
 
-interface MessageOverviewProps {
-  onSelectConversation: (conversationId: string) => void;
-}
-
-export const MessageOverview = ({ onSelectConversation }: MessageOverviewProps) => {
-  const { profile } = useAuth();
-  const [conversations, setConversations] = useState<ConversationOverview[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
+export function MessageOverview() {
+  const [stats, setStats] = useState<MessageStats>({
     totalConversations: 0,
-    totalMessages: 0,
-    unreadMessages: 0
+    unreadMessages: 0,
+    activeClients: 0,
+    todayMessages: 0,
   });
+  const [recentConversations, setRecentConversations] = useState<RecentConversation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { profile } = useAuth();
 
   useEffect(() => {
-    fetchOverviewData();
-    
-    // Set up real-time subscription
-    const channel = supabase
-      .channel('admin-overview')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'messages'
-        },
-        () => {
-          console.log('Messages updated, refreshing overview');
-          fetchOverviewData();
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'conversations'
-        },
-        () => {
-          console.log('Conversations updated, refreshing overview');
-          fetchOverviewData();
-        }
-      )
-      .subscribe();
+    if (profile?.id) {
+      fetchMessageStats();
+      fetchRecentConversations();
+    }
+  }, [profile?.id]);
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+  const fetchMessageStats = async () => {
+    if (!profile?.id) return;
 
-  const fetchOverviewData = async () => {
     try {
-      // Build query based on user role and firm scope
-      let conversationsQuery = supabase
+      // Get total conversations for the user's firm
+      const { data: conversations, error: convError } = await supabase
+        .from('conversations')
+        .select('id, attorney_id, client_id')
+        .or(`attorney_id.eq.${profile.id},client_id.eq.${profile.id}`);
+
+      if (convError) throw convError;
+
+      // Get unread messages
+      const { data: unreadMessages, error: unreadError } = await supabase
+        .from('messages')
+        .select('id')
+        .eq('recipient_id', profile.id)
+        .eq('is_read', false);
+
+      if (unreadError) throw unreadError;
+
+      // Get today's messages
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const { data: todayMessages, error: todayError } = await supabase
+        .from('messages')
+        .select('id')
+        .or(`sender_id.eq.${profile.id},recipient_id.eq.${profile.id}`)
+        .gte('created_at', today.toISOString());
+
+      if (todayError) throw todayError;
+
+      // Get active clients count (for attorneys and firm admins)
+      let activeClients = 0;
+      if (profile.role === 'attorney') {
+        const { data: clients, error: clientsError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('assigned_attorney_id', profile.id)
+          .eq('is_active', true);
+
+        if (!clientsError) {
+          activeClients = clients?.length || 0;
+        }
+      } else if (profile.role === 'firm_admin' && profile.firm_id) {
+        const { data: clients, error: clientsError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('firm_id', profile.firm_id)
+          .eq('role', 'client')
+          .eq('is_active', true);
+
+        if (!clientsError) {
+          activeClients = clients?.length || 0;
+        }
+      }
+
+      setStats({
+        totalConversations: conversations?.length || 0,
+        unreadMessages: unreadMessages?.length || 0,
+        activeClients,
+        todayMessages: todayMessages?.length || 0,
+      });
+
+    } catch (error) {
+      console.error('Error fetching message stats:', error);
+    }
+  };
+
+  const fetchRecentConversations = async () => {
+    if (!profile?.id) return;
+
+    try {
+      const { data: conversations, error } = await supabase
         .from('conversations')
         .select(`
           id,
-          client_id,
-          attorney_id,
           last_message_at,
-          client_profile:profiles!conversations_client_id_fkey (first_name, last_name, firm_id),
-          attorney_profile:profiles!conversations_attorney_id_fkey (first_name, last_name, firm_id),
-          client_firm:profiles!conversations_client_id_fkey (firm:firms(name)),
-          attorney_firm:profiles!conversations_attorney_id_fkey (firm:firms(name))
+          attorney_id,
+          client_id,
+          cases (title)
         `)
-        .order('last_message_at', { ascending: false, nullsFirst: false });
+        .or(`attorney_id.eq.${profile.id},client_id.eq.${profile.id}`)
+        .order('last_message_at', { ascending: false })
+        .limit(5);
 
-      // Apply firm-scoped filtering for firm admins
-      if (profile?.role === 'firm_admin' && profile?.firm_id) {
-        // For firm admins, only show conversations involving their firm's clients or attorneys
-        conversationsQuery = conversationsQuery.or(
-          `client_profile.firm_id.eq.${profile.firm_id},attorney_profile.firm_id.eq.${profile.firm_id}`
-        );
-      }
+      if (error) throw error;
 
-      const { data: conversationsData, error: convError } = await conversationsQuery;
+      // Get user names for each conversation
+      const conversationsWithNames = await Promise.all(
+        (conversations || []).map(async (conv) => {
+          const [clientId, attorneyId] = [conv.client_id, conv.attorney_id];
+          
+          const { data: client } = await supabase
+            .from('profiles')
+            .select('first_name, last_name')
+            .eq('id', clientId)
+            .single();
 
-      if (convError) {
-        console.error('Error fetching conversations:', convError);
-        return;
-      }
+          const { data: attorney } = await supabase
+            .from('profiles')
+            .select('first_name, last_name')
+            .eq('id', attorneyId)
+            .single();
 
-      // Get all messages with firm scope filtering
-      let messagesQuery = supabase
-        .from('messages')
-        .select('id, conversation_id, content, created_at, is_read');
+          // Get unread count for this conversation
+          const { data: unreadCount } = await supabase
+            .from('messages')
+            .select('id')
+            .eq('conversation_id', conv.id)
+            .eq('recipient_id', profile.id)
+            .eq('is_read', false);
 
-      const { data: allMessages, error: msgError } = await messagesQuery;
+          return {
+            id: conv.id,
+            client_name: client ? `${client.first_name} ${client.last_name}` : 'Unknown Client',
+            attorney_name: attorney ? `${attorney.first_name} ${attorney.last_name}` : 'Unknown Attorney',
+            last_message_at: conv.last_message_at,
+            unread_count: unreadCount?.length || 0,
+            case_title: conv.cases?.[0]?.title,
+          };
+        })
+      );
 
-      if (msgError) {
-        console.error('Error fetching messages:', msgError);
-        return;
-      }
+      setRecentConversations(conversationsWithNames);
 
-      const conversationList: ConversationOverview[] = [];
-      let totalUnread = 0;
-
-      for (const conv of conversationsData || []) {
-        // Get messages for this conversation
-        const convMessages = allMessages?.filter(msg => msg.conversation_id === conv.id) || [];
-        const unreadCount = convMessages.filter(msg => !msg.is_read).length;
-        const latestMessage = convMessages
-          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
-
-        totalUnread += unreadCount;
-
-        const clientName = conv.client_profile 
-          ? `${conv.client_profile.first_name || ''} ${conv.client_profile.last_name || ''}`.trim() || 'Unknown Client'
-          : 'Unknown Client';
-
-        const attorneyName = conv.attorney_profile 
-          ? `${conv.attorney_profile.first_name || ''} ${conv.attorney_profile.last_name || ''}`.trim() || 'Unknown Attorney'
-          : 'Unknown Attorney';
-
-        // Get firm name for super admin view
-        const firmName = profile?.role === 'super_admin' 
-          ? (conv.client_firm?.firm?.name || conv.attorney_firm?.firm?.name || 'No Firm')
-          : undefined;
-
-        conversationList.push({
-          conversation_id: conv.id,
-          client_id: conv.client_id,
-          client_name: clientName,
-          attorney_name: attorneyName,
-          message_count: convMessages.length,
-          unread_count: unreadCount,
-          last_message_time: latestMessage?.created_at || conv.last_message_at || '',
-          last_message_content: latestMessage?.content || 'No messages yet',
-          firm_name: firmName
-        });
-      }
-
-      setConversations(conversationList);
-      setStats({
-        totalConversations: conversationList.length,
-        totalMessages: allMessages?.length || 0,
-        unreadMessages: totalUnread
-      });
     } catch (error) {
-      console.error('Error fetching overview data:', error);
+      console.error('Error fetching recent conversations:', error);
     } finally {
       setLoading(false);
     }
   };
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+
+    if (diffInHours < 1) {
+      return 'Just now';
+    } else if (diffInHours < 24) {
+      return `${Math.floor(diffInHours)}h ago`;
+    } else {
+      return date.toLocaleDateString();
+    }
+  };
+
   if (loading) {
     return (
-      <div className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          {Array.from({ length: 3 }).map((_, i) => (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map((i) => (
             <Card key={i} className="animate-pulse">
               <CardContent className="p-6">
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-8 bg-gray-200 rounded"></div>
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-8 bg-gray-200 rounded w-1/2"></div>
               </CardContent>
             </Card>
           ))}
@@ -183,124 +207,93 @@ export const MessageOverview = ({ onSelectConversation }: MessageOverviewProps) 
   }
 
   return (
-    <div className="p-6">
+    <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">
-                  {profile?.role === 'firm_admin' ? 'Firm Conversations' : 'Total Conversations'}
-                </p>
-                <p className="text-2xl font-bold">{stats.totalConversations}</p>
+            <div className="flex items-center">
+              <MessageCircle className="h-8 w-8 text-blue-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Conversations</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalConversations}</p>
               </div>
-              <Users className="h-8 w-8 text-blue-600" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Messages</p>
-                <p className="text-2xl font-bold">{stats.totalMessages}</p>
-              </div>
-              <MessageSquare className="h-8 w-8 text-green-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex items-center">
+              <Mail className="h-8 w-8 text-red-600" />
+              <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Unread Messages</p>
-                <p className="text-2xl font-bold">{stats.unreadMessages}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.unreadMessages}</p>
               </div>
-              <Badge variant="destructive" className="h-8 w-8 rounded-full flex items-center justify-center">
-                {stats.unreadMessages}
-              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <Users className="h-8 w-8 text-green-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Active Clients</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.activeClients}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <Clock className="h-8 w-8 text-purple-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Today's Messages</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.todayMessages}</p>
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Conversations List */}
+      {/* Recent Conversations */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MessageSquare className="h-5 w-5" />
-            {profile?.role === 'firm_admin' ? 'Firm Conversations' : 'All Conversations'}
-            {profile?.role === 'firm_admin' && (
-              <Badge variant="outline" className="ml-2">
-                <Building className="h-3 w-3 mr-1" />
-                Your Firm Only
-              </Badge>
-            )}
-          </CardTitle>
+          <CardTitle>Recent Conversations</CardTitle>
         </CardHeader>
         <CardContent>
-          {conversations.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <MessageSquare className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-              <p>No conversations found</p>
-              {profile?.role === 'firm_admin' && (
-                <p className="text-sm mt-2">You can only see conversations involving your firm</p>
-              )}
+          {recentConversations.length === 0 ? (
+            <div className="text-center py-8">
+              <MessageCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600">No recent conversations</p>
             </div>
           ) : (
             <div className="space-y-4">
-              {conversations.map((conversation) => (
-                <div
-                  key={conversation.conversation_id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-medium">{conversation.client_name}</h3>
-                      <span className="text-sm text-gray-500">↔</span>
-                      <span className="text-sm text-gray-600">{conversation.attorney_name}</span>
-                      {conversation.firm_name && profile?.role === 'super_admin' && (
-                        <Badge variant="outline" className="text-xs">
-                          <Building className="h-3 w-3 mr-1" />
-                          {conversation.firm_name}
-                        </Badge>
-                      )}
-                      {conversation.unread_count > 0 && (
-                        <Badge variant="destructive">{conversation.unread_count} unread</Badge>
-                      )}
+              {recentConversations.map((conversation) => (
+                <div key={conversation.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                  <div className="flex items-center space-x-4">
+                    <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
+                      <User className="h-5 w-5 text-blue-600" />
                     </div>
-                    
-                    <p className="text-sm text-gray-600 truncate mb-1">
-                      {conversation.last_message_content}
-                    </p>
-                    
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
-                      <span className="flex items-center gap-1">
-                        <MessageSquare className="h-3 w-3" />
-                        {conversation.message_count} messages
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {conversation.last_message_time ? 
-                          new Date(conversation.last_message_time).toLocaleDateString() : 
-                          'No activity'
-                        }
-                      </span>
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        {profile?.role === 'client' ? conversation.attorney_name : conversation.client_name}
+                      </p>
+                      {conversation.case_title && (
+                        <p className="text-sm text-gray-600">Case: {conversation.case_title}</p>
+                      )}
+                      <p className="text-xs text-gray-500">{formatDate(conversation.last_message_at)}</p>
                     </div>
                   </div>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onSelectConversation(conversation.conversation_id)}
-                    className="ml-4"
-                  >
-                    <Eye className="h-4 w-4 mr-2" />
-                    View
-                  </Button>
+                  <div className="flex items-center space-x-2">
+                    {conversation.unread_count > 0 && (
+                      <Badge variant="destructive">{conversation.unread_count}</Badge>
+                    )}
+                    <Button variant="outline" size="sm">View</Button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -309,4 +302,4 @@ export const MessageOverview = ({ onSelectConversation }: MessageOverviewProps) 
       </Card>
     </div>
   );
-};
+}

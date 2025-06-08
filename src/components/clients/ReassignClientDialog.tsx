@@ -12,6 +12,7 @@ import { toast } from "sonner";
 interface ReassignClientDialogProps {
   clientId: string;
   clientName: string;
+  currentAttorneyId?: string;
   onClientReassigned: () => void;
 }
 
@@ -22,7 +23,7 @@ interface Attorney {
   email: string;
 }
 
-export function ReassignClientDialog({ clientId, clientName, onClientReassigned }: ReassignClientDialogProps) {
+export function ReassignClientDialog({ clientId, clientName, currentAttorneyId, onClientReassigned }: ReassignClientDialogProps) {
   const [open, setOpen] = useState(false);
   const [selectedAttorney, setSelectedAttorney] = useState("");
   const [attorneys, setAttorneys] = useState<Attorney[]>([]);
