@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -41,7 +40,7 @@ const Attorneys = () => {
     try {
       setLoading(true);
 
-      // Build query based on user role
+      // Build query based on user role - fix the relationship ambiguity
       let query = supabase
         .from('profiles')
         .select(`
@@ -60,7 +59,7 @@ const Attorneys = () => {
             years_of_experience,
             hourly_rate
           ),
-          firms (
+          firm:firms!profiles_firm_id_fkey (
             name
           )
         `)
@@ -92,7 +91,7 @@ const Attorneys = () => {
         specialization: attorney.attorneys?.specialization,
         years_of_experience: attorney.attorneys?.years_of_experience,
         hourly_rate: attorney.attorneys?.hourly_rate,
-        firm_name: attorney.firms?.name,
+        firm_name: attorney.firm?.name,
         client_count: 0 // Will be populated separately if needed
       }));
 
