@@ -938,9 +938,21 @@ export type Database = {
         Args: { profile_id: string }
         Returns: boolean
       }
+      get_current_user_firm_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: Database["public"]["Enums"]["user_role"]
+      }
       get_user_role: {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
+      }
+      is_current_user_firm_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
       is_firm_admin: {
         Args: { user_id: string }

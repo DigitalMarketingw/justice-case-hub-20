@@ -1,45 +1,13 @@
 
-import React from "react";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-
-const formSchema = z.object({
-  firstName: z.string().min(2, "First name must be at least 2 characters"),
-  lastName: z.string().min(2, "Last name must be at least 2 characters"),
-  email: z.string().email("Please enter a valid email"),
-  phone: z.string().optional(),
-  firmId: z.string().min(1, "Please select a firm"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-});
+import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
 
 interface AddFirmAdminDialogProps {
   open: boolean;
@@ -49,22 +17,16 @@ interface AddFirmAdminDialogProps {
 
 export function AddFirmAdminDialog({ open, onOpenChange, onAdminAdded }: AddFirmAdminDialogProps) {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      firstName: "",
-      lastName: "",
-      email: "",
-      phone: "",
-      firmId: "",
-      password: "",
-    },
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    email: "",
+    firstName: "",
+    lastName: "",
+    phone: "",
+    firmId: "",
   });
 
-  // Fetch firms for dropdown
+  // Fetch firms for selection
   const { data: firms } = useQuery({
     queryKey: ['firms-for-admin'],
     queryFn: async () => {
@@ -78,197 +40,200 @@ export function AddFirmAdminDialog({ open, onOpenChange, onAdminAdded }: AddFirm
     },
   });
 
-  const createFirmAdminMutation = useMutation({
-    mutationFn: async (values: z.infer<typeof formSchema>) => {
-      console.log('Creating firm admin with values:', values);
-      
-      // Create the user account using Supabase Auth Admin API
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: values.email,
-        password: values.password,
-        email_confirm: true,
-        user_metadata: {
-          first_name: values.firstName,
-          last_name: values.lastName,
-          role: 'firm_admin',
-          firm_id: values.firmId,
-        },
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.email.trim() || !formData.firstName.trim() || !formData.lastName.trim() || !formData.firmId) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      console.log('Creating firm admin with data:', formData);
+
+      // Create the user account and profile in one step using the auth.users trigger
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email.trim(),
+        password: 'TempPassword123!', // Temporary password that admin will reset
+        options: {
+          data: {
+            first_name: formData.firstName.trim(),
+            last_name: formData.lastName.trim(),
+            role: 'firm_admin',
+            firm_id: formData.firmId,
+          }
+        }
       });
 
       if (authError) {
         console.error('Auth error:', authError);
-        throw new Error(authError.message);
+        throw authError;
       }
 
-      console.log('User created:', authData);
+      console.log('Auth user created:', authData.user?.id);
 
-      // Update the profile with additional info (phone)
-      if (authData.user && values.phone) {
-        const { error: profileError } = await supabase
+      // If the trigger didn't create the profile, create it manually
+      if (authData.user) {
+        // Wait a moment for the trigger to potentially run
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Check if profile exists
+        const { data: existingProfile } = await supabase
           .from('profiles')
-          .update({ phone: values.phone })
-          .eq('id', authData.user.id);
+          .select('id')
+          .eq('id', authData.user.id)
+          .maybeSingle();
 
-        if (profileError) {
-          console.error('Profile update error:', profileError);
-          // Don't throw here as the main user creation succeeded
+        if (!existingProfile) {
+          console.log('Creating profile manually as trigger may not have run');
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              id: authData.user.id,
+              email: formData.email.trim(),
+              first_name: formData.firstName.trim(),
+              last_name: formData.lastName.trim(),
+              phone: formData.phone.trim() || null,
+              role: 'firm_admin',
+              firm_id: formData.firmId,
+              password_reset_required: true,
+              is_active: true,
+            });
+
+          if (profileError) {
+            console.error('Profile creation error:', profileError);
+            throw profileError;
+          }
+        } else {
+          console.log('Profile already exists from trigger');
         }
       }
 
-      return authData;
-    },
-    onSuccess: () => {
       toast({
         title: "Success",
-        description: "Firm administrator account has been created successfully.",
+        description: "Firm administrator created successfully. They will receive an email to set up their account.",
       });
-      queryClient.invalidateQueries({ queryKey: ['firms'] });
-      queryClient.invalidateQueries({ queryKey: ['firms-stats'] });
-      form.reset();
+
+      // Reset form
+      setFormData({
+        email: "",
+        firstName: "",
+        lastName: "",
+        phone: "",
+        firmId: "",
+      });
+      
       onOpenChange(false);
       onAdminAdded?.();
-    },
-    onError: (error: any) => {
+
+    } catch (error: any) {
       console.error('Error creating firm admin:', error);
       toast({
-        title: "Error",
-        description: error.message || "Failed to create firm administrator. Please try again.",
-        variant: "destructive",
+        title: "Error creating firm administrator",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive"
       });
-    },
-  });
-
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    setIsSubmitting(true);
-    try {
-      await createFirmAdminMutation.mutateAsync(values);
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
+  // Reset form when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setFormData({
+        email: "",
+        firstName: "",
+        lastName: "",
+        phone: "",
+        firmId: "",
+      });
+    }
+  }, [open]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Create Firm Administrator Account</DialogTitle>
-          <DialogDescription>
-            Create a new firm administrator account with login credentials.
-          </DialogDescription>
+          <DialogTitle>Add Firm Administrator</DialogTitle>
         </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="firstName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>First Name *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter first name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="lastName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Last Name *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter last name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="firmId">Firm *</Label>
+            <Select value={formData.firmId} onValueChange={(value) => handleInputChange('firmId', value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a firm" />
+              </SelectTrigger>
+              <SelectContent>
+                {firms?.map((firm) => (
+                  <SelectItem key={firm.id} value={firm.id}>
+                    {firm.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email">Email Address *</Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => handleInputChange('email', e.target.value)}
+              placeholder="Enter email address"
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="firstName">First Name *</Label>
+              <Input
+                id="firstName"
+                value={formData.firstName}
+                onChange={(e) => handleInputChange('firstName', e.target.value)}
+                placeholder="First name"
+                required
               />
             </div>
-            
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="admin@firm.com" type="email" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Phone</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter phone number" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="firmId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Assign to Firm *</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a firm" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {firms?.map((firm) => (
-                        <SelectItem key={firm.id} value={firm.id}>
-                          {firm.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter password" type="password" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Creating..." : "Create Admin Account"}
-              </Button>
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Last Name *</Label>
+              <Input
+                id="lastName"
+                value={formData.lastName}
+                onChange={(e) => handleInputChange('lastName', e.target.value)}
+                placeholder="Last name"
+                required
+              />
             </div>
-          </form>
-        </Form>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="phone">Phone Number</Label>
+            <Input
+              id="phone"
+              value={formData.phone}
+              onChange={(e) => handleInputChange('phone', e.target.value)}
+              placeholder="Enter phone number"
+            />
+          </div>
+
+          <Button type="submit" disabled={loading} className="w-full">
+            {loading ? 'Creating Administrator...' : 'Create Administrator'}
+          </Button>
+        </form>
       </DialogContent>
     </Dialog>
   );

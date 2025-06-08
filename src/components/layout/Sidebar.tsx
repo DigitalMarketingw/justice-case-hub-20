@@ -80,10 +80,7 @@ export function Sidebar({ className }: SidebarProps) {
     console.log('Sidebar: Starting EMERGENCY logout process');
     
     try {
-      // Force immediate logout - don't wait for anything
       await signOut();
-      
-      // The signOut function should handle navigation, but force it just in case
       setTimeout(() => {
         if (window.location.pathname !== '/auth') {
           console.log('Sidebar: Forcing navigation to auth page');
@@ -93,7 +90,6 @@ export function Sidebar({ className }: SidebarProps) {
       
     } catch (error) {
       console.error('Sidebar: Error during logout (forcing logout anyway):', error);
-      // Force navigation to auth page even if logout fails
       window.location.href = '/auth';
     } finally {
       setIsLoggingOut(false);
@@ -119,53 +115,57 @@ export function Sidebar({ className }: SidebarProps) {
     );
   }
 
-  // Choose navigation based on user role or special cases
-  const getNavigationForRole = () => {
+  // Determine navigation and role based on profile and user
+  const getNavigationAndRole = () => {
+    console.log('Sidebar - determining navigation for:', {
+      userEmail: user?.email,
+      profileRole: profile?.role,
+      profile: profile
+    });
+
     // Special case for superadmin@demo.com - always show super admin navigation
     if (user?.email === 'superadmin@demo.com') {
-      return superAdminNavigation;
+      console.log('Sidebar - Using super admin navigation for superadmin@demo.com');
+      return {
+        navigation: superAdminNavigation,
+        roleLabel: 'Super Admin'
+      };
     }
     
     // For other users, use their profile role with fallback
-    const userRole = profile?.role || 'attorney'; // Default to attorney if no profile
-    
-    switch (userRole) {
-      case 'super_admin':
-        return superAdminNavigation;
-      case 'firm_admin':
-        return firmAdminNavigation;
-      case 'attorney':
-        return attorneyNavigation;
-      case 'client':
-        return clientNavigation;
-      default:
-        return attorneyNavigation;
-    }
-  };
-
-  const navigation = getNavigationForRole();
-
-  // Determine the role label for display
-  const getRoleLabel = () => {
-    if (user?.email === 'superadmin@demo.com') {
-      return 'Super Admin';
-    }
-    
     const userRole = profile?.role || 'attorney';
+    console.log('Sidebar - Using profile role:', userRole);
     
     switch (userRole) {
       case 'super_admin':
-        return 'Super Admin';
+        return {
+          navigation: superAdminNavigation,
+          roleLabel: 'Super Admin'
+        };
       case 'firm_admin':
-        return 'Firm Admin';
+        return {
+          navigation: firmAdminNavigation,
+          roleLabel: 'Firm Admin'
+        };
       case 'attorney':
-        return 'Attorney';
+        return {
+          navigation: attorneyNavigation,
+          roleLabel: 'Attorney'
+        };
       case 'client':
-        return 'Client';
+        return {
+          navigation: clientNavigation,
+          roleLabel: 'Client'
+        };
       default:
-        return 'User';
+        return {
+          navigation: attorneyNavigation,
+          roleLabel: 'User'
+        };
     }
   };
+
+  const { navigation, roleLabel } = getNavigationAndRole();
 
   return (
     <div className={cn(
@@ -232,7 +232,7 @@ export function Sidebar({ className }: SidebarProps) {
                   : user?.email ? user.email.split('@')[0] : 'User'}
               </p>
               <p className="text-xs text-slate-400">
-                {getRoleLabel()}
+                {roleLabel}
               </p>
             </div>
           )}
