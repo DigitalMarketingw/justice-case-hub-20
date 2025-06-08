@@ -41,6 +41,30 @@ export const MessageThread = ({ conversationId, onBack }: MessageThreadProps) =>
     if (conversationId && user) {
       fetchMessages();
       fetchConversationInfo();
+      
+      // Set up real-time subscription for new messages
+      const channel = supabase
+        .channel(`conversation-${conversationId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'messages',
+            filter: `conversation_id=eq.${conversationId}`
+          },
+          (payload) => {
+            console.log('Real-time message update:', payload);
+            if (payload.eventType === 'INSERT') {
+              fetchMessages(); // Refresh messages when new message is inserted
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [conversationId, user]);
 
@@ -59,13 +83,18 @@ export const MessageThread = ({ conversationId, onBack }: MessageThreadProps) =>
         .select(`
           client_id,
           attorney_id,
-          clients:client_id (full_name),
-          attorney_profile:attorney_id (first_name, last_name)
+          client_profile:profiles!conversations_client_id_fkey (first_name, last_name),
+          attorney_profile:profiles!conversations_attorney_id_fkey (first_name, last_name)
         `)
         .eq('id', conversationId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching conversation info:', error);
+        return;
+      }
+      
+      console.log('Conversation info:', conversation);
       setConversationInfo(conversation);
     } catch (error) {
       console.error('Error fetching conversation info:', error);
@@ -83,14 +112,21 @@ export const MessageThread = ({ conversationId, onBack }: MessageThreadProps) =>
           content,
           created_at,
           is_read,
-          profiles!messages_sender_id_fkey (first_name, last_name)
+          sender_profile:profiles!messages_sender_id_fkey (first_name, last_name)
         `)
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching messages:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load messages. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-      // Transform the data to match our Message interface
       const transformedMessages = messages?.map((msg: any) => ({
         id: msg.id,
         sender_id: msg.sender_id,
@@ -99,8 +135,8 @@ export const MessageThread = ({ conversationId, onBack }: MessageThreadProps) =>
         created_at: msg.created_at,
         is_read: msg.is_read,
         sender_profile: {
-          first_name: msg.profiles?.first_name || 'Unknown',
-          last_name: msg.profiles?.last_name || 'User'
+          first_name: msg.sender_profile?.first_name || 'Unknown',
+          last_name: msg.sender_profile?.last_name || 'User'
         }
       })) || [];
 
@@ -142,15 +178,28 @@ export const MessageThread = ({ conversationId, onBack }: MessageThreadProps) =>
         .insert({
           sender_id: user.id,
           recipient_id: recipientId,
-          client_id: conversationInfo.clients?.id || conversationInfo.client_id,
+          client_id: conversationInfo.client_id,
           conversation_id: conversationId,
           content: newMessage.trim()
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error sending message:', error);
+        toast({
+          title: "Error",
+          description: "Failed to send message. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Update conversation's last_message_at
+      await supabase
+        .from('conversations')
+        .update({ last_message_at: new Date().toISOString() })
+        .eq('id', conversationId);
 
       setNewMessage("");
-      await fetchMessages();
       
       toast({
         title: "Message sent",
@@ -187,12 +236,14 @@ export const MessageThread = ({ conversationId, onBack }: MessageThreadProps) =>
     ? conversationInfo?.attorney_profile 
       ? `${conversationInfo.attorney_profile.first_name || ''} ${conversationInfo.attorney_profile.last_name || ''}`.trim()
       : 'Attorney'
-    : conversationInfo?.clients?.full_name || 'Client';
+    : conversationInfo?.client_profile
+      ? `${conversationInfo.client_profile.first_name || ''} ${conversationInfo.client_profile.last_name || ''}`.trim()
+      : 'Client';
 
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b flex items-center gap-3">
+      <div className="p-4 border-b flex items-center gap-3 bg-white shadow-sm">
         <Button variant="ghost" size="sm" onClick={onBack}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
@@ -210,7 +261,7 @@ export const MessageThread = ({ conversationId, onBack }: MessageThreadProps) =>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
         {messages.length === 0 ? (
           <div className="text-center text-gray-500 py-8">
             <p>No messages yet. Start the conversation!</p>
@@ -224,7 +275,7 @@ export const MessageThread = ({ conversationId, onBack }: MessageThreadProps) =>
               <Card className={`max-w-xs lg:max-w-md ${
                 message.sender_id === user.id 
                   ? 'bg-blue-500 text-white' 
-                  : 'bg-white'
+                  : 'bg-white border-gray-200'
               }`}>
                 <CardContent className="p-3">
                   <p className="text-sm">{message.content}</p>
@@ -233,7 +284,10 @@ export const MessageThread = ({ conversationId, onBack }: MessageThreadProps) =>
                       ? 'text-blue-100' 
                       : 'text-gray-500'
                   }`}>
-                    {new Date(message.created_at).toLocaleTimeString()}
+                    {new Date(message.created_at).toLocaleTimeString([], { 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    })}
                   </p>
                 </CardContent>
               </Card>
@@ -244,7 +298,7 @@ export const MessageThread = ({ conversationId, onBack }: MessageThreadProps) =>
       </div>
 
       {/* Message Input */}
-      <div className="p-4 border-t">
+      <div className="p-4 border-t bg-white">
         <div className="flex gap-2">
           <Textarea
             value={newMessage}
@@ -258,7 +312,7 @@ export const MessageThread = ({ conversationId, onBack }: MessageThreadProps) =>
             onClick={sendMessage}
             disabled={!newMessage.trim() || sending}
             size="sm"
-            className="px-3"
+            className="px-3 bg-blue-600 hover:bg-blue-700"
           >
             <Send className="h-4 w-4" />
           </Button>

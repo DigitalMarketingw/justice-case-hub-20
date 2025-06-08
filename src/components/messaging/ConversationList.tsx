@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,16 +37,58 @@ export const ConversationList = ({
   useEffect(() => {
     if (user) {
       fetchConversations();
+      
+      // Set up real-time subscription for conversation updates
+      const channel = supabase
+        .channel('conversations-updates')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'conversations'
+          },
+          () => {
+            console.log('Conversation updated, refreshing list');
+            fetchConversations();
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'messages'
+          },
+          () => {
+            console.log('New message, refreshing conversation list');
+            fetchConversations();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [user, profile]);
 
   const fetchConversations = async () => {
     try {
-      // First, get conversations based on user role
+      console.log('Fetching conversations for user:', user?.id, 'role:', profile?.role);
+      
+      // Build query based on user role
       let query = supabase
         .from('conversations')
-        .select('id, client_id, attorney_id, last_message_at')
-        .order('last_message_at', { ascending: false });
+        .select(`
+          id, 
+          client_id, 
+          attorney_id, 
+          last_message_at,
+          client_profile:profiles!conversations_client_id_fkey (first_name, last_name),
+          attorney_profile:profiles!conversations_attorney_id_fkey (first_name, last_name)
+        `)
+        .order('last_message_at', { ascending: false, nullsFirst: false });
 
       // Filter based on user role
       if (profile?.role === 'client') {
@@ -57,26 +100,17 @@ export const ConversationList = ({
 
       const { data: conversationsData, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching conversations:', error);
+        return;
+      }
 
-      // For each conversation, get the participant names and latest message
+      console.log('Raw conversations data:', conversationsData);
+
+      // For each conversation, get the latest message and unread count
       const conversationList: Conversation[] = [];
       
       for (const conv of conversationsData || []) {
-        // Get client profile information
-        const { data: clientProfile } = await supabase
-          .from('profiles')
-          .select('first_name, last_name')
-          .eq('id', conv.client_id)
-          .single();
-
-        // Get attorney profile information
-        const { data: attorneyProfile } = await supabase
-          .from('profiles')
-          .select('first_name, last_name')
-          .eq('id', conv.attorney_id)
-          .single();
-
         // Get latest message
         const { data: latestMessage } = await supabase
           .from('messages')
@@ -84,7 +118,7 @@ export const ConversationList = ({
           .eq('conversation_id', conv.id)
           .order('created_at', { ascending: false })
           .limit(1)
-          .single();
+          .maybeSingle();
 
         // Count unread messages for current user
         const { count: unreadCount } = await supabase
@@ -94,12 +128,12 @@ export const ConversationList = ({
           .eq('recipient_id', user.id)
           .eq('is_read', false);
 
-        const clientName = clientProfile 
-          ? `${clientProfile.first_name || ''} ${clientProfile.last_name || ''}`.trim()
+        const clientName = conv.client_profile 
+          ? `${conv.client_profile.first_name || ''} ${conv.client_profile.last_name || ''}`.trim() || 'Unknown Client'
           : 'Unknown Client';
 
-        const attorneyName = attorneyProfile 
-          ? `${attorneyProfile.first_name || ''} ${attorneyProfile.last_name || ''}`.trim()
+        const attorneyName = conv.attorney_profile 
+          ? `${conv.attorney_profile.first_name || ''} ${conv.attorney_profile.last_name || ''}`.trim() || 'Unknown Attorney'
           : 'Unknown Attorney';
 
         conversationList.push({
@@ -114,6 +148,7 @@ export const ConversationList = ({
         });
       }
 
+      console.log('Processed conversations:', conversationList);
       setConversations(conversationList);
     } catch (error) {
       console.error('Error fetching conversations:', error);
@@ -147,8 +182,8 @@ export const ConversationList = ({
           </h2>
         </div>
         
-        {/* Attorney Start Conversation Button - Always Visible */}
-        {profile?.role === 'attorney' && (
+        {/* Attorney Start Conversation Button */}
+        {(profile?.role === 'attorney' || user?.email?.includes('attorney')) && (
           <div className="mb-2">
             <Button 
               onClick={onStartNewConversation}
@@ -168,9 +203,9 @@ export const ConversationList = ({
             <div className="py-8">
               <MessageSquare className="h-12 w-12 mx-auto mb-3 text-gray-300" />
               <p className="text-sm">No conversations yet</p>
-              {profile?.role === 'attorney' && (
+              {(profile?.role === 'attorney' || user?.email?.includes('attorney')) && (
                 <div className="mt-4">
-                  <p className="text-xs mb-3 text-gray-400">Start messaging your clients to begin</p>
+                  <p className="text-xs mb-3 text-gray-400">Start messaging your clients</p>
                   <Button 
                     onClick={onStartNewConversation}
                     className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -205,7 +240,10 @@ export const ConversationList = ({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
                           <h3 className="font-medium text-sm truncate">
-                            {profile?.role === 'client' ? conversation.attorney_name : conversation.client_name}
+                            {profile?.role === 'client' 
+                              ? conversation.attorney_name 
+                              : conversation.client_name
+                            }
                           </h3>
                           {conversation.unread_count > 0 && (
                             <Badge variant="destructive" className="ml-2">

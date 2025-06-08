@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { MessageSquare, Users, Clock, Eye } from "lucide-react";
 
 interface ConversationOverview {
+  conversation_id: string;
   client_id: string;
   client_name: string;
   attorney_name: string;
@@ -30,67 +32,107 @@ export const MessageOverview = ({ onSelectConversation }: MessageOverviewProps) 
 
   useEffect(() => {
     fetchOverviewData();
+    
+    // Set up real-time subscription
+    const channel = supabase
+      .channel('admin-overview')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'messages'
+        },
+        () => {
+          console.log('Messages updated, refreshing overview');
+          fetchOverviewData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'conversations'
+        },
+        () => {
+          console.log('Conversations updated, refreshing overview');
+          fetchOverviewData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchOverviewData = async () => {
     try {
-      // Fetch all messages with related data
-      const { data: messages, error } = await supabase
-        .from('messages')
+      // Get all conversations with participant info
+      const { data: conversationsData, error: convError } = await supabase
+        .from('conversations')
         .select(`
           id,
           client_id,
-          sender_id,
-          recipient_id,
-          content,
-          created_at,
-          is_read,
-          clients:client_id (full_name),
-          sender_profile:profiles!messages_sender_id_fkey (first_name, last_name),
-          recipient_profile:profiles!messages_recipient_id_fkey (first_name, last_name)
+          attorney_id,
+          last_message_at,
+          client_profile:profiles!conversations_client_id_fkey (first_name, last_name),
+          attorney_profile:profiles!conversations_attorney_id_fkey (first_name, last_name)
         `)
-        .order('created_at', { ascending: false });
+        .order('last_message_at', { ascending: false, nullsFirst: false });
 
-      if (error) throw error;
+      if (convError) {
+        console.error('Error fetching conversations:', convError);
+        return;
+      }
 
-      // Group by client_id to create conversation overview
-      const conversationMap = new Map<string, ConversationOverview>();
+      // Get all messages for stats
+      const { data: allMessages, error: msgError } = await supabase
+        .from('messages')
+        .select('id, conversation_id, content, created_at, is_read');
+
+      if (msgError) {
+        console.error('Error fetching messages:', msgError);
+        return;
+      }
+
+      const conversationList: ConversationOverview[] = [];
       let totalUnread = 0;
 
-      messages?.forEach((message: any) => {
-        const clientId = message.client_id;
-        
-        if (!conversationMap.has(clientId)) {
-          const attorneyName = message.sender_profile?.first_name 
-            ? `${message.sender_profile.first_name} ${message.sender_profile.last_name}`
-            : `${message.recipient_profile?.first_name || ''} ${message.recipient_profile?.last_name || ''}`.trim();
+      for (const conv of conversationsData || []) {
+        // Get messages for this conversation
+        const convMessages = allMessages?.filter(msg => msg.conversation_id === conv.id) || [];
+        const unreadCount = convMessages.filter(msg => !msg.is_read).length;
+        const latestMessage = convMessages
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
 
-          conversationMap.set(clientId, {
-            client_id: clientId,
-            client_name: message.clients?.full_name || 'Unknown Client',
-            attorney_name: attorneyName || 'Unknown Attorney',
-            message_count: 0,
-            unread_count: 0,
-            last_message_time: message.created_at,
-            last_message_content: message.content
-          });
-        }
+        totalUnread += unreadCount;
 
-        const conv = conversationMap.get(clientId)!;
-        conv.message_count++;
-        
-        if (!message.is_read) {
-          conv.unread_count++;
-          totalUnread++;
-        }
-      });
+        const clientName = conv.client_profile 
+          ? `${conv.client_profile.first_name || ''} ${conv.client_profile.last_name || ''}`.trim() || 'Unknown Client'
+          : 'Unknown Client';
 
-      const conversationList = Array.from(conversationMap.values());
+        const attorneyName = conv.attorney_profile 
+          ? `${conv.attorney_profile.first_name || ''} ${conv.attorney_profile.last_name || ''}`.trim() || 'Unknown Attorney'
+          : 'Unknown Attorney';
+
+        conversationList.push({
+          conversation_id: conv.id,
+          client_id: conv.client_id,
+          client_name: clientName,
+          attorney_name: attorneyName,
+          message_count: convMessages.length,
+          unread_count: unreadCount,
+          last_message_time: latestMessage?.created_at || conv.last_message_at || '',
+          last_message_content: latestMessage?.content || 'No messages yet'
+        });
+      }
+
       setConversations(conversationList);
-      
       setStats({
         totalConversations: conversationList.length,
-        totalMessages: messages?.length || 0,
+        totalMessages: allMessages?.length || 0,
         unreadMessages: totalUnread
       });
     } catch (error) {
@@ -178,7 +220,7 @@ export const MessageOverview = ({ onSelectConversation }: MessageOverviewProps) 
             <div className="space-y-4">
               {conversations.map((conversation) => (
                 <div
-                  key={conversation.client_id}
+                  key={conversation.conversation_id}
                   className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   <div className="flex-1">
@@ -202,7 +244,10 @@ export const MessageOverview = ({ onSelectConversation }: MessageOverviewProps) 
                       </span>
                       <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        {new Date(conversation.last_message_time).toLocaleDateString()}
+                        {conversation.last_message_time ? 
+                          new Date(conversation.last_message_time).toLocaleDateString() : 
+                          'No activity'
+                        }
                       </span>
                     </div>
                   </div>
@@ -210,7 +255,7 @@ export const MessageOverview = ({ onSelectConversation }: MessageOverviewProps) 
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => onSelectConversation(conversation.client_id)}
+                    onClick={() => onSelectConversation(conversation.conversation_id)}
                     className="ml-4"
                   >
                     <Eye className="h-4 w-4 mr-2" />
