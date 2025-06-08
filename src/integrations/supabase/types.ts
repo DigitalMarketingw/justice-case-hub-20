@@ -768,17 +768,23 @@ export type Database = {
       }
       profiles: {
         Row: {
+          activated_at: string | null
           assigned_attorney_id: string | null
           created_at: string | null
+          created_by: string | null
           dropped_by: string | null
           dropped_date: string | null
           email: string
           firm_id: string | null
           first_name: string | null
           id: string
+          invite_token: string | null
+          invited_at: string | null
           is_active: boolean | null
           is_dropped: boolean | null
+          last_login: string | null
           last_name: string | null
+          password_reset_required: boolean | null
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
           transferred_by: string | null
@@ -787,17 +793,23 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          activated_at?: string | null
           assigned_attorney_id?: string | null
           created_at?: string | null
+          created_by?: string | null
           dropped_by?: string | null
           dropped_date?: string | null
           email: string
           firm_id?: string | null
           first_name?: string | null
           id: string
+          invite_token?: string | null
+          invited_at?: string | null
           is_active?: boolean | null
           is_dropped?: boolean | null
+          last_login?: string | null
           last_name?: string | null
+          password_reset_required?: boolean | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           transferred_by?: string | null
@@ -806,17 +818,23 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          activated_at?: string | null
           assigned_attorney_id?: string | null
           created_at?: string | null
+          created_by?: string | null
           dropped_by?: string | null
           dropped_date?: string | null
           email?: string
           firm_id?: string | null
           first_name?: string | null
           id?: string
+          invite_token?: string | null
+          invited_at?: string | null
           is_active?: boolean | null
           is_dropped?: boolean | null
+          last_login?: string | null
           last_name?: string | null
+          password_reset_required?: boolean | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           transferred_by?: string | null
@@ -828,6 +846,13 @@ export type Database = {
           {
             foreignKeyName: "profiles_assigned_attorney_id_fkey"
             columns: ["assigned_attorney_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -862,11 +887,57 @@ export type Database = {
           },
         ]
       }
+      user_activity_log: {
+        Row: {
+          action: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          performed_by: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          performed_by?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          performed_by?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_activity_log_performed_by_fkey"
+            columns: ["performed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_activity_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      can_access_profile: {
+        Args: { profile_id: string }
+        Returns: boolean
+      }
       get_user_role: {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
@@ -878,6 +949,10 @@ export type Database = {
       is_super_admin: {
         Args: { user_id: string }
         Returns: boolean
+      }
+      log_user_activity: {
+        Args: { p_user_id: string; p_action: string; p_details?: Json }
+        Returns: undefined
       }
     }
     Enums: {

@@ -21,6 +21,17 @@ export const useAuthOperations = () => {
         return { error };
       }
 
+      // Update last login timestamp
+      try {
+        await supabase
+          .from('profiles')
+          .update({ last_login: new Date().toISOString() })
+          .eq('email', email);
+      } catch (updateError) {
+        console.error('Error updating last login:', updateError);
+        // Don't fail the sign-in for this
+      }
+
       toast({
         title: "Signed in successfully",
         description: "Welcome back!",
@@ -84,12 +95,11 @@ export const useAuthOperations = () => {
       // Clear profile state immediately for instant UI feedback
       setProfile(null);
       
-      // Sign out from Supabase (simplified - no need for global scope or localStorage.clear())
+      // Sign out from Supabase
       const { error } = await supabase.auth.signOut();
       
       if (error) {
         console.error('Supabase sign out error:', error);
-        // Don't show error toast as it might be normal in some cases
       }
       
       console.log('Sign out completed');
@@ -105,10 +115,10 @@ export const useAuthOperations = () => {
       setProfile(null);
       
       toast({
-        title: "Signed out successfully", // Show success anyway since we cleared state
+        title: "Signed out successfully",
       });
       
-      return { error: null }; // Return success to prevent UI issues
+      return { error: null };
     }
   };
 

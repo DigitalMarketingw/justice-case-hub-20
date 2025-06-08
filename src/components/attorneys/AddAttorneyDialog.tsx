@@ -1,195 +1,330 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { supabase } from "@/integrations/supabase/client";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { UserPlus } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+
+interface Firm {
+  id: string;
+  name: string;
+}
 
 interface AddAttorneyDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onAttorneyAdded: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onAttorneyAdded?: () => void;
 }
 
 export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAttorneyDialogProps) {
-  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { profile, user } = useAuth();
+  const [isOpen, setIsOpen] = useState(false);
+  const [firms, setFirms] = useState<Firm[]>([]);
   const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
     email: "",
-    password: "",
-    first_name: "",
-    last_name: "",
     phone: "",
-    bar_number: "",
+    barNumber: "",
     specialization: "",
-    years_of_experience: "",
-    hourly_rate: "",
+    yearsExperience: "",
+    hourlyRate: "",
+    firmId: profile?.firm_id || "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const dialogOpen = open !== undefined ? open : isOpen;
+  const setDialogOpen = onOpenChange || setIsOpen;
+
+  useEffect(() => {
+    const fetchFirms = async () => {
+      if (!dialogOpen) return;
+
+      // Only super admins can select firms, firm admins are limited to their firm
+      if (profile?.role === 'super_admin') {
+        const { data: firmData, error: firmError } = await supabase
+          .from('firms')
+          .select('id, name')
+          .order('name');
+
+        if (firmError) {
+          console.error('Error fetching firms:', firmError);
+        } else {
+          setFirms(firmData || []);
+        }
+      }
+    };
+
+    fetchFirms();
+  }, [dialogOpen, profile]);
+
+  // Generate a secure temporary password
+  const generateTemporaryPassword = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    
+    if (!formData.firstName || !formData.lastName || !formData.email) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validate firm assignment
+    const targetFirmId = formData.firmId || profile?.firm_id;
+    if (!targetFirmId) {
+      toast({
+        title: "Error",
+        description: "No firm selected or available",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Ensure firm admin can only create attorneys in their firm
+    if (profile?.role === 'firm_admin' && profile?.firm_id !== targetFirmId) {
+      toast({
+        title: "Error",
+        description: "You can only create attorneys for your firm",
+        variant: "destructive"
+      });
+      return;
+    }
 
     try {
-      // First create the user account
+      setIsSubmitting(true);
+
+      const temporaryPassword = generateTemporaryPassword();
+
+      // Create the user in auth with proper metadata
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
-        password: formData.password,
+        password: temporaryPassword,
         options: {
           data: {
-            first_name: formData.first_name,
-            last_name: formData.last_name,
-            role: 'attorney'
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            role: 'attorney',
+            firm_id: targetFirmId
           }
         }
       });
 
-      if (authError) throw authError;
-
-      if (authData.user) {
-        // Create the profile
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: authData.user.id,
-            email: formData.email,
-            first_name: formData.first_name,
-            last_name: formData.last_name,
-            phone: formData.phone || null,
-            role: 'attorney'
-          });
-
-        if (profileError) throw profileError;
-
-        // Create attorney-specific data
-        const { error: attorneyError } = await supabase
-          .from('attorneys')
-          .insert({
-            id: authData.user.id,
-            bar_number: formData.bar_number || null,
-            specialization: formData.specialization ? [formData.specialization] : null,
-            years_of_experience: formData.years_of_experience ? parseInt(formData.years_of_experience) : null,
-            hourly_rate: formData.hourly_rate ? parseFloat(formData.hourly_rate) : null,
-          });
-
-        if (attorneyError) throw attorneyError;
+      if (authError) {
+        toast({
+          title: "Error",
+          description: authError.message,
+          variant: "destructive"
+        });
+        return;
       }
+
+      if (!authData.user) {
+        toast({
+          title: "Error",
+          description: "Failed to create user account",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Update the profile with additional info
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          phone: formData.phone || null,
+          created_by: user?.id,
+          invited_at: new Date().toISOString(),
+          password_reset_required: true
+        })
+        .eq('id', authData.user.id);
+
+      if (profileError) {
+        console.error('Error updating profile:', profileError);
+      }
+
+      // Update the attorney record with professional info
+      const { error: attorneyError } = await supabase
+        .from('attorneys')
+        .update({
+          bar_number: formData.barNumber || null,
+          specialization: formData.specialization ? [formData.specialization] : null,
+          years_of_experience: formData.yearsExperience ? parseInt(formData.yearsExperience) : null,
+          hourly_rate: formData.hourlyRate ? parseFloat(formData.hourlyRate) : null,
+        })
+        .eq('id', authData.user.id);
+
+      if (attorneyError) {
+        console.error('Error updating attorney info:', attorneyError);
+      }
+
+      // Log the activity
+      await supabase.rpc('log_user_activity', {
+        p_user_id: authData.user.id,
+        p_action: 'ATTORNEY_CREATED',
+        p_details: {
+          attorney_name: `${formData.firstName} ${formData.lastName}`,
+          firm_id: targetFirmId,
+          bar_number: formData.barNumber || null,
+          temporary_password: temporaryPassword
+        }
+      });
 
       toast({
         title: "Success",
-        description: "Attorney added successfully",
+        description: `Attorney created successfully. Temporary password: ${temporaryPassword}`,
+        duration: 10000
       });
 
       // Reset form
       setFormData({
+        firstName: "",
+        lastName: "",
         email: "",
-        password: "",
-        first_name: "",
-        last_name: "",
         phone: "",
-        bar_number: "",
+        barNumber: "",
         specialization: "",
-        years_of_experience: "",
-        hourly_rate: "",
+        yearsExperience: "",
+        hourlyRate: "",
+        firmId: profile?.firm_id || "",
       });
 
-      onAttorneyAdded();
-      onOpenChange(false);
+      setDialogOpen(false);
+
+      if (onAttorneyAdded) {
+        onAttorneyAdded();
+      }
+
     } catch (error) {
       console.error('Error adding attorney:', error);
       toast({
         title: "Error",
-        description: "Failed to add attorney. Please try again.",
-        variant: "destructive",
+        description: "Failed to create attorney",
+        variant: "destructive"
       });
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
+  // Only show to admins
+  if (!profile || !['super_admin', 'firm_admin'].includes(profile.role)) {
+    return null;
+  }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      {!open && (
+        <DialogTrigger asChild>
+          <Button>
+            <UserPlus className="mr-2 h-4 w-4" />
+            Add Attorney
+          </Button>
+        </DialogTrigger>
+      )}
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Add New Attorney</DialogTitle>
-          <DialogDescription>
-            Add a new attorney to your legal team. Fill in the details below.
-          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="first_name">First Name *</Label>
+              <Label htmlFor="firstName">First Name *</Label>
               <Input
-                id="first_name"
-                value={formData.first_name}
-                onChange={(e) => handleChange("first_name", e.target.value)}
+                id="firstName"
+                value={formData.firstName}
+                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="last_name">Last Name *</Label>
+              <Label htmlFor="lastName">Last Name *</Label>
               <Input
-                id="last_name"
-                value={formData.last_name}
-                onChange={(e) => handleChange("last_name", e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleChange("email", e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password *</Label>
-              <Input
-                id="password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => handleChange("password", e.target.value)}
+                id="lastName"
+                value={formData.lastName}
+                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                 required
               />
             </div>
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="email">Email *</Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="phone">Phone</Label>
+            <Input
+              id="phone"
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            />
+          </div>
+
+          {/* Firm selection - only for super admin */}
+          {profile?.role === 'super_admin' && (
+            <div className="space-y-2">
+              <Label htmlFor="firm">Firm *</Label>
+              <Select
+                value={formData.firmId}
+                onValueChange={(value) => setFormData({ ...formData, firmId: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a firm" />
+                </SelectTrigger>
+                <SelectContent>
+                  {firms.map((firm) => (
+                    <SelectItem key={firm.id} value={firm.id}>
+                      {firm.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
+              <Label htmlFor="barNumber">Bar Number</Label>
               <Input
-                id="phone"
-                value={formData.phone}
-                onChange={(e) => handleChange("phone", e.target.value)}
+                id="barNumber"
+                value={formData.barNumber}
+                onChange={(e) => setFormData({ ...formData, barNumber: e.target.value })}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="bar_number">Bar Number</Label>
+              <Label htmlFor="yearsExperience">Years Experience</Label>
               <Input
-                id="bar_number"
-                value={formData.bar_number}
-                onChange={(e) => handleChange("bar_number", e.target.value)}
+                id="yearsExperience"
+                type="number"
+                min="0"
+                value={formData.yearsExperience}
+                onChange={(e) => setFormData({ ...formData, yearsExperience: e.target.value })}
               />
             </div>
           </div>
@@ -200,42 +335,26 @@ export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAt
               <Input
                 id="specialization"
                 value={formData.specialization}
-                onChange={(e) => handleChange("specialization", e.target.value)}
-                placeholder="e.g. Corporate Law, Criminal Defense"
+                onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
+                placeholder="e.g., Corporate Law"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="years_of_experience">Years of Experience</Label>
+              <Label htmlFor="hourlyRate">Hourly Rate ($)</Label>
               <Input
-                id="years_of_experience"
+                id="hourlyRate"
                 type="number"
                 min="0"
-                value={formData.years_of_experience}
-                onChange={(e) => handleChange("years_of_experience", e.target.value)}
+                step="0.01"
+                value={formData.hourlyRate}
+                onChange={(e) => setFormData({ ...formData, hourlyRate: e.target.value })}
               />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="hourly_rate">Hourly Rate ($)</Label>
-            <Input
-              id="hourly_rate"
-              type="number"
-              min="0"
-              step="0.01"
-              value={formData.hourly_rate}
-              onChange={(e) => handleChange("hourly_rate", e.target.value)}
-            />
-          </div>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Adding..." : "Add Attorney"}
-            </Button>
-          </DialogFooter>
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? "Creating Attorney..." : "Create Attorney"}
+          </Button>
         </form>
       </DialogContent>
     </Dialog>

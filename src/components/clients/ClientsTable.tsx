@@ -10,9 +10,10 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { User, Mail, Phone, Building, MoreHorizontal, RefreshCw } from "lucide-react";
+import { User, Mail, Phone, Building, MoreHorizontal, RefreshCw, UserCheck } from "lucide-react";
 import { DropClientDialog } from "./DropClientDialog";
 import { TransferClientDialog } from "./TransferClientDialog";
+import { ReassignClientDialog } from "./ReassignClientDialog";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface Client {
@@ -29,6 +30,11 @@ interface Client {
   dropped_date?: string;
   assigned_attorney_id?: string;
   assigned_attorney_name?: string;
+  firm_id?: string;
+  firm_name?: string;
+  created_by_name?: string;
+  last_login?: string;
+  is_active: boolean;
 }
 
 interface ClientsTableProps {
@@ -47,6 +53,16 @@ export function ClientsTable({ clients, loading, onRefresh }: ClientsTableProps)
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
+  };
+
+  const getStatusBadge = (client: Client) => {
+    if (!client.is_active) {
+      return <Badge variant="secondary">Inactive</Badge>;
+    }
+    if (!client.last_login) {
+      return <Badge variant="outline">Never Logged In</Badge>;
+    }
+    return <Badge variant="default">Active</Badge>;
   };
 
   if (loading) {
@@ -93,11 +109,11 @@ export function ClientsTable({ clients, loading, onRefresh }: ClientsTableProps)
             <TableRow>
               <TableHead>Client</TableHead>
               <TableHead>Contact</TableHead>
-              <TableHead>Company</TableHead>
+              {isSuperAdmin && <TableHead>Firm</TableHead>}
               <TableHead>Assigned Attorney</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Added</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              {isFirmAdmin && <TableHead className="text-right">Actions</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -110,6 +126,9 @@ export function ClientsTable({ clients, loading, onRefresh }: ClientsTableProps)
                     </div>
                     <div>
                       <p className="font-medium text-gray-900">{client.full_name}</p>
+                      {client.created_by_name && (
+                        <p className="text-xs text-gray-500">Added by {client.created_by_name}</p>
+                      )}
                       {client.tags && client.tags.length > 0 && (
                         <div className="flex space-x-1 mt-1">
                           {client.tags.slice(0, 2).map((tag, index) => (
@@ -134,53 +153,69 @@ export function ClientsTable({ clients, loading, onRefresh }: ClientsTableProps)
                         {client.phone}
                       </div>
                     )}
+                    {client.company_name && (
+                      <div className="flex items-center text-sm text-gray-600">
+                        <Building className="h-4 w-4 mr-2" />
+                        {client.company_name}
+                      </div>
+                    )}
                   </div>
                 </TableCell>
-                <TableCell>
-                  {client.company_name ? (
-                    <div className="flex items-center text-sm">
-                      <Building className="h-4 w-4 mr-2 text-gray-400" />
-                      {client.company_name}
-                    </div>
-                  ) : (
-                    <span className="text-gray-400">-</span>
-                  )}
-                </TableCell>
+                {isSuperAdmin && (
+                  <TableCell>
+                    {client.firm_name ? (
+                      <span className="text-sm text-gray-900">{client.firm_name}</span>
+                    ) : (
+                      <span className="text-gray-400">No Firm</span>
+                    )}
+                  </TableCell>
+                )}
                 <TableCell>
                   {client.assigned_attorney_name ? (
-                    <span className="text-sm text-gray-900">{client.assigned_attorney_name}</span>
+                    <div className="flex items-center">
+                      <UserCheck className="h-4 w-4 mr-2 text-green-600" />
+                      <span className="text-sm text-gray-900">{client.assigned_attorney_name}</span>
+                    </div>
                   ) : (
                     <span className="text-gray-400">Unassigned</span>
                   )}
                 </TableCell>
                 <TableCell>
-                  <Badge variant="default">Active</Badge>
+                  {getStatusBadge(client)}
                 </TableCell>
                 <TableCell className="text-sm text-gray-600">
                   {formatDate(client.created_at)}
                 </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end space-x-2">
-                    {isFirmAdmin && (
-                      <DropClientDialog
+                {isFirmAdmin && (
+                  <TableCell className="text-right">
+                    <div className="flex justify-end space-x-2">
+                      <ReassignClientDialog
                         clientId={client.id}
                         clientName={client.full_name}
-                        onClientDropped={onRefresh}
+                        currentAttorneyId={client.assigned_attorney_id}
+                        onClientReassigned={onRefresh}
                       />
-                    )}
-                    {isSuperAdmin && profile?.firm_id && (
-                      <TransferClientDialog
-                        clientId={client.id}
-                        clientName={client.full_name}
-                        currentFirmId={profile.firm_id}
-                        onClientTransferred={onRefresh}
-                      />
-                    )}
-                    <Button variant="ghost" size="sm">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
+                      {isFirmAdmin && (
+                        <DropClientDialog
+                          clientId={client.id}
+                          clientName={client.full_name}
+                          onClientDropped={onRefresh}
+                        />
+                      )}
+                      {isSuperAdmin && profile?.firm_id && (
+                        <TransferClientDialog
+                          clientId={client.id}
+                          clientName={client.full_name}
+                          currentFirmId={client.firm_id || ''}
+                          onClientTransferred={onRefresh}
+                        />
+                      )}
+                      <Button variant="ghost" size="sm">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                )}
               </TableRow>
             ))}
           </TableBody>

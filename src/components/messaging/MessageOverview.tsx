@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Users, Clock, Eye } from "lucide-react";
+import { MessageSquare, Users, Clock, Eye, Building } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ConversationOverview {
   conversation_id: string;
@@ -15,6 +16,7 @@ interface ConversationOverview {
   unread_count: number;
   last_message_time: string;
   last_message_content: string;
+  firm_name?: string;
 }
 
 interface MessageOverviewProps {
@@ -22,6 +24,7 @@ interface MessageOverviewProps {
 }
 
 export const MessageOverview = ({ onSelectConversation }: MessageOverviewProps) => {
+  const { profile } = useAuth();
   const [conversations, setConversations] = useState<ConversationOverview[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -69,28 +72,42 @@ export const MessageOverview = ({ onSelectConversation }: MessageOverviewProps) 
 
   const fetchOverviewData = async () => {
     try {
-      // Get all conversations with participant info
-      const { data: conversationsData, error: convError } = await supabase
+      // Build query based on user role and firm scope
+      let conversationsQuery = supabase
         .from('conversations')
         .select(`
           id,
           client_id,
           attorney_id,
           last_message_at,
-          client_profile:profiles!conversations_client_id_fkey (first_name, last_name),
-          attorney_profile:profiles!conversations_attorney_id_fkey (first_name, last_name)
+          client_profile:profiles!conversations_client_id_fkey (first_name, last_name, firm_id),
+          attorney_profile:profiles!conversations_attorney_id_fkey (first_name, last_name, firm_id),
+          client_firm:profiles!conversations_client_id_fkey (firm:firms(name)),
+          attorney_firm:profiles!conversations_attorney_id_fkey (firm:firms(name))
         `)
         .order('last_message_at', { ascending: false, nullsFirst: false });
+
+      // Apply firm-scoped filtering for firm admins
+      if (profile?.role === 'firm_admin' && profile?.firm_id) {
+        // For firm admins, only show conversations involving their firm's clients or attorneys
+        conversationsQuery = conversationsQuery.or(
+          `client_profile.firm_id.eq.${profile.firm_id},attorney_profile.firm_id.eq.${profile.firm_id}`
+        );
+      }
+
+      const { data: conversationsData, error: convError } = await conversationsQuery;
 
       if (convError) {
         console.error('Error fetching conversations:', convError);
         return;
       }
 
-      // Get all messages for stats
-      const { data: allMessages, error: msgError } = await supabase
+      // Get all messages with firm scope filtering
+      let messagesQuery = supabase
         .from('messages')
         .select('id, conversation_id, content, created_at, is_read');
+
+      const { data: allMessages, error: msgError } = await messagesQuery;
 
       if (msgError) {
         console.error('Error fetching messages:', msgError);
@@ -117,6 +134,11 @@ export const MessageOverview = ({ onSelectConversation }: MessageOverviewProps) 
           ? `${conv.attorney_profile.first_name || ''} ${conv.attorney_profile.last_name || ''}`.trim() || 'Unknown Attorney'
           : 'Unknown Attorney';
 
+        // Get firm name for super admin view
+        const firmName = profile?.role === 'super_admin' 
+          ? (conv.client_firm?.firm?.name || conv.attorney_firm?.firm?.name || 'No Firm')
+          : undefined;
+
         conversationList.push({
           conversation_id: conv.id,
           client_id: conv.client_id,
@@ -125,7 +147,8 @@ export const MessageOverview = ({ onSelectConversation }: MessageOverviewProps) 
           message_count: convMessages.length,
           unread_count: unreadCount,
           last_message_time: latestMessage?.created_at || conv.last_message_at || '',
-          last_message_content: latestMessage?.content || 'No messages yet'
+          last_message_content: latestMessage?.content || 'No messages yet',
+          firm_name: firmName
         });
       }
 
@@ -167,7 +190,9 @@ export const MessageOverview = ({ onSelectConversation }: MessageOverviewProps) 
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Conversations</p>
+                <p className="text-sm font-medium text-gray-600">
+                  {profile?.role === 'firm_admin' ? 'Firm Conversations' : 'Total Conversations'}
+                </p>
                 <p className="text-2xl font-bold">{stats.totalConversations}</p>
               </div>
               <Users className="h-8 w-8 text-blue-600" />
@@ -207,7 +232,13 @@ export const MessageOverview = ({ onSelectConversation }: MessageOverviewProps) 
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5" />
-            All Conversations
+            {profile?.role === 'firm_admin' ? 'Firm Conversations' : 'All Conversations'}
+            {profile?.role === 'firm_admin' && (
+              <Badge variant="outline" className="ml-2">
+                <Building className="h-3 w-3 mr-1" />
+                Your Firm Only
+              </Badge>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -215,6 +246,9 @@ export const MessageOverview = ({ onSelectConversation }: MessageOverviewProps) 
             <div className="text-center py-8 text-gray-500">
               <MessageSquare className="h-12 w-12 mx-auto mb-4 text-gray-300" />
               <p>No conversations found</p>
+              {profile?.role === 'firm_admin' && (
+                <p className="text-sm mt-2">You can only see conversations involving your firm</p>
+              )}
             </div>
           ) : (
             <div className="space-y-4">
@@ -228,6 +262,12 @@ export const MessageOverview = ({ onSelectConversation }: MessageOverviewProps) 
                       <h3 className="font-medium">{conversation.client_name}</h3>
                       <span className="text-sm text-gray-500">↔</span>
                       <span className="text-sm text-gray-600">{conversation.attorney_name}</span>
+                      {conversation.firm_name && profile?.role === 'super_admin' && (
+                        <Badge variant="outline" className="text-xs">
+                          <Building className="h-3 w-3 mr-1" />
+                          {conversation.firm_name}
+                        </Badge>
+                      )}
                       {conversation.unread_count > 0 && (
                         <Badge variant="destructive">{conversation.unread_count} unread</Badge>
                       )}

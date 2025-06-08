@@ -9,11 +9,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Attorney {
   id: string;
   first_name: string;
   last_name: string;
+}
+
+interface Firm {
+  id: string;
+  name: string;
 }
 
 interface AddClientDialogProps {
@@ -24,8 +30,10 @@ interface AddClientDialogProps {
 
 export function AddClientDialog({ open, onOpenChange, onClientAdded }: AddClientDialogProps) {
   const { toast } = useToast();
+  const { profile, user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [attorneys, setAttorneys] = useState<Attorney[]>([]);
+  const [firms, setFirms] = useState<Firm[]>([]);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -34,6 +42,7 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded }: AddClient
     address: "",
     notes: "",
     assignedAttorneyId: "",
+    firmId: profile?.firm_id || "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -41,28 +50,67 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded }: AddClient
   const setDialogOpen = onOpenChange || setIsOpen;
 
   useEffect(() => {
-    const fetchAttorneys = async () => {
-      const { data, error } = await supabase
+    const fetchData = async () => {
+      if (!dialogOpen) return;
+
+      // Fetch attorneys based on user role
+      let attorneyQuery = supabase
         .from('profiles')
-        .select('id, first_name, last_name')
+        .select('id, first_name, last_name, firm_id')
         .eq('role', 'attorney')
+        .eq('is_active', true)
         .order('first_name');
 
-      if (error) {
-        console.error('Error fetching attorneys:', error);
+      // If firm admin, only show attorneys from their firm
+      if (profile?.role === 'firm_admin' && profile?.firm_id) {
+        attorneyQuery = attorneyQuery.eq('firm_id', profile.firm_id);
+      }
+
+      const { data: attorneyData, error: attorneyError } = await attorneyQuery;
+
+      if (attorneyError) {
+        console.error('Error fetching attorneys:', attorneyError);
+        toast({
+          title: "Error",
+          description: "Failed to load attorneys",
+          variant: "destructive"
+        });
         return;
       }
 
-      setAttorneys(data || []);
+      setAttorneys(attorneyData || []);
+
+      // Only super admins can select firms, firm admins are limited to their firm
+      if (profile?.role === 'super_admin') {
+        const { data: firmData, error: firmError } = await supabase
+          .from('firms')
+          .select('id, name')
+          .order('name');
+
+        if (firmError) {
+          console.error('Error fetching firms:', firmError);
+        } else {
+          setFirms(firmData || []);
+        }
+      }
     };
 
-    if (dialogOpen) {
-      fetchAttorneys();
+    fetchData();
+  }, [dialogOpen, profile]);
+
+  // Generate a secure temporary password
+  const generateTemporaryPassword = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-  }, [dialogOpen]);
+    return password;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (!formData.firstName || !formData.lastName || !formData.email) {
       toast({
         title: "Error",
@@ -72,18 +120,42 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded }: AddClient
       return;
     }
 
+    // Validate firm assignment
+    const targetFirmId = formData.firmId || profile?.firm_id;
+    if (!targetFirmId) {
+      toast({
+        title: "Error",
+        description: "No firm selected or available",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Ensure firm admin can only create clients in their firm
+    if (profile?.role === 'firm_admin' && profile?.firm_id !== targetFirmId) {
+      toast({
+        title: "Error",
+        description: "You can only create clients for your firm",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       setIsSubmitting(true);
 
-      // Create the user in auth first
+      const temporaryPassword = generateTemporaryPassword();
+
+      // Create the user in auth with proper metadata
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
-        password: 'temporary123', // You should generate a secure temporary password
+        password: temporaryPassword,
         options: {
           data: {
             first_name: formData.firstName,
             last_name: formData.lastName,
-            role: 'client'
+            role: 'client',
+            firm_id: targetFirmId
           }
         }
       });
@@ -100,10 +172,26 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded }: AddClient
       if (!authData.user) {
         toast({
           title: "Error",
-          description: "Failed to create user",
+          description: "Failed to create user account",
           variant: "destructive"
         });
         return;
+      }
+
+      // Update the profile with additional client info
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          phone: formData.phone || null,
+          assigned_attorney_id: formData.assignedAttorneyId || null,
+          created_by: user?.id,
+          invited_at: new Date().toISOString(),
+          password_reset_required: true
+        })
+        .eq('id', authData.user.id);
+
+      if (profileError) {
+        console.error('Error updating profile:', profileError);
       }
 
       // Update the client record with additional info
@@ -119,9 +207,22 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded }: AddClient
         console.error('Error updating client info:', clientError);
       }
 
+      // Log the activity
+      await supabase.rpc('log_user_activity', {
+        p_user_id: authData.user.id,
+        p_action: 'CLIENT_CREATED',
+        p_details: {
+          client_name: `${formData.firstName} ${formData.lastName}`,
+          firm_id: targetFirmId,
+          assigned_attorney_id: formData.assignedAttorneyId || null,
+          temporary_password: temporaryPassword // Include for admin reference
+        }
+      });
+
       toast({
         title: "Success",
-        description: "Client added successfully"
+        description: `Client created successfully. Temporary password: ${temporaryPassword}`,
+        duration: 10000 // Show longer so admin can copy password
       });
 
       // Reset form
@@ -133,6 +234,7 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded }: AddClient
         address: "",
         notes: "",
         assignedAttorneyId: "",
+        firmId: profile?.firm_id || "",
       });
 
       setDialogOpen(false);
@@ -145,13 +247,18 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded }: AddClient
       console.error('Error adding client:', error);
       toast({
         title: "Error",
-        description: "Failed to add client",
+        description: "Failed to create client",
         variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // Only show to admins
+  if (!profile || !['super_admin', 'firm_admin'].includes(profile.role)) {
+    return null;
+  }
 
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -210,15 +317,27 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded }: AddClient
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="address">Address</Label>
-            <Textarea
-              id="address"
-              value={formData.address}
-              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              rows={2}
-            />
-          </div>
+          {/* Firm selection - only for super admin */}
+          {profile?.role === 'super_admin' && (
+            <div className="space-y-2">
+              <Label htmlFor="firm">Firm *</Label>
+              <Select
+                value={formData.firmId}
+                onValueChange={(value) => setFormData({ ...formData, firmId: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a firm" />
+                </SelectTrigger>
+                <SelectContent>
+                  {firms.map((firm) => (
+                    <SelectItem key={firm.id} value={firm.id}>
+                      {firm.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="assignedAttorney">Assigned Attorney</Label>
@@ -240,6 +359,16 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded }: AddClient
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="address">Address</Label>
+            <Textarea
+              id="address"
+              value={formData.address}
+              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              rows={2}
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="notes">Notes</Label>
             <Textarea
               id="notes"
@@ -250,7 +379,7 @@ export function AddClientDialog({ open, onOpenChange, onClientAdded }: AddClient
           </div>
 
           <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? "Adding Client..." : "Add Client"}
+            {isSubmitting ? "Creating Client..." : "Create Client"}
           </Button>
         </form>
       </DialogContent>
