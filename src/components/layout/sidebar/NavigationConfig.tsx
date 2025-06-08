@@ -11,11 +11,12 @@ import {
   Building,
   MessageSquare
 } from "lucide-react";
+import { LucideIcon } from "lucide-react";
 
 export interface NavigationItem {
   name: string;
   href: string;
-  icon: React.ComponentType<{ className?: string; size?: number }>;
+  icon: LucideIcon;
 }
 
 export const superAdminNavigation: NavigationItem[] = [
