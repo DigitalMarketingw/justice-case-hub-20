@@ -77,8 +77,8 @@ const HeroSection = ({ onContactClick }: HeroSectionProps) => {
                 "Ensure ABA compliance"
               ].map((benefit, index) => (
                 <div key={index} className="flex items-center space-x-3">
-                  <CheckCircle className="w-5 h-5 text-success-500 flex-shrink-0" />
-                  <span className="text-foreground/80 font-medium">{benefit}</span>
+                  <CheckCircle className="w-5 h-5 text-white flex-shrink-0" />
+                  <span className="text-white font-medium">{benefit}</span>
                 </div>
               ))}
             </div>
