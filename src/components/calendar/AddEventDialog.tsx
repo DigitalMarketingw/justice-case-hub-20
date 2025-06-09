@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -95,6 +94,11 @@ export function AddEventDialog({ open, onOpenChange, onEventAdded }: AddEventDia
     } catch (error) {
       console.error('Error fetching attorneys:', error);
     }
+  };
+
+  const handleCancel = () => {
+    form.reset();
+    onOpenChange(false);
   };
 
   const onSubmit = async (data: FormData) => {
@@ -293,6 +297,9 @@ export function AddEventDialog({ open, onOpenChange, onEventAdded }: AddEventDia
             />
 
             <DialogFooter>
+              <Button type="button" variant="outline" onClick={handleCancel}>
+                Cancel
+              </Button>
               <Button type="submit" disabled={loading}>
                 {loading ? "Creating..." : "Create Event"}
               </Button>

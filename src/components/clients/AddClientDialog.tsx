@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -68,6 +67,17 @@ export function AddClientDialog({ onClientAdded }: AddClientDialogProps) {
       password += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return password;
+  };
+
+  const handleCancel = () => {
+    setFormData({
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      assignedAttorneyId: "",
+    });
+    setIsOpen(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -264,9 +274,14 @@ export function AddClientDialog({ onClientAdded }: AddClientDialogProps) {
             </Select>
           </div>
 
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? "Creating Client..." : "Create Client"}
-          </Button>
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button type="button" variant="outline" onClick={handleCancel}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Creating Client..." : "Create Client"}
+            </Button>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

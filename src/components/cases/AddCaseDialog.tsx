@@ -82,6 +82,11 @@ export function AddCaseDialog({ open, onOpenChange }: AddCaseDialogProps) {
     }
   };
 
+  const handleCancel = () => {
+    form.reset();
+    onOpenChange(false);
+  };
+
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
@@ -129,13 +134,8 @@ export function AddCaseDialog({ open, onOpenChange }: AddCaseDialogProps) {
     }
   };
 
-  const handleDialogClose = () => {
-    form.reset();
-    onOpenChange(false);
-  };
-
   return (
-    <Dialog open={open} onOpenChange={handleDialogClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Case</DialogTitle>
@@ -381,7 +381,7 @@ export function AddCaseDialog({ open, onOpenChange }: AddCaseDialogProps) {
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={handleDialogClose}>
+              <Button type="button" variant="outline" onClick={handleCancel}>
                 Cancel
               </Button>
               <Button type="submit" disabled={loading}>
