@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Phone } from "lucide-react";
+import { Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface LandingNavigationProps {
@@ -14,9 +14,7 @@ const LandingNavigation = ({ onLoginClick, onContactClick }: LandingNavigationPr
 
   const navItems = [
     { label: "Features", href: "/features" },
-    { label: "Pricing", href: "/pricing" },
-    { label: "Resources", href: "#resources" },
-    { label: "Support", href: "#support" }
+    { label: "Pricing", href: "/pricing" }
   ];
 
   const handleNavClick = (href: string) => {
@@ -64,14 +62,6 @@ const LandingNavigation = ({ onLoginClick, onContactClick }: LandingNavigationPr
 
           {/* Right Side Actions */}
           <div className="flex items-center space-x-4">
-            {/* Contact Info - Desktop */}
-            <div className="hidden lg:flex items-center space-x-4 text-sm text-foreground border-r border-border/20 pr-4">
-              <div className="flex items-center space-x-1">
-                <Phone className="w-4 h-4" />
-                <span>(555) 123-LEGAL</span>
-              </div>
-            </div>
-
             {/* Action Buttons */}
             <div className="flex items-center space-x-3">
               <Button 
