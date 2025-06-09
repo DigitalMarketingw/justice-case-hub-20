@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -58,9 +57,9 @@ const Auth = () => {
   // If loading, show loading state
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-gradient-to-br from-primary-900/20 via-secondary-900/10 to-accent-900/20">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-primary-500/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-secondary-500/10 rounded-full blur-3xl"></div>
+      <div className="flex h-screen items-center justify-center bg-gradient-to-br from-primary-900/60 via-secondary-900/40 to-accent-900/50">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-primary-500/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-secondary-500/20 rounded-full blur-3xl"></div>
         <div className="text-center relative z-10">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
           <p className="text-lg text-white">Loading...</p>
@@ -137,24 +136,20 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
-      {/* Background Elements matching hero section */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary-900/20 via-secondary-900/10 to-accent-900/20"></div>
-      <div className="absolute top-0 right-0 w-96 h-96 bg-primary-500/10 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-secondary-500/10 rounded-full blur-3xl"></div>
+      {/* Background Elements with darker blue gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary-900/60 via-secondary-900/40 to-accent-900/50"></div>
+      <div className="absolute top-0 right-0 w-96 h-96 bg-primary-500/20 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-secondary-500/20 rounded-full blur-3xl"></div>
       
       <div className="w-full max-w-md space-y-6 relative z-10">
-        {/* Logo Header */}
-        <div className="text-center space-y-4">
-          <div className="flex items-center justify-center space-x-3">
+        {/* Logo Header - removed redundant text */}
+        <div className="text-center space-y-6">
+          <div className="flex items-center justify-center">
             <img 
               src="/lovable-uploads/bbf7762d-182e-48ac-b791-d3c06762a94c.png" 
               alt="LAWerp500 Logo" 
-              className="h-12 w-auto"
+              className="h-16 w-auto"
             />
-          </div>
-          <div>
-            <h1 className="text-3xl font-display font-bold text-white">LAWerp500</h1>
-            <p className="text-white/80">Legal Practice Management Suite</p>
           </div>
         </div>
 
