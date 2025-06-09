@@ -65,6 +65,11 @@ export function DropClientDialog({ clientId, clientName, onClientDropped }: Drop
     }
   };
 
+  const handleCancel = () => {
+    setOpen(false);
+    setReason("");
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -92,7 +97,7 @@ export function DropClientDialog({ clientId, clientName, onClientDropped }: Drop
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>
+          <Button variant="outline" onClick={handleCancel}>
             Cancel
           </Button>
           <Button 

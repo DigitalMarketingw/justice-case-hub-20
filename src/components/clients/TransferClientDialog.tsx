@@ -121,6 +121,12 @@ export function TransferClientDialog({
     }
   };
 
+  const handleCancel = () => {
+    setOpen(false);
+    setSelectedFirmId("");
+    setReason("");
+  };
+
   if (!isSuperAdmin) {
     return null;
   }
@@ -167,7 +173,7 @@ export function TransferClientDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>
+          <Button variant="outline" onClick={handleCancel}>
             Cancel
           </Button>
           <Button 
