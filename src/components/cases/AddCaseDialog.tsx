@@ -144,7 +144,7 @@ export function AddCaseDialog({ open, onOpenChange }: AddCaseDialogProps) {
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" onClick={(e) => e.stopPropagation()}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -384,7 +384,7 @@ export function AddCaseDialog({ open, onOpenChange }: AddCaseDialogProps) {
               <Button type="button" variant="outline" onClick={handleCancel}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading}>
+              <Button onClick={() => form.handleSubmit(onSubmit)()} disabled={loading}>
                 {loading ? "Creating..." : "Create Case"}
               </Button>
             </DialogFooter>

@@ -208,7 +208,7 @@ export function AddClientDialog({ onClientAdded }: AddClientDialogProps) {
           Add Client
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg" onClick={(e) => e.stopPropagation()}>
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Add New Client</DialogTitle>
         </DialogHeader>
@@ -278,7 +278,7 @@ export function AddClientDialog({ onClientAdded }: AddClientDialogProps) {
             <Button type="button" variant="outline" onClick={handleCancel}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button onClick={handleSubmit} disabled={isSubmitting}>
               {isSubmitting ? "Creating Client..." : "Create Client"}
             </Button>
           </div>

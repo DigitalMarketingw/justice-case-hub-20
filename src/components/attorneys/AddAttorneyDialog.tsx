@@ -243,7 +243,7 @@ export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAt
           </Button>
         </DialogTrigger>
       )}
-      <DialogContent className="sm:max-w-lg" onClick={(e) => e.stopPropagation()}>
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Add New Attorney</DialogTitle>
         </DialogHeader>
@@ -359,7 +359,7 @@ export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAt
             <Button type="button" variant="outline" onClick={handleCancel}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button onClick={handleSubmit} disabled={isSubmitting}>
               {isSubmitting ? "Creating Attorney..." : "Create Attorney"}
             </Button>
           </div>
