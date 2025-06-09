@@ -143,11 +143,6 @@ export function AddEventDialog({ open, onOpenChange, onEventAdded }: AddEventDia
     form.handleSubmit(onSubmit)(e);
   };
 
-  const handleCancel = () => {
-    form.reset();
-    onOpenChange(false);
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]" onClick={(e) => e.stopPropagation()}>
@@ -298,9 +293,6 @@ export function AddEventDialog({ open, onOpenChange, onEventAdded }: AddEventDia
             />
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={handleCancel}>
-                Cancel
-              </Button>
               <Button type="submit" disabled={loading}>
                 {loading ? "Creating..." : "Create Event"}
               </Button>
