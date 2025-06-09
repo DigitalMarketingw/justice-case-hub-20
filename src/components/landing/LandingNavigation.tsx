@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Shield, Phone } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface LandingNavigationProps {
   onLoginClick: () => void;
@@ -9,12 +10,27 @@ interface LandingNavigationProps {
 }
 
 const LandingNavigation = ({ onLoginClick, onContactClick }: LandingNavigationProps) => {
+  const navigate = useNavigate();
+
   const navItems = [
-    { label: "Features", href: "#features" },
-    { label: "Pricing", href: "#pricing" },
+    { label: "Features", href: "/features" },
+    { label: "Pricing", href: "/pricing" },
     { label: "Resources", href: "#resources" },
     { label: "Support", href: "#support" }
   ];
+
+  const handleNavClick = (href: string) => {
+    if (href.startsWith("#")) {
+      // Handle anchor links (scroll to section)
+      const element = document.querySelector(href);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      // Handle route navigation
+      navigate(href);
+    }
+  };
 
   return (
     <nav className="sticky top-0 z-50 bg-background/60 backdrop-blur-lg border-b border-border/20">
@@ -26,7 +42,8 @@ const LandingNavigation = ({ onLoginClick, onContactClick }: LandingNavigationPr
               <img 
                 src="/lovable-uploads/bbf7762d-182e-48ac-b791-d3c06762a94c.png" 
                 alt="LAWerp500 Logo" 
-                className="h-12 w-auto"
+                className="h-12 w-auto cursor-pointer"
+                onClick={() => navigate("/")}
               />
             </div>
           </div>
@@ -34,14 +51,14 @@ const LandingNavigation = ({ onLoginClick, onContactClick }: LandingNavigationPr
           {/* Navigation Links - Desktop */}
           <div className="hidden lg:flex items-center space-x-8">
             {navItems.map((item) => (
-              <a
+              <button
                 key={item.label}
-                href={item.href}
+                onClick={() => handleNavClick(item.href)}
                 className="text-primary-500 hover:text-primary-600 transition-colors font-medium relative group"
               >
                 {item.label}
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary-600 group-hover:w-full transition-all duration-300"></span>
-              </a>
+              </button>
             ))}
           </div>
 
