@@ -174,10 +174,7 @@ export const StartConversationDialog = ({
       });
 
       // Reset form and close dialog
-      setSelectedClientId("");
-      setSelectedClient(null);
-      setMessage("");
-      setSearchTerm("");
+      resetForm();
       onOpenChange(false);
       onConversationCreated(conversationId);
     } catch (error) {
@@ -192,16 +189,20 @@ export const StartConversationDialog = ({
     }
   };
 
-  const handleDialogClose = () => {
+  const resetForm = () => {
     setSelectedClientId("");
     setSelectedClient(null);
     setMessage("");
     setSearchTerm("");
+  };
+
+  const handleCancel = () => {
+    resetForm();
     onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleDialogClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -293,7 +294,7 @@ export const StartConversationDialog = ({
         </div>
 
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={handleDialogClose}>
+          <Button variant="outline" onClick={handleCancel}>
             Cancel
           </Button>
           <Button 

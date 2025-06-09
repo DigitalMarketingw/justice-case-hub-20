@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -185,18 +185,7 @@ export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAt
         duration: 10000
       });
 
-      setFormData({
-        firstName: "",
-        lastName: "",
-        email: "",
-        phone: "",
-        barNumber: "",
-        specialization: "",
-        yearsExperience: "",
-        hourlyRate: "",
-        firmId: profile?.firm_id || "",
-      });
-
+      resetForm();
       setDialogOpen(false);
 
       if (onAttorneyAdded) {
@@ -213,6 +202,25 @@ export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAt
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      barNumber: "",
+      specialization: "",
+      yearsExperience: "",
+      hourlyRate: "",
+      firmId: profile?.firm_id || "",
+    });
+  };
+
+  const handleCancel = () => {
+    resetForm();
+    setDialogOpen(false);
   };
 
   if (!profile || !['super_admin', 'firm_admin'].includes(profile.role)) {
@@ -341,9 +349,14 @@ export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAt
             </div>
           </div>
 
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? "Creating Attorney..." : "Create Attorney"}
-          </Button>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={handleCancel}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Creating Attorney..." : "Create Attorney"}
+            </Button>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

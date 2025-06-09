@@ -69,11 +69,25 @@ export function SmartSchedulingDialog({
       description: `Event scheduled for ${new Date(selectedSlot.start).toLocaleString()}`,
     });
 
+    resetForm();
+    onEventScheduled();
+    onOpenChange(false);
+  };
+
+  const resetForm = () => {
     form.reset();
     setShowScheduling(false);
     setSelectedSlot(null);
-    onEventScheduled();
+  };
+
+  const handleCancel = () => {
+    resetForm();
     onOpenChange(false);
+  };
+
+  const handleBackToDetails = () => {
+    setShowScheduling(false);
+    setSelectedSlot(null);
   };
 
   if (showScheduling) {
@@ -97,19 +111,10 @@ export function SmartSchedulingDialog({
           />
 
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowScheduling(false);
-                setSelectedSlot(null);
-              }}
-            >
+            <Button variant="outline" onClick={handleBackToDetails}>
               Back to Event Details
             </Button>
-            <Button
-              onClick={confirmScheduling}
-              disabled={!selectedSlot}
-            >
+            <Button onClick={confirmScheduling} disabled={!selectedSlot}>
               Schedule Event
             </Button>
           </DialogFooter>
@@ -220,6 +225,9 @@ export function SmartSchedulingDialog({
             />
 
             <DialogFooter>
+              <Button type="button" variant="outline" onClick={handleCancel}>
+                Cancel
+              </Button>
               <Button type="submit">
                 Find Optimal Times
               </Button>
