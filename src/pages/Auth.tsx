@@ -58,10 +58,12 @@ const Auth = () => {
   // If loading, show loading state
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-gradient-to-br from-primary-50 via-white to-secondary-50">
-        <div className="text-center">
+      <div className="flex h-screen items-center justify-center bg-gradient-to-br from-primary-900/20 via-secondary-900/10 to-accent-900/20">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-primary-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-secondary-500/10 rounded-full blur-3xl"></div>
+        <div className="text-center relative z-10">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-          <p className="text-lg text-gray-600">Loading...</p>
+          <p className="text-lg text-white">Loading...</p>
         </div>
       </div>
     );
@@ -134,8 +136,13 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
+    <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
+      {/* Background Elements matching hero section */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary-900/20 via-secondary-900/10 to-accent-900/20"></div>
+      <div className="absolute top-0 right-0 w-96 h-96 bg-primary-500/10 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-secondary-500/10 rounded-full blur-3xl"></div>
+      
+      <div className="w-full max-w-md space-y-6 relative z-10">
         {/* Logo Header */}
         <div className="text-center space-y-4">
           <div className="flex items-center justify-center space-x-3">
@@ -146,8 +153,8 @@ const Auth = () => {
             />
           </div>
           <div>
-            <h1 className="text-3xl font-display font-bold text-gray-900">LAWerp500</h1>
-            <p className="text-gray-600">Legal Practice Management Suite</p>
+            <h1 className="text-3xl font-display font-bold text-white">LAWerp500</h1>
+            <p className="text-white/80">Legal Practice Management Suite</p>
           </div>
         </div>
 
@@ -164,8 +171,8 @@ const Auth = () => {
         {authMode === "login" && (
           <div className="space-y-4">
             <div className="text-center">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Demo Access</h3>
-              <p className="text-sm text-gray-600 mb-4">
+              <h3 className="text-lg font-semibold text-white mb-4">Quick Demo Access</h3>
+              <p className="text-sm text-white/70 mb-4">
                 Try LAWerp500 instantly with these demo accounts
               </p>
             </div>
@@ -174,7 +181,7 @@ const Auth = () => {
               {demoCredentials.map((cred, index) => (
                 <div 
                   key={index}
-                  className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer group"
+                  className="p-4 border border-white/20 rounded-lg hover:bg-white/10 transition-colors cursor-pointer group backdrop-blur-sm"
                   onClick={() => {
                     // Auto-fill demo credentials (you could implement auto-login here)
                     toast({
@@ -186,14 +193,14 @@ const Auth = () => {
                   <div className="flex justify-between items-center">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="outline" className="text-xs bg-white/10 backdrop-blur-sm text-white border-white/30">
                           {cred.role}
                         </Badge>
                       </div>
-                      <p className="text-sm text-gray-600">{cred.description}</p>
-                      <p className="text-xs text-gray-500 font-mono">{cred.email}</p>
+                      <p className="text-sm text-white/80">{cred.description}</p>
+                      <p className="text-xs text-white/60 font-mono">{cred.email}</p>
                     </div>
-                    <div className="text-xs text-gray-400 group-hover:text-gray-600">
+                    <div className="text-xs text-white/50 group-hover:text-white/70">
                       Click to copy
                     </div>
                   </div>
@@ -202,10 +209,10 @@ const Auth = () => {
             </div>
 
             {/* Create Demo Users Button */}
-            <div className="text-center pt-4 border-t border-gray-200">
+            <div className="text-center pt-4 border-t border-white/20">
               <button
                 onClick={() => setShowCreateDemo(!showCreateDemo)}
-                className="text-sm text-gray-600 hover:text-gray-800 underline"
+                className="text-sm text-white/70 hover:text-white underline"
                 disabled={creatingDemo}
               >
                 {showCreateDemo ? 'Cancel' : 'Demo users not working? Create them'}

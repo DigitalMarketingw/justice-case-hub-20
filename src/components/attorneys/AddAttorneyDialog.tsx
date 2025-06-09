@@ -54,7 +54,11 @@ export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAt
     fetchFirms();
   }, [dialogOpen, profile]);
 
-  const handleCancel = () => {
+  const handleCancel = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     resetForm();
     setDialogOpen(false);
   };
@@ -140,7 +144,11 @@ export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAt
           />
 
           <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={handleCancel}>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={handleCancel}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>

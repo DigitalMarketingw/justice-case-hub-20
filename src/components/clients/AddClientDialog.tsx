@@ -51,12 +51,21 @@ export function AddClientDialog({ onClientAdded }: AddClientDialogProps) {
     }
   };
 
-  const handleCancel = () => {
+  const handleCancel = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     resetForm();
     setIsOpen(false);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
     if (!isFormValid()) {
       toast({
         title: "Error",
@@ -130,10 +139,17 @@ export function AddClientDialog({ onClientAdded }: AddClientDialogProps) {
           />
         </form>
         <div className="flex justify-end space-x-2 pt-4">
-          <Button type="button" variant="outline" onClick={handleCancel}>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={handleCancel}
+          >
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
+          <Button 
+            onClick={handleSubmit} 
+            disabled={isSubmitting}
+          >
             {isSubmitting ? "Creating Client..." : "Create Client"}
           </Button>
         </div>
