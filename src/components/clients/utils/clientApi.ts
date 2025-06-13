@@ -63,7 +63,8 @@ export const createClient = async (
     toast({
       title: "Error",
       description: authError.message,
-      variant: "destructive"
+      variant: "destructive",
+      duration: 5000
     });
     throw authError;
   }
@@ -73,7 +74,8 @@ export const createClient = async (
     toast({
       title: "Error",
       description: error.message,
-      variant: "destructive"
+      variant: "destructive",
+      duration: 5000
     });
     throw error;
   }

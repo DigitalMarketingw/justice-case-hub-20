@@ -51,12 +51,8 @@ export function AddClientDialog({ onClientAdded }: AddClientDialogProps) {
     }
   };
 
-  const handleCancel = (e?: React.MouseEvent) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    console.log('Cancel button clicked');
+  const handleCancel = () => {
+    console.log('Cancel button clicked - closing dialog');
     resetForm();
     setIsOpen(false);
   };
@@ -71,7 +67,8 @@ export function AddClientDialog({ onClientAdded }: AddClientDialogProps) {
       toast({
         title: "Error",
         description: "Please fill in all required fields and ensure password is at least 8 characters",
-        variant: "destructive"
+        variant: "destructive",
+        duration: 5000
       });
       return;
     }
@@ -80,7 +77,8 @@ export function AddClientDialog({ onClientAdded }: AddClientDialogProps) {
       toast({
         title: "Error",
         description: "No firm associated with your account",
-        variant: "destructive"
+        variant: "destructive",
+        duration: 5000
       });
       return;
     }
@@ -89,7 +87,8 @@ export function AddClientDialog({ onClientAdded }: AddClientDialogProps) {
       toast({
         title: "Error",
         description: "User not authenticated",
-        variant: "destructive"
+        variant: "destructive",
+        duration: 5000
       });
       return;
     }
@@ -110,7 +109,8 @@ export function AddClientDialog({ onClientAdded }: AddClientDialogProps) {
       toast({
         title: "Error",
         description: "Failed to create client",
-        variant: "destructive"
+        variant: "destructive",
+        duration: 5000
       });
     } finally {
       setIsSubmitting(false);
