@@ -56,15 +56,9 @@ export function AddEventDialog({ open, onOpenChange, onEventAdded }: AddEventDia
     }
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    form.handleSubmit(onSubmit)(e);
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]" onClick={(e) => e.stopPropagation()}>
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Add Calendar Event</DialogTitle>
           <DialogDescription>
@@ -72,23 +66,30 @@ export function AddEventDialog({ open, onOpenChange, onEventAdded }: AddEventDia
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={handleFormSubmit} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <EventFormFields 
               control={form.control}
               clients={clients}
               attorneys={attorneys}
             />
-
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={handleCancel}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={loading}>
-                {loading ? "Creating..." : "Create Event"}
-              </Button>
-            </DialogFooter>
           </form>
         </Form>
+        <DialogFooter>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={handleCancel}
+          >
+            Cancel
+          </Button>
+          <Button 
+            type="button"
+            onClick={form.handleSubmit(onSubmit)}
+            disabled={loading}
+          >
+            {loading ? "Creating..." : "Create Event"}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

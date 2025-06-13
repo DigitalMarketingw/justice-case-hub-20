@@ -98,6 +98,11 @@ export function AddBillableHourDialog() {
     }
   };
 
+  const handleCancel = () => {
+    form.reset();
+    setOpen(false);
+  };
+
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
@@ -275,14 +280,24 @@ export function AddBillableHourDialog() {
                 </FormItem>
               )}
             />
-
-            <DialogFooter>
-              <Button type="submit" disabled={loading}>
-                {loading ? "Adding..." : "Add Billable Hour"}
-              </Button>
-            </DialogFooter>
           </form>
         </Form>
+        <DialogFooter>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={handleCancel}
+          >
+            Cancel
+          </Button>
+          <Button 
+            type="button"
+            onClick={form.handleSubmit(onSubmit)}
+            disabled={loading}
+          >
+            {loading ? "Adding..." : "Add Billable Hour"}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { UserPlus } from "lucide-react";
@@ -51,21 +51,12 @@ export function AddClientDialog({ onClientAdded }: AddClientDialogProps) {
     }
   };
 
-  const handleCancel = (e?: React.MouseEvent) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
+  const handleCancel = () => {
     resetForm();
     setIsOpen(false);
   };
 
-  const handleSubmit = async (e?: React.MouseEvent) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-
+  const handleSubmit = async () => {
     if (!isFormValid()) {
       toast({
         title: "Error",
@@ -131,14 +122,14 @@ export function AddClientDialog({ onClientAdded }: AddClientDialogProps) {
         <DialogHeader>
           <DialogTitle>Add New Client</DialogTitle>
         </DialogHeader>
-        <form className="space-y-4">
+        <div className="space-y-4">
           <ClientFormFields
             formData={formData}
             attorneys={attorneys}
             onFieldChange={updateField}
           />
-        </form>
-        <div className="flex justify-end space-x-2 pt-4">
+        </div>
+        <DialogFooter>
           <Button 
             type="button" 
             variant="outline" 
@@ -147,12 +138,13 @@ export function AddClientDialog({ onClientAdded }: AddClientDialogProps) {
             Cancel
           </Button>
           <Button 
+            type="button"
             onClick={handleSubmit} 
             disabled={isSubmitting}
           >
             {isSubmitting ? "Creating Client..." : "Create Client"}
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

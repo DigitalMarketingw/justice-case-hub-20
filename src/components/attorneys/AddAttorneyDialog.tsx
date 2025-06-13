@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { UserPlus } from "lucide-react";
@@ -24,18 +24,19 @@ interface AddAttorneyDialogProps {
 export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAttorneyDialogProps) {
   const { toast } = useToast();
   const { profile, user } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
   const [firms, setFirms] = useState<Firm[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { formData, resetForm, updateField } = useAttorneyForm();
 
-  const dialogOpen = open !== undefined ? open : isOpen;
-  const setDialogOpen = onOpenChange || setIsOpen;
+  // Use controlled state if provided, otherwise use internal state
+  const isOpen = open !== undefined ? open : internalOpen;
+  const setIsOpen = onOpenChange || setInternalOpen;
 
   useEffect(() => {
     const fetchFirms = async () => {
-      if (!dialogOpen) return;
+      if (!isOpen) return;
 
       if (profile?.role === 'super_admin') {
         const { data: firmData, error: firmError } = await supabase
@@ -52,21 +53,14 @@ export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAt
     };
 
     fetchFirms();
-  }, [dialogOpen, profile]);
+  }, [isOpen, profile]);
 
-  const handleCancel = (e?: React.MouseEvent) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
+  const handleCancel = () => {
     resetForm();
-    setDialogOpen(false);
+    setIsOpen(false);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
+  const handleSubmit = async () => {
     if (!formData.firstName || !formData.lastName || !formData.email) {
       toast({
         title: "Error",
@@ -100,7 +94,7 @@ export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAt
       await createAttorney(formData, targetFirmId, user?.id || '', toast);
       
       resetForm();
-      setDialogOpen(false);
+      setIsOpen(false);
 
       if (onAttorneyAdded) {
         onAttorneyAdded();
@@ -122,8 +116,8 @@ export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAt
   }
 
   return (
-    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      {!open && (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      {open === undefined && (
         <DialogTrigger asChild>
           <Button>
             <UserPlus className="mr-2 h-4 w-4" />
@@ -135,27 +129,30 @@ export function AddAttorneyDialog({ open, onOpenChange, onAttorneyAdded }: AddAt
         <DialogHeader>
           <DialogTitle>Add New Attorney</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-4">
           <AttorneyFormFields
             formData={formData}
             onFieldChange={updateField}
             firms={firms}
             showFirmSelector={profile?.role === 'super_admin'}
           />
-
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={handleCancel}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Creating Attorney..." : "Create Attorney"}
-            </Button>
-          </div>
-        </form>
+        </div>
+        <DialogFooter>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={handleCancel}
+          >
+            Cancel
+          </Button>
+          <Button 
+            type="button" 
+            onClick={handleSubmit} 
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Creating Attorney..." : "Create Attorney"}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

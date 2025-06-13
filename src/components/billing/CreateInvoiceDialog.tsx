@@ -122,6 +122,13 @@ export function CreateInvoiceDialog() {
     return `INV-${timestamp.slice(-8)}`;
   };
 
+  const handleCancel = () => {
+    form.reset();
+    setSelectedClient("");
+    setUnbilledHours([]);
+    setOpen(false);
+  };
+
   const onSubmit = async (data: FormData) => {
     if (data.selectedHours.length === 0) {
       toast({
@@ -361,14 +368,24 @@ export function CreateInvoiceDialog() {
                 </div>
               </div>
             )}
-
-            <DialogFooter>
-              <Button type="submit" disabled={loading || form.watch('selectedHours').length === 0}>
-                {loading ? "Creating..." : "Create Invoice"}
-              </Button>
-            </DialogFooter>
           </form>
         </Form>
+        <DialogFooter>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={handleCancel}
+          >
+            Cancel
+          </Button>
+          <Button 
+            type="button"
+            onClick={form.handleSubmit(onSubmit)}
+            disabled={loading || form.watch('selectedHours').length === 0}
+          >
+            {loading ? "Creating..." : "Create Invoice"}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

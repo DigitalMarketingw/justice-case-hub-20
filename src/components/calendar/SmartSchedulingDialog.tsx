@@ -44,6 +44,13 @@ export function SmartSchedulingDialog({
     },
   });
 
+  const handleCancel = () => {
+    form.reset();
+    setShowScheduling(false);
+    setSelectedSlot(null);
+    onOpenChange(false);
+  };
+
   const onSubmit = (data: SmartSchedulingFormData) => {
     setShowScheduling(true);
   };
@@ -76,6 +83,11 @@ export function SmartSchedulingDialog({
     onOpenChange(false);
   };
 
+  const goBackToForm = () => {
+    setShowScheduling(false);
+    setSelectedSlot(null);
+  };
+
   if (showScheduling) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -98,15 +110,21 @@ export function SmartSchedulingDialog({
 
           <DialogFooter>
             <Button
+              type="button"
               variant="outline"
-              onClick={() => {
-                setShowScheduling(false);
-                setSelectedSlot(null);
-              }}
+              onClick={handleCancel}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={goBackToForm}
             >
               Back to Event Details
             </Button>
             <Button
+              type="button"
               onClick={confirmScheduling}
               disabled={!selectedSlot}
             >
@@ -218,14 +236,23 @@ export function SmartSchedulingDialog({
                 </FormItem>
               )}
             />
-
-            <DialogFooter>
-              <Button type="submit">
-                Find Optimal Times
-              </Button>
-            </DialogFooter>
           </form>
         </Form>
+        <DialogFooter>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={handleCancel}
+          >
+            Cancel
+          </Button>
+          <Button 
+            type="button"
+            onClick={form.handleSubmit(onSubmit)}
+          >
+            Find Optimal Times
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

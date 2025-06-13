@@ -24,11 +24,7 @@ export function AddCaseDialog({ open, onOpenChange }: AddCaseDialogProps) {
     }
   }, [open]);
 
-  const handleCancel = (e?: React.MouseEvent) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
+  const handleCancel = () => {
     resetForm();
     onOpenChange(false);
   };
@@ -73,24 +69,24 @@ export function AddCaseDialog({ open, onOpenChange }: AddCaseDialogProps) {
               control={form.control}
               clients={clients}
             />
-
-            <DialogFooter>
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={handleCancel}
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit"
-                disabled={loading}
-              >
-                {loading ? "Creating..." : "Create Case"}
-              </Button>
-            </DialogFooter>
           </form>
         </Form>
+        <DialogFooter>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={handleCancel}
+          >
+            Cancel
+          </Button>
+          <Button 
+            type="button"
+            onClick={form.handleSubmit(onSubmit)}
+            disabled={loading}
+          >
+            {loading ? "Creating..." : "Create Case"}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
