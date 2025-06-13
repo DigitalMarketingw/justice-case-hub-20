@@ -51,16 +51,26 @@ export function AddClientDialog({ onClientAdded }: AddClientDialogProps) {
     }
   };
 
-  const handleCancel = () => {
+  const handleCancel = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    console.log('Cancel button clicked');
     resetForm();
     setIsOpen(false);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
     if (!isFormValid()) {
       toast({
         title: "Error",
-        description: "Please fill in all required fields",
+        description: "Please fill in all required fields and ensure password is at least 8 characters",
         variant: "destructive"
       });
       return;
@@ -91,6 +101,7 @@ export function AddClientDialog({ onClientAdded }: AddClientDialogProps) {
       resetForm();
       setIsOpen(false);
 
+      // Only refresh data, don't navigate
       if (onClientAdded) {
         onClientAdded();
       }
@@ -118,7 +129,7 @@ export function AddClientDialog({ onClientAdded }: AddClientDialogProps) {
           Add Client
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Client</DialogTitle>
         </DialogHeader>
@@ -129,7 +140,7 @@ export function AddClientDialog({ onClientAdded }: AddClientDialogProps) {
             onFieldChange={updateField}
           />
         </div>
-        <DialogFooter>
+        <DialogFooter className="flex gap-2">
           <Button 
             type="button" 
             variant="outline" 
@@ -139,8 +150,8 @@ export function AddClientDialog({ onClientAdded }: AddClientDialogProps) {
           </Button>
           <Button 
             type="button"
-            onClick={handleSubmit} 
-            disabled={isSubmitting}
+            onClick={handleSubmit}
+            disabled={isSubmitting || !isFormValid()}
           >
             {isSubmitting ? "Creating Client..." : "Create Client"}
           </Button>

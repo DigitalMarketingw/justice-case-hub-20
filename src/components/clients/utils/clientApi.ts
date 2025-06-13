@@ -17,6 +17,7 @@ interface ClientFormData {
   email: string;
   phone: string;
   assignedAttorneyId: string;
+  password: string;
 }
 
 export const fetchAttorneys = async (firmId: string) => {
@@ -41,11 +42,13 @@ export const createClient = async (
   userId: string,
   toast: ReturnType<typeof useToast>['toast']
 ) => {
-  const temporaryPassword = generateTemporaryPassword();
+  // Use custom password if provided, otherwise generate temporary one
+  const password = formData.password || generateTemporaryPassword();
+  const isCustomPassword = !!formData.password;
 
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email: formData.email,
-    password: temporaryPassword,
+    password: password,
     options: {
       data: {
         first_name: formData.firstName,
@@ -82,7 +85,7 @@ export const createClient = async (
       assigned_attorney_id: formData.assignedAttorneyId || null,
       created_by: userId,
       invited_at: new Date().toISOString(),
-      password_reset_required: true
+      password_reset_required: !isCustomPassword // Only require reset if auto-generated
     })
     .eq('id', authData.user.id);
 
@@ -97,15 +100,24 @@ export const createClient = async (
       client_name: `${formData.firstName} ${formData.lastName}`,
       firm_id: firmId,
       assigned_attorney_id: formData.assignedAttorneyId || null,
-      temporary_password: temporaryPassword
+      custom_password_set: isCustomPassword
     }
   });
 
-  toast({
-    title: "Success",
-    description: `Client created successfully. Temporary password: ${temporaryPassword}`,
-    duration: 10000
-  });
+  // Show different messages based on password type
+  if (isCustomPassword) {
+    toast({
+      title: "Success",
+      description: `Client created successfully with custom password.`,
+      duration: 5000
+    });
+  } else {
+    toast({
+      title: "Success",
+      description: `Client created successfully. Temporary password: ${password}`,
+      duration: 10000
+    });
+  }
 
   return authData.user;
 };

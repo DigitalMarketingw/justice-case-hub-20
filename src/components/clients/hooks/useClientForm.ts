@@ -8,6 +8,7 @@ interface ClientFormData {
   email: string;
   phone: string;
   assignedAttorneyId: string;
+  password: string;
 }
 
 export function useClientForm() {
@@ -19,6 +20,7 @@ export function useClientForm() {
     email: "",
     phone: "",
     assignedAttorneyId: "",
+    password: "",
   });
 
   const resetForm = () => {
@@ -28,6 +30,7 @@ export function useClientForm() {
       email: "",
       phone: "",
       assignedAttorneyId: "",
+      password: "",
     });
   };
 
@@ -36,7 +39,9 @@ export function useClientForm() {
   };
 
   const isFormValid = () => {
-    return formData.firstName && formData.lastName && formData.email;
+    const hasRequiredFields = formData.firstName && formData.lastName && formData.email;
+    const isPasswordValid = !formData.password || formData.password.length >= 8;
+    return hasRequiredFields && isPasswordValid;
   };
 
   return {
