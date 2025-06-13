@@ -51,9 +51,17 @@ export function AddClientDialog({ onClientAdded }: AddClientDialogProps) {
     }
   };
 
+  const handleOpenChange = (open: boolean) => {
+    console.log('Dialog open state changing to:', open);
+    setIsOpen(open);
+    if (!open) {
+      // Reset form when dialog is closed
+      resetForm();
+    }
+  };
+
   const handleCancel = () => {
     console.log('Cancel button clicked - closing dialog');
-    resetForm();
     setIsOpen(false);
   };
 
@@ -122,7 +130,7 @@ export function AddClientDialog({ onClientAdded }: AddClientDialogProps) {
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button>
           <UserPlus className="mr-2 h-4 w-4" />
@@ -145,6 +153,7 @@ export function AddClientDialog({ onClientAdded }: AddClientDialogProps) {
             type="button" 
             variant="outline" 
             onClick={handleCancel}
+            disabled={isSubmitting}
           >
             Cancel
           </Button>
