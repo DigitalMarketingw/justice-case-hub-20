@@ -55,14 +55,9 @@ export function AddClientDialog({ onClientAdded }: AddClientDialogProps) {
     console.log('Dialog open state changing to:', open);
     setIsOpen(open);
     if (!open) {
-      // Reset form when dialog is closed
+      console.log('Dialog closing - resetting form');
       resetForm();
     }
-  };
-
-  const handleCancel = () => {
-    console.log('Cancel button clicked - closing dialog');
-    setIsOpen(false);
   };
 
   const handleSubmit = async (e?: React.MouseEvent) => {
@@ -105,10 +100,9 @@ export function AddClientDialog({ onClientAdded }: AddClientDialogProps) {
       setIsSubmitting(true);
       await createClient(formData, firmId, user.id, toast);
       
-      resetForm();
+      // Close dialog and refresh data
       setIsOpen(false);
 
-      // Only refresh data, don't navigate
       if (onClientAdded) {
         onClientAdded();
       }
@@ -152,7 +146,7 @@ export function AddClientDialog({ onClientAdded }: AddClientDialogProps) {
           <Button 
             type="button" 
             variant="outline" 
-            onClick={handleCancel}
+            onClick={() => setIsOpen(false)}
             disabled={isSubmitting}
           >
             Cancel
