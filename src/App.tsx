@@ -28,6 +28,7 @@ import NotFound from "./pages/NotFound";
 // Role-specific dashboards
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import FirmAdminDashboard from "./pages/FirmAdminDashboard";
+import CaseManagerDashboard from "./pages/CaseManagerDashboard";
 import AttorneyDashboard from "./pages/AttorneyDashboard";
 import ClientDashboard from "./pages/ClientDashboard";
 
@@ -69,6 +70,12 @@ function App() {
                 </ProtectedRoute>
               } />
               
+              <Route path="/case-manager" element={
+                <ProtectedRoute allowedRoles={['case_manager']}>
+                  <CaseManagerDashboard />
+                </ProtectedRoute>
+              } />
+              
               <Route path="/attorney" element={
                 <ProtectedRoute allowedRoles={['attorney']}>
                   <AttorneyDashboard />
@@ -83,7 +90,7 @@ function App() {
               
               {/* Protected Feature Routes */}
               <Route path="/clients" element={
-                <ProtectedRoute allowedRoles={['super_admin', 'firm_admin', 'attorney']}>
+                <ProtectedRoute allowedRoles={['super_admin', 'firm_admin', 'attorney', 'case_manager']}>
                   <Clients />
                 </ProtectedRoute>
               } />
@@ -95,7 +102,7 @@ function App() {
               } />
               
               <Route path="/cases" element={
-                <ProtectedRoute allowedRoles={['super_admin', 'firm_admin', 'attorney']}>
+                <ProtectedRoute allowedRoles={['super_admin', 'firm_admin', 'attorney', 'case_manager']}>
                   <Cases />
                 </ProtectedRoute>
               } />
@@ -119,7 +126,7 @@ function App() {
               } />
               
               <Route path="/billing" element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['super_admin', 'firm_admin', 'attorney']}>
                   <Billing />
                 </ProtectedRoute>
               } />

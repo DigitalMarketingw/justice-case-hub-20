@@ -46,7 +46,7 @@ export function DropClientDialog({ clientId, clientName, onClientDropped }: Drop
           is_active: false,
           unassigned_date: new Date().toISOString(),
           unassigned_by: profile.id,
-          reason: reason || 'Client dropped by firm admin'
+          reason: reason || `Client dropped by ${profile.role === 'case_manager' ? 'case manager' : 'firm admin'}`
         })
         .eq('client_id', clientId)
         .eq('is_active', true);

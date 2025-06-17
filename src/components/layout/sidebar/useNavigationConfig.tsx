@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { 
   superAdminNavigation, 
   firmAdminNavigation, 
+  caseManagerNavigation,
   attorneyNavigation, 
   clientNavigation,
   NavigationItem
@@ -45,6 +46,11 @@ export function useNavigationConfig(): NavigationResult {
       return {
         navigation: firmAdminNavigation,
         roleLabel: 'Firm Admin'
+      };
+    case 'case_manager':
+      return {
+        navigation: caseManagerNavigation,
+        roleLabel: 'Case Manager'
       };
     case 'attorney':
       return {

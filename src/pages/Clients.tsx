@@ -41,7 +41,7 @@ const Clients = () => {
   const [loading, setLoading] = useState(true);
   const { profile } = useAuth();
 
-  const isFirmAdmin = profile?.role === 'firm_admin' || profile?.role === 'super_admin';
+  const isFirmAdminOrCaseManager = profile?.role === 'firm_admin' || profile?.role === 'super_admin' || profile?.role === 'case_manager';
 
   useEffect(() => {
     if (profile?.firm_id) {
@@ -162,7 +162,7 @@ const Clients = () => {
               </CardContent>
             </Card>
 
-            {isFirmAdmin && (
+            {isFirmAdminOrCaseManager && (
               <DroppedClientsSection onClientReassigned={fetchClients} />
             )}
           </div>

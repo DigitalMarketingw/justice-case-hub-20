@@ -30,6 +30,7 @@ const Index = () => {
         const redirectMap = {
           "super_admin": "/super-admin",
           "firm_admin": "/firm-admin", 
+          "case_manager": "/case-manager",
           "attorney": "/attorney",
           "client": "/client"
         };

@@ -40,6 +40,16 @@ export const firmAdminNavigation: NavigationItem[] = [
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
+export const caseManagerNavigation: NavigationItem[] = [
+  { name: 'Dashboard', href: '/case-manager', icon: Home },
+  { name: 'Clients', href: '/clients', icon: Users },
+  { name: 'Cases', href: '/cases', icon: Briefcase },
+  { name: 'Messages', href: '/messages', icon: MessageSquare },
+  { name: 'Calendar', href: '/calendar', icon: Calendar },
+  { name: 'Documents', href: '/documents', icon: FileText },
+  { name: 'Settings', href: '/settings', icon: Settings },
+];
+
 export const attorneyNavigation: NavigationItem[] = [
   { name: 'Dashboard', href: '/attorney', icon: Home },
   { name: 'Clients', href: '/clients', icon: Users },
