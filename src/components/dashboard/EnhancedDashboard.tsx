@@ -14,7 +14,15 @@ const MemoizedActivityTimeline = memo(ActivityTimeline);
 const MemoizedQuickActions = memo(EnhancedQuickActions);
 const MemoizedPerformanceMetrics = memo(PerformanceMetrics);
 
-export const EnhancedDashboard = memo(function EnhancedDashboard() {
+interface EnhancedDashboardProps {
+  title?: string;
+  subtitle?: string;
+}
+
+export const EnhancedDashboard = memo(function EnhancedDashboard({ 
+  title = "Dashboard", 
+  subtitle = "Welcome back! Here's an overview of your practice." 
+}: EnhancedDashboardProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState({
     totalClients: 0,
@@ -46,10 +54,10 @@ export const EnhancedDashboard = memo(function EnhancedDashboard() {
         {/* Header */}
         <div className="space-y-2">
           <h1 className="text-4xl font-bold font-display bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
-            Dashboard
+            {title}
           </h1>
           <p className="text-lg text-gray-600">
-            Welcome back! Here's an overview of your practice.
+            {subtitle}
           </p>
         </div>
 
