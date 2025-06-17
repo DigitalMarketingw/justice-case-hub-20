@@ -976,7 +976,12 @@ export type Database = {
         | "evidence"
         | "correspondence"
         | "other"
-      user_role: "super_admin" | "firm_admin" | "attorney" | "client"
+      user_role:
+        | "super_admin"
+        | "firm_admin"
+        | "attorney"
+        | "client"
+        | "case_manager"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1101,7 +1106,13 @@ export const Constants = {
         "correspondence",
         "other",
       ],
-      user_role: ["super_admin", "firm_admin", "attorney", "client"],
+      user_role: [
+        "super_admin",
+        "firm_admin",
+        "attorney",
+        "client",
+        "case_manager",
+      ],
     },
   },
 } as const
