@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { UserRole } from "@/types/auth";
 
@@ -55,6 +54,14 @@ export const createDemoUsers = async () => {
       role: "firm_admin" as UserRole,
       firstName: "Firm",
       lastName: "Admin",
+      firmId: demoFirmId
+    },
+    {
+      email: "casemanager@demo.com",
+      password: "password",
+      role: "case_manager" as UserRole,
+      firstName: "Case",
+      lastName: "Manager",
       firmId: demoFirmId
     },
     {

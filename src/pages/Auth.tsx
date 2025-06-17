@@ -30,6 +30,12 @@ const Auth = () => {
       description: "Manage firm and users"
     },
     {
+      role: "Case Manager",
+      email: "casemanager@demo.com",
+      password: "password",
+      description: "Manage clients and cases"
+    },
+    {
       role: "Attorney",
       email: "attorney@demo.com",
       password: "password", 
