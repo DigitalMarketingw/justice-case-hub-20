@@ -7,8 +7,13 @@ import { InvoicesTable } from "./InvoicesTable";
 import { AddBillableHourDialog } from "./AddBillableHourDialog";
 import { CreateInvoiceDialog } from "./CreateInvoiceDialog";
 import { BillingStats } from "./BillingStats";
+import { AttorneyBonuses } from "./AttorneyBonuses";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function BillingDashboard() {
+  const { profile } = useAuth();
+  const isFirmAdmin = profile?.role === 'firm_admin' || profile?.role === 'super_admin';
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -21,10 +26,11 @@ export function BillingDashboard() {
       <BillingStats />
 
       <Tabs defaultValue="billable-hours" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className={`grid w-full ${isFirmAdmin ? 'grid-cols-4' : 'grid-cols-3'}`}>
           <TabsTrigger value="billable-hours">Billable Hours</TabsTrigger>
           <TabsTrigger value="invoices">Invoices</TabsTrigger>
           <TabsTrigger value="payments">Payments</TabsTrigger>
+          {isFirmAdmin && <TabsTrigger value="bonuses">Attorney Bonuses</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="billable-hours" className="space-y-4">
@@ -72,6 +78,12 @@ export function BillingDashboard() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {isFirmAdmin && (
+          <TabsContent value="bonuses" className="space-y-4">
+            <AttorneyBonuses />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

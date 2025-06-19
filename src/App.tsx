@@ -24,6 +24,7 @@ import Firms from "./pages/Firms";
 import Settings from "./pages/Settings";
 import Messages from "./pages/Messages";
 import NotFound from "./pages/NotFound";
+import CaseReferrals from "./pages/CaseReferrals";
 
 // Role-specific dashboards
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
@@ -104,6 +105,12 @@ function App() {
               <Route path="/cases" element={
                 <ProtectedRoute allowedRoles={['super_admin', 'firm_admin', 'attorney', 'case_manager']}>
                   <Cases />
+                </ProtectedRoute>
+              } />
+
+              <Route path="/case-referrals" element={
+                <ProtectedRoute allowedRoles={['super_admin', 'firm_admin']}>
+                  <CaseReferrals />
                 </ProtectedRoute>
               } />
 

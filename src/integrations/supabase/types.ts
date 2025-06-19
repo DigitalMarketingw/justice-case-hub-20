@@ -9,6 +9,70 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      attorney_bonuses: {
+        Row: {
+          attorney_id: string
+          awarded_by: string
+          awarded_date: string
+          bonus_amount: number
+          bonus_type: string
+          case_id: string | null
+          created_at: string
+          criteria_met: string | null
+          description: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          attorney_id: string
+          awarded_by: string
+          awarded_date?: string
+          bonus_amount: number
+          bonus_type?: string
+          case_id?: string | null
+          created_at?: string
+          criteria_met?: string | null
+          description?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          attorney_id?: string
+          awarded_by?: string
+          awarded_date?: string
+          bonus_amount?: number
+          bonus_type?: string
+          case_id?: string | null
+          created_at?: string
+          criteria_met?: string | null
+          description?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attorney_bonuses_attorney_id_fkey"
+            columns: ["attorney_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attorney_bonuses_awarded_by_fkey"
+            columns: ["awarded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attorney_bonuses_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attorneys: {
         Row: {
           bar_number: string | null
@@ -101,6 +165,63 @@ export type Database = {
           },
         ]
       }
+      bonus_criteria: {
+        Row: {
+          bonus_amount: number
+          created_at: string
+          created_by: string
+          criteria_type: string
+          description: string | null
+          firm_id: string | null
+          id: string
+          is_active: boolean
+          name: string
+          target_value: number | null
+          updated_at: string
+        }
+        Insert: {
+          bonus_amount: number
+          created_at?: string
+          created_by: string
+          criteria_type: string
+          description?: string | null
+          firm_id?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          target_value?: number | null
+          updated_at?: string
+        }
+        Update: {
+          bonus_amount?: number
+          created_at?: string
+          created_by?: string
+          criteria_type?: string
+          description?: string | null
+          firm_id?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          target_value?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bonus_criteria_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bonus_criteria_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendar_events: {
         Row: {
           attendees: string[] | null
@@ -149,6 +270,92 @@ export type Database = {
         }
         Relationships: []
       }
+      case_referrals: {
+        Row: {
+          case_id: string
+          client_consent_obtained: boolean | null
+          created_at: string
+          external_source_name: string | null
+          id: string
+          notes: string | null
+          processed_by: string | null
+          processed_date: string | null
+          referral_date: string
+          referral_fee: number | null
+          referral_reason: string | null
+          referral_source: string | null
+          referred_to_attorney_id: string | null
+          referring_attorney_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          case_id: string
+          client_consent_obtained?: boolean | null
+          created_at?: string
+          external_source_name?: string | null
+          id?: string
+          notes?: string | null
+          processed_by?: string | null
+          processed_date?: string | null
+          referral_date?: string
+          referral_fee?: number | null
+          referral_reason?: string | null
+          referral_source?: string | null
+          referred_to_attorney_id?: string | null
+          referring_attorney_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string
+          client_consent_obtained?: boolean | null
+          created_at?: string
+          external_source_name?: string | null
+          id?: string
+          notes?: string | null
+          processed_by?: string | null
+          processed_date?: string | null
+          referral_date?: string
+          referral_fee?: number | null
+          referral_reason?: string | null
+          referral_source?: string | null
+          referred_to_attorney_id?: string | null
+          referring_attorney_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_referrals_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_referrals_processed_by_fkey"
+            columns: ["processed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_referrals_referred_to_attorney_id_fkey"
+            columns: ["referred_to_attorney_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_referrals_referring_attorney_id_fkey"
+            columns: ["referring_attorney_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cases: {
         Row: {
           attorney_id: string
@@ -164,8 +371,11 @@ export type Database = {
           filing_date: string | null
           firm_id: string | null
           id: string
+          is_referral: boolean | null
           judge_name: string | null
+          original_attorney_id: string | null
           priority: Database["public"]["Enums"]["case_priority"] | null
+          referral_count: number | null
           status: Database["public"]["Enums"]["case_status"] | null
           title: string
           total_billed: number | null
@@ -185,8 +395,11 @@ export type Database = {
           filing_date?: string | null
           firm_id?: string | null
           id?: string
+          is_referral?: boolean | null
           judge_name?: string | null
+          original_attorney_id?: string | null
           priority?: Database["public"]["Enums"]["case_priority"] | null
+          referral_count?: number | null
           status?: Database["public"]["Enums"]["case_status"] | null
           title: string
           total_billed?: number | null
@@ -206,8 +419,11 @@ export type Database = {
           filing_date?: string | null
           firm_id?: string | null
           id?: string
+          is_referral?: boolean | null
           judge_name?: string | null
+          original_attorney_id?: string | null
           priority?: Database["public"]["Enums"]["case_priority"] | null
+          referral_count?: number | null
           status?: Database["public"]["Enums"]["case_status"] | null
           title?: string
           total_billed?: number | null
@@ -233,6 +449,13 @@ export type Database = {
             columns: ["firm_id"]
             isOneToOne: false
             referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cases_original_attorney_id_fkey"
+            columns: ["original_attorney_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -690,6 +913,57 @@ export type Database = {
           },
         ]
       }
+      message_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          file_type: string
+          id: string
+          message_id: string
+          mime_type: string | null
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          file_type: string
+          id?: string
+          message_id: string
+          mime_type?: string | null
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string
+          id?: string
+          message_id?: string
+          mime_type?: string | null
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_attachments_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_attachments_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           client_id: string | null
@@ -881,6 +1155,56 @@ export type Database = {
           {
             foreignKeyName: "profiles_transferred_from_firm_id_fkey"
             columns: ["transferred_from_firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referral_sources: {
+        Row: {
+          address: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          firm_id: string | null
+          id: string
+          is_active: boolean
+          source_name: string
+          source_type: string
+          total_referrals: number | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          firm_id?: string | null
+          id?: string
+          is_active?: boolean
+          source_name: string
+          source_type: string
+          total_referrals?: number | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          firm_id?: string | null
+          id?: string
+          is_active?: boolean
+          source_name?: string
+          source_type?: string
+          total_referrals?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_sources_firm_id_fkey"
+            columns: ["firm_id"]
             isOneToOne: false
             referencedRelation: "firms"
             referencedColumns: ["id"]
