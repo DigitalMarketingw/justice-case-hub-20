@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -98,9 +97,9 @@ export function CaseReferralDashboard() {
 
     // Check for concentration risks
     Object.entries(incomingByAttorney).forEach(([attorneyId, sources]: [string, any]) => {
-      const totalIncoming = Object.values(sources).reduce((sum: number, count: any) => sum + count, 0);
+      const totalIncoming = Object.values(sources).reduce((sum: number, count: any) => sum + Number(count), 0);
       Object.entries(sources).forEach(([source, count]: [string, any]) => {
-        const percentage = (count / totalIncoming) * 100;
+        const percentage = (Number(count) / Number(totalIncoming)) * 100;
         if (percentage > 30) {
           alertsFound.push({
             type: 'incoming_concentration',
@@ -115,9 +114,9 @@ export function CaseReferralDashboard() {
     });
 
     Object.entries(outgoingByAttorney).forEach(([attorneyId, destinations]: [string, any]) => {
-      const totalOutgoing = Object.values(destinations).reduce((sum: number, count: any) => sum + count, 0);
+      const totalOutgoing = Object.values(destinations).reduce((sum: number, count: any) => sum + Number(count), 0);
       Object.entries(destinations).forEach(([destination, count]: [string, any]) => {
-        const percentage = (count / totalOutgoing) * 100;
+        const percentage = (Number(count) / Number(totalOutgoing)) * 100;
         if (percentage > 50) {
           alertsFound.push({
             type: 'outgoing_concentration',
