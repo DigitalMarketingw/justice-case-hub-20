@@ -2,7 +2,7 @@
 import React from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { Sidebar } from "@/components/layout/Sidebar";
-import { CaseReferralDashboard } from "@/components/referrals/CaseReferralDashboard";
+import { ReferralDashboardEnhanced } from "@/components/referrals/ReferralDashboardEnhanced";
 
 const CaseReferrals = () => {
   return (
@@ -11,7 +11,7 @@ const CaseReferrals = () => {
         <Sidebar />
         <main className="flex-1">
           <div className="p-6">
-            <CaseReferralDashboard />
+            <ReferralDashboardEnhanced />
           </div>
         </main>
       </div>

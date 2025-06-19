@@ -272,12 +272,16 @@ export type Database = {
       }
       case_referrals: {
         Row: {
+          auto_approved: boolean | null
           case_id: string
           client_consent_obtained: boolean | null
+          compliance_notes: string | null
           created_at: string
+          deadline_date: string | null
           external_source_name: string | null
           id: string
           notes: string | null
+          priority_level: string | null
           processed_by: string | null
           processed_date: string | null
           referral_date: string
@@ -286,16 +290,25 @@ export type Database = {
           referral_source: string | null
           referred_to_attorney_id: string | null
           referring_attorney_id: string | null
+          requires_case_manager_approval: boolean | null
+          requires_compliance_review: boolean | null
+          requires_firm_admin_approval: boolean | null
+          risk_assessment_score: number | null
           status: string
           updated_at: string
+          workflow_stage: string | null
         }
         Insert: {
+          auto_approved?: boolean | null
           case_id: string
           client_consent_obtained?: boolean | null
+          compliance_notes?: string | null
           created_at?: string
+          deadline_date?: string | null
           external_source_name?: string | null
           id?: string
           notes?: string | null
+          priority_level?: string | null
           processed_by?: string | null
           processed_date?: string | null
           referral_date?: string
@@ -304,16 +317,25 @@ export type Database = {
           referral_source?: string | null
           referred_to_attorney_id?: string | null
           referring_attorney_id?: string | null
+          requires_case_manager_approval?: boolean | null
+          requires_compliance_review?: boolean | null
+          requires_firm_admin_approval?: boolean | null
+          risk_assessment_score?: number | null
           status?: string
           updated_at?: string
+          workflow_stage?: string | null
         }
         Update: {
+          auto_approved?: boolean | null
           case_id?: string
           client_consent_obtained?: boolean | null
+          compliance_notes?: string | null
           created_at?: string
+          deadline_date?: string | null
           external_source_name?: string | null
           id?: string
           notes?: string | null
+          priority_level?: string | null
           processed_by?: string | null
           processed_date?: string | null
           referral_date?: string
@@ -322,8 +344,13 @@ export type Database = {
           referral_source?: string | null
           referred_to_attorney_id?: string | null
           referring_attorney_id?: string | null
+          requires_case_manager_approval?: boolean | null
+          requires_compliance_review?: boolean | null
+          requires_firm_admin_approval?: boolean | null
+          risk_assessment_score?: number | null
           status?: string
           updated_at?: string
+          workflow_stage?: string | null
         }
         Relationships: [
           {
@@ -1161,6 +1188,147 @@ export type Database = {
           },
         ]
       }
+      referral_approvals: {
+        Row: {
+          approval_type: string
+          approved_at: string | null
+          approver_id: string
+          comments: string | null
+          created_at: string
+          id: string
+          referral_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          approval_type: string
+          approved_at?: string | null
+          approver_id: string
+          comments?: string | null
+          created_at?: string
+          id?: string
+          referral_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          approval_type?: string
+          approved_at?: string | null
+          approver_id?: string
+          comments?: string | null
+          created_at?: string
+          id?: string
+          referral_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_approvals_approver_id_fkey"
+            columns: ["approver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_approvals_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "case_referrals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referral_comments: {
+        Row: {
+          comment: string
+          created_at: string
+          id: string
+          is_internal: boolean | null
+          referral_id: string
+          user_id: string
+        }
+        Insert: {
+          comment: string
+          created_at?: string
+          id?: string
+          is_internal?: boolean | null
+          referral_id: string
+          user_id: string
+        }
+        Update: {
+          comment?: string
+          created_at?: string
+          id?: string
+          is_internal?: boolean | null
+          referral_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_comments_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "case_referrals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referral_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean | null
+          message: string
+          notification_type: string
+          referral_id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message: string
+          notification_type: string
+          referral_id: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          notification_type?: string
+          referral_id?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_notifications_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "case_referrals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       referral_sources: {
         Row: {
           address: string | null
@@ -1262,6 +1430,19 @@ export type Database = {
         Args: { profile_id: string }
         Returns: boolean
       }
+      determine_approval_requirements: {
+        Args: {
+          p_referral_fee: number
+          p_case_value?: number
+          p_referral_source?: string
+        }
+        Returns: {
+          requires_case_manager: boolean
+          requires_firm_admin: boolean
+          requires_compliance: boolean
+          risk_score: number
+        }[]
+      }
       get_current_user_firm_id: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1293,7 +1474,16 @@ export type Database = {
     }
     Enums: {
       case_priority: "low" | "medium" | "high" | "urgent"
-      case_status: "active" | "pending" | "closed" | "on_hold"
+      case_status:
+        | "active"
+        | "pending"
+        | "closed"
+        | "on_hold"
+        | "pending_case_manager"
+        | "case_manager_approved"
+        | "firm_admin_approved"
+        | "compliance_review"
+        | "rejected"
       document_type:
         | "contract"
         | "court_filing"
@@ -1422,7 +1612,17 @@ export const Constants = {
   public: {
     Enums: {
       case_priority: ["low", "medium", "high", "urgent"],
-      case_status: ["active", "pending", "closed", "on_hold"],
+      case_status: [
+        "active",
+        "pending",
+        "closed",
+        "on_hold",
+        "pending_case_manager",
+        "case_manager_approved",
+        "firm_admin_approved",
+        "compliance_review",
+        "rejected",
+      ],
       document_type: [
         "contract",
         "court_filing",
