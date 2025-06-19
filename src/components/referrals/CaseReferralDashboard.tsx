@@ -117,7 +117,7 @@ export function CaseReferralDashboard() {
     Object.entries(outgoingByAttorney).forEach(([attorneyId, destinations]: [string, any]) => {
       const totalOutgoing = Object.values(destinations).reduce((sum: number, count: any) => sum + count, 0);
       Object.entries(destinations).forEach(([destination, count]: [string, any]) => {
-        const percentage =  count / totalOutgoing) * 100;
+        const percentage = (count / totalOutgoing) * 100;
         if (percentage > 50) {
           alertsFound.push({
             type: 'outgoing_concentration',
