@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -14,17 +14,29 @@ export function ProfileSettings() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    first_name: profile?.first_name || '',
-    last_name: profile?.last_name || '',
-    phone: profile?.phone || '',
-    email: profile?.email || '',
+    first_name: '',
+    last_name: '',
+    phone: '',
+    email: '',
   });
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
+  // Initialize form data when profile changes
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        first_name: profile.first_name || '',
+        last_name: profile.last_name || '',
+        phone: profile.phone || '',
+        email: profile.email || '',
+      });
+    }
+  }, [profile?.id, profile?.first_name, profile?.last_name, profile?.phone, profile?.email]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleInputChange = useCallback((field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  }, []);
+
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user?.id) return;
 
@@ -61,7 +73,7 @@ export function ProfileSettings() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id, profile?.role, formData, toast]);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
