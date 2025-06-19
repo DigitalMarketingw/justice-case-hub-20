@@ -10,7 +10,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { session, user, loading, setSession, setUser } = useAuthState();
-  const { profile, setProfile } = useProfileState(user, loading);
+  const { profile, setProfile, profileLoading } = useProfileState(user, loading);
   const { signIn, signUp, signOut: authSignOut } = useAuthOperations();
 
   const handleSignOut = async () => {
@@ -39,7 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signIn,
         signUp,
         signOut: handleSignOut,
-        loading,
+        loading: loading || profileLoading,
         isAuthenticated: !!user,
       }}
     >

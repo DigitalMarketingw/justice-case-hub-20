@@ -7,19 +7,29 @@ import { useProfile } from "@/hooks/useProfile";
 
 export const useProfileState = (user: User | null, loading: boolean) => {
   const { profile, setProfile, fetchUserProfile } = useProfile();
+  const [profileLoading, setProfileLoading] = useState(false);
 
   useEffect(() => {
     let mounted = true;
     let profileFetchTimeout: NodeJS.Timeout;
 
-    if (loading || !user) return;
+    if (loading || !user) {
+      if (!user) {
+        setProfile(null);
+      }
+      return;
+    }
 
-    // Fetch profile for authenticated users with simplified error handling
+    // Prevent multiple simultaneous fetches
+    if (profileLoading) return;
+
+    setProfileLoading(true);
+
+    // Set a timeout to create fallback profile if fetch takes too long
     profileFetchTimeout = setTimeout(() => {
-      if (mounted) {
+      if (mounted && !profile) {
         console.log('Profile fetch timeout, creating fallback profile');
-        // Create immediate fallback profile
-        const fallbackProfile = {
+        const fallbackProfile: UserProfile = {
           id: user.id,
           email: user.email || '',
           first_name: null,
@@ -28,11 +38,12 @@ export const useProfileState = (user: User | null, loading: boolean) => {
           firm_id: null,
           is_active: true,
           phone: null,
-          last_login: new Date().toISOString(), // Set current time to prevent onboarding loop
+          last_login: new Date().toISOString(),
         };
         setProfile(fallbackProfile);
+        setProfileLoading(false);
       }
-    }, 2000);
+    }, 3000);
 
     const fetchProfile = async () => {
       try {
@@ -61,9 +72,11 @@ export const useProfileState = (user: User | null, loading: boolean) => {
             } else {
               setProfile(fetchedProfile);
             }
+            clearTimeout(profileFetchTimeout);
           } else {
-            // Create fallback profile
-            const fallbackProfile = {
+            // No profile found, create fallback
+            console.log('No profile found, creating fallback');
+            const fallbackProfile: UserProfile = {
               id: user.id,
               email: user.email || '',
               first_name: null,
@@ -82,7 +95,7 @@ export const useProfileState = (user: User | null, loading: boolean) => {
         
         if (mounted) {
           // Create fallback profile on error
-          const fallbackProfile = {
+          const fallbackProfile: UserProfile = {
             id: user.id,
             email: user.email || '',
             first_name: null,
@@ -97,6 +110,7 @@ export const useProfileState = (user: User | null, loading: boolean) => {
         }
       } finally {
         if (mounted) {
+          setProfileLoading(false);
           clearTimeout(profileFetchTimeout);
         }
       }
@@ -106,14 +120,16 @@ export const useProfileState = (user: User | null, loading: boolean) => {
 
     return () => {
       mounted = false;
+      setProfileLoading(false);
       if (profileFetchTimeout) {
         clearTimeout(profileFetchTimeout);
       }
     };
-  }, [user, loading, fetchUserProfile, setProfile]);
+  }, [user, loading, fetchUserProfile, setProfile, profileLoading, profile]);
 
   return {
     profile,
     setProfile,
+    profileLoading,
   };
 };

@@ -45,9 +45,16 @@ const Index = () => {
           navigate("/attorney", { replace: true });
         }
       } else {
-        // If authenticated but no profile, still redirect to prevent infinite loading
-        console.log('No profile, redirecting to attorney dashboard as fallback');
-        navigate("/attorney", { replace: true });
+        // If authenticated but no profile, wait a bit longer before fallback
+        console.log('No profile yet, setting timeout for fallback redirect');
+        const timer = setTimeout(() => {
+          if (isAuthenticated && user && !profile) {
+            console.log('Profile still not loaded, redirecting to attorney dashboard as fallback');
+            navigate("/attorney", { replace: true });
+          }
+        }, 2000);
+        
+        return () => clearTimeout(timer);
       }
     }
   }, [isAuthenticated, profile, user, loading, navigate]);
