@@ -136,18 +136,10 @@ const Pricing = () => {
   ];
 
   return (
-    <div className="min-h-screen" 
-         style={{
-           backgroundImage: 'url(/lovable-uploads/5d01f912-00ca-4a68-9268-3100775217e8.png)',
-           backgroundSize: 'cover',
-           backgroundPosition: 'center',
-           backgroundRepeat: 'no-repeat'
-         }}>
-      <div className="absolute inset-0 bg-black/10"></div>
-      <div className="relative z-10">
-        <LandingNavigation onLoginClick={handleLoginClick} onContactClick={handleContactClick} />
-        
-        <main className="pt-20">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
+      <LandingNavigation onLoginClick={handleLoginClick} onContactClick={handleContactClick} />
+      
+      <main className="pt-20">
         {/* Hero Section */}
         <section className="py-20 px-6">
           <div className="max-w-4xl mx-auto text-center">
@@ -296,8 +288,7 @@ const Pricing = () => {
         </section>
       </main>
 
-        <LandingFooter />
-      </div>
+      <LandingFooter />
     </div>
   );
 };

@@ -71,15 +71,8 @@ const Index = () => {
   if (loading) {
     console.log('Index - Showing loading state (auth loading)');
     return (
-      <div className="flex h-screen items-center justify-center"
-           style={{
-           backgroundImage: 'url(/lovable-uploads/5d01f912-00ca-4a68-9268-3100775217e8.png)',
-             backgroundSize: 'cover',
-             backgroundPosition: 'center',
-             backgroundRepeat: 'no-repeat'
-           }}>
-        <div className="absolute inset-0 bg-black/10"></div>
-        <div className="text-center text-white relative z-10">
+      <div className="flex h-screen items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
+        <div className="text-center text-white">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto mb-4"></div>
           <p className="text-lg">Loading...</p>
         </div>
@@ -90,21 +83,12 @@ const Index = () => {
   // Not authenticated - show landing page
   console.log('Index - Showing landing page (not authenticated)');
   return (
-    <div className="min-h-screen" 
-         style={{
-           backgroundImage: 'url(/lovable-uploads/5d01f912-00ca-4a68-9268-3100775217e8.png)',
-           backgroundSize: 'cover',
-           backgroundPosition: 'center',
-           backgroundRepeat: 'no-repeat'
-         }}>
-      <div className="absolute inset-0 bg-black/10"></div>
-      <div className="relative z-10">
-        <LandingNavigation onLoginClick={handleLoginClick} onContactClick={handleContactClick} />
-        <HeroSection onContactClick={handleContactClick} />
-        <FeaturesSection />
-        <BenefitsSection onLoginClick={handleLoginClick} />
-        <LandingFooter />
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
+      <LandingNavigation onLoginClick={handleLoginClick} onContactClick={handleContactClick} />
+      <HeroSection onContactClick={handleContactClick} />
+      <FeaturesSection />
+      <BenefitsSection onLoginClick={handleLoginClick} />
+      <LandingFooter />
     </div>
   );
 };
