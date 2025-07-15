@@ -66,8 +66,7 @@ const BenefitsSection = ({ onLoginClick }: BenefitsSectionProps) => {
 
   return (
     <section className="relative py-20 lg:py-32 px-6">
-      {/* Background Elements */}
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-900/50 to-slate-800/80"></div>
+      {/* Content is now overlaid on the main background */}
       
       <div className="relative max-w-7xl mx-auto">
         {/* Section Header */}

@@ -35,10 +35,7 @@ const HeroSection = ({ onContactClick }: HeroSectionProps) => {
 
   return (
     <section className="relative overflow-hidden px-6 py-20 lg:py-32">
-      {/* Background Elements */}
-      <div className="absolute inset-0 gradient-surface"></div>
-      <div className="absolute top-0 right-0 w-96 h-96 bg-primary-400/20 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-secondary/30 rounded-full blur-3xl"></div>
+      {/* Content is now overlaid on the main background */}
       
       <div className="relative max-w-7xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
