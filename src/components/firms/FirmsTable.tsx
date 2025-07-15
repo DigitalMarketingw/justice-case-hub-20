@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -19,12 +19,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ViewAdminsDialog } from "./ViewAdminsDialog";
+import { EditFirmDialog } from "./EditFirmDialog";
 
 interface FirmsTableProps {
   searchTerm: string;
 }
 
 export function FirmsTable({ searchTerm }: FirmsTableProps) {
+  const [selectedFirm, setSelectedFirm] = useState<{id: string, name: string} | null>(null);
+  const [showAdminsDialog, setShowAdminsDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  
   const { data: firms, isLoading, refetch } = useQuery({
     queryKey: ['firms', searchTerm],
     queryFn: async () => {
@@ -53,14 +59,14 @@ export function FirmsTable({ searchTerm }: FirmsTableProps) {
     },
   });
 
-  const handleViewAdmins = (firmId: string) => {
-    // TODO: Implement view admins functionality
-    console.log('View admins for firm:', firmId);
+  const handleViewAdmins = (firm: {id: string, name: string}) => {
+    setSelectedFirm(firm);
+    setShowAdminsDialog(true);
   };
 
-  const handleEditFirm = (firmId: string) => {
-    // TODO: Implement edit firm functionality
-    console.log('Edit firm:', firmId);
+  const handleEditFirm = (firm: {id: string, name: string}) => {
+    setSelectedFirm(firm);
+    setShowEditDialog(true);
   };
 
   if (isLoading) {
@@ -145,10 +151,10 @@ export function FirmsTable({ searchTerm }: FirmsTableProps) {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleViewAdmins(firm.id)}>
+                      <DropdownMenuItem onClick={() => handleViewAdmins({id: firm.id, name: firm.name})}>
                         View Admins
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleEditFirm(firm.id)}>
+                      <DropdownMenuItem onClick={() => handleEditFirm({id: firm.id, name: firm.name})}>
                         Edit Firm
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -162,9 +168,26 @@ export function FirmsTable({ searchTerm }: FirmsTableProps) {
       
       {firms?.length === 0 && (
         <div className="text-center py-8">
-          <p className="text-gray-500">No firms found</p>
+          <p className="text-muted-foreground">No firms found</p>
         </div>
       )}
+    
+    {selectedFirm && (
+      <>
+        <ViewAdminsDialog
+          open={showAdminsDialog}
+          onOpenChange={setShowAdminsDialog}
+          firmId={selectedFirm.id}
+          firmName={selectedFirm.name}
+        />
+        <EditFirmDialog
+          open={showEditDialog}
+          onOpenChange={setShowEditDialog}
+          firmId={selectedFirm.id}
+          onFirmUpdated={refetch}
+        />
+      </>
+    )}
     </div>
   );
 }

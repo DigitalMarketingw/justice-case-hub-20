@@ -8,19 +8,23 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { Briefcase, Users, Settings, Building, ArrowRightLeft } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const SuperAdminDashboard = () => {
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [firmCount, setFirmCount] = useState(0);
   const [userCount, setUserCount] = useState(0);
   const [caseCount, setCaseCount] = useState(0);
   const [clientCount, setClientCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchStats = async () => {
       setLoading(true);
+      setError(null);
 
       try {
         // Count firms
@@ -28,24 +32,24 @@ const SuperAdminDashboard = () => {
           .from('firms')
           .select('*', { count: 'exact', head: true });
 
-        if (firmError) console.error('Error fetching firms:', firmError);
-        else setFirmCount(firmCount || 0);
+        if (firmError) throw firmError;
+        setFirmCount(firmCount || 0);
 
         // Count users
         const { count: userCount, error: userError } = await supabase
           .from('profiles')
           .select('*', { count: 'exact', head: true });
 
-        if (userError) console.error('Error fetching users:', userError);
-        else setUserCount(userCount || 0);
+        if (userError) throw userError;
+        setUserCount(userCount || 0);
 
         // Count cases
         const { count: caseCount, error: caseError } = await supabase
           .from('cases')
           .select('*', { count: 'exact', head: true });
 
-        if (caseError) console.error('Error fetching cases:', caseError);
-        else setCaseCount(caseCount || 0);
+        if (caseError) throw caseError;
+        setCaseCount(caseCount || 0);
 
         // Count clients
         const { count: clientCount, error: clientError } = await supabase
@@ -53,17 +57,23 @@ const SuperAdminDashboard = () => {
           .select('*', { count: 'exact', head: true })
           .eq('role', 'client');
 
-        if (clientError) console.error('Error fetching clients:', clientError);
-        else setClientCount(clientCount || 0);
-      } catch (error) {
+        if (clientError) throw clientError;
+        setClientCount(clientCount || 0);
+      } catch (error: any) {
         console.error('Error fetching stats:', error);
+        setError(error.message || 'Failed to load dashboard statistics');
+        toast({
+          title: "Error",
+          description: "Failed to load dashboard statistics. Please refresh the page.",
+          variant: "destructive",
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchStats();
-  }, []);
+  }, [toast]);
 
   const handleNavigateToFirms = () => {
     navigate('/firms');
@@ -93,7 +103,12 @@ const SuperAdminDashboard = () => {
           <div className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-3xl font-bold">Super Admin Dashboard</h1>
-              <p className="text-gray-600">Welcome, {profile?.first_name} {profile?.last_name}</p>
+              <p className="text-muted-foreground">Welcome, {profile?.first_name} {profile?.last_name}</p>
+              {error && (
+                <div className="mt-2 p-2 bg-destructive/10 border border-destructive/20 rounded text-destructive text-sm">
+                  {error}
+                </div>
+              )}
             </div>
             <Button variant="outline" onClick={signOut}>Sign Out</Button>
           </div>

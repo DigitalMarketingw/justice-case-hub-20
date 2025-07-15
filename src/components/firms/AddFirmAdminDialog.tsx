@@ -61,11 +61,24 @@ export function AddFirmAdminDialog({ open, onOpenChange, onAdminAdded }: AddFirm
 
       console.log('Creating firm admin with data:', formData);
 
+      // Generate a secure random password
+      const generateSecurePassword = () => {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+        let password = '';
+        for (let i = 0; i < 16; i++) {
+          password += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return password;
+      };
+
+      const tempPassword = generateSecurePassword();
+
       // Create the user account and profile in one step using the auth.users trigger
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email.trim(),
-        password: 'TempPassword123!', // Temporary password that admin will reset
+        password: tempPassword,
         options: {
+          emailRedirectTo: `${window.location.origin}/auth`,
           data: {
             first_name: formData.firstName.trim(),
             last_name: formData.lastName.trim(),
@@ -121,7 +134,7 @@ export function AddFirmAdminDialog({ open, onOpenChange, onAdminAdded }: AddFirm
 
       toast({
         title: "Success",
-        description: "Firm administrator created successfully. They will receive an email to set up their account.",
+        description: "Firm administrator created successfully. They will receive an email to verify their account and set up a new password.",
       });
 
       // Reset form
