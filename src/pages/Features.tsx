@@ -133,7 +133,7 @@ const Features = () => {
   return (
     <div className="min-h-screen" 
          style={{
-           backgroundImage: 'url(/lovable-uploads/ebeb3045-b328-4b37-abc4-c1cef32f0872.png)',
+           backgroundImage: 'url(/lovable-uploads/5d01f912-00ca-4a68-9268-3100775217e8.png)',
            backgroundSize: 'cover',
            backgroundPosition: 'center',
            backgroundRepeat: 'no-repeat'
