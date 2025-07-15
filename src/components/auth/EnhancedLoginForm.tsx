@@ -69,14 +69,6 @@ const EnhancedLoginForm = ({ onSignUpClick }: EnhancedLoginFormProps) => {
               </CardDescription>
             </div>
           </div>
-          
-          {/* Security Badge */}
-          <div className="flex justify-center">
-            <Badge variant="outline" className="text-xs bg-success-50 text-success-700 border-success-200">
-              <Lock className="w-3 h-3 mr-1" />
-              Bank-level security
-            </Badge>
-          </div>
         </CardHeader>
         
         <CardContent className="space-y-6">
