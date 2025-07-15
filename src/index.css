@@ -5,43 +5,53 @@
 @tailwind utilities;
 
 :root {
-  /* Color System */
+  /* Google-Style Color System - Based on uploaded gradient */
   --background: 0 0% 100%;
-  --foreground: 240 10% 3.9%;
+  --foreground: 240 8% 15%;
   --card: 0 0% 100%;
-  --card-foreground: 240 10% 3.9%;
+  --card-foreground: 240 8% 15%;
   --popover: 0 0% 100%;
-  --popover-foreground: 240 10% 3.9%;
-  --primary: 221 83% 53%;
-  --primary-foreground: 210 40% 98%;
-  --primary-50: 221 100% 97%;
-  --primary-100: 221 85% 91%;
-  --primary-200: 221 85% 82%;
-  --primary-300: 221 85% 70%;
-  --primary-400: 221 85% 60%;
-  --primary-500: 221 83% 53%;
-  --primary-600: 221 85% 45%;
-  --primary-700: 221 85% 37%;
-  --primary-800: 221 85% 29%;
-  --primary-900: 221 85% 21%;
-  --secondary: 210 40% 96%;
-  --secondary-foreground: 222.2 84% 4.9%;
-  --muted: 210 40% 96%;
-  --muted-foreground: 215.4 16.3% 46.9%;
-  --accent: 210 40% 96%;
-  --accent-foreground: 222.2 84% 4.9%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 40% 98%;
-  --success: 142 76% 36%;
-  --success-foreground: 355.7 100% 97.3%;
-  --warning: 48 96% 53%;
-  --warning-foreground: 26 83% 14%;
-  --info: 199 89% 48%;
-  --info-foreground: 210 40% 98%;
-  --border: 214.3 31.8% 91.4%;
-  --input: 214.3 31.8% 91.4%;
-  --ring: 221 83% 53%;
-  --radius: 0.75rem;
+  --popover-foreground: 240 8% 15%;
+  
+  /* Primary Gradient Colors from uploaded palette */
+  --primary: 240 100% 67%; /* Vibrant blue from left side */
+  --primary-foreground: 0 0% 100%;
+  --primary-50: 240 100% 97%;
+  --primary-100: 240 96% 93%;
+  --primary-200: 240 90% 85%;
+  --primary-300: 240 88% 75%;
+  --primary-400: 240 92% 70%;
+  --primary-500: 240 100% 67%;
+  --primary-600: 240 95% 60%;
+  --primary-700: 240 85% 50%;
+  --primary-800: 240 75% 40%;
+  --primary-900: 240 65% 30%;
+  
+  /* Secondary - Periwinkle from right side of gradient */
+  --secondary: 260 70% 92%;
+  --secondary-foreground: 240 8% 15%;
+  
+  /* Surface Colors - Minimal, clean */
+  --muted: 240 10% 97%;
+  --muted-foreground: 240 5% 45%;
+  --accent: 245 50% 96%;
+  --accent-foreground: 240 8% 15%;
+  
+  /* Status Colors - Harmonized with primary */
+  --destructive: 0 85% 65%;
+  --destructive-foreground: 0 0% 100%;
+  --success: 142 70% 45%;
+  --success-foreground: 0 0% 100%;
+  --warning: 45 95% 55%;
+  --warning-foreground: 45 15% 15%;
+  --info: 200 90% 55%;
+  --info-foreground: 0 0% 100%;
+  
+  /* Interaction States - No borders, subtle fills */
+  --border: transparent;
+  --input: 240 15% 96%;
+  --ring: 240 100% 67%;
+  --radius: 1rem; /* Larger radius for Google-style curves */
 
   /* Spacing System */
   --spacing-xs: 0.25rem;
@@ -52,11 +62,12 @@
   --spacing-2xl: 3rem;
   --spacing-3xl: 4rem;
 
-  /* Shadow System */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  /* Google Material Design 3 Shadow System */
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px 0 rgb(0 0 0 / 0.06);
+  --shadow-md: 0 4px 8px -1px rgb(0 0 0 / 0.05), 0 2px 4px -1px rgb(0 0 0 / 0.03);
+  --shadow-lg: 0 8px 16px -4px rgb(0 0 0 / 0.06), 0 4px 6px -2px rgb(0 0 0 / 0.03);
+  --shadow-xl: 0 16px 32px -8px rgb(0 0 0 / 0.08), 0 8px 16px -4px rgb(0 0 0 / 0.03);
+  --shadow-2xl: 0 24px 48px -12px rgb(0 0 0 / 0.12), 0 16px 32px -8px rgb(0 0 0 / 0.04);
 
   /* Sidebar */
   --sidebar-background: 0 0% 98%;
@@ -70,25 +81,25 @@
 }
 
 .dark {
-  --background: 240 10% 3.9%;
-  --foreground: 0 0% 98%;
-  --card: 240 10% 3.9%;
-  --card-foreground: 0 0% 98%;
-  --popover: 240 10% 3.9%;
-  --popover-foreground: 0 0% 98%;
-  --primary: 221 83% 53%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 240 3.7% 15.9%;
-  --secondary-foreground: 0 0% 98%;
-  --muted: 240 3.7% 15.9%;
-  --muted-foreground: 240 5% 64.9%;
-  --accent: 240 3.7% 15.9%;
-  --accent-foreground: 0 0% 98%;
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 240 3.7% 15.9%;
-  --input: 240 3.7% 15.9%;
-  --ring: 221 83% 53%;
+  --background: 240 12% 8%;
+  --foreground: 240 10% 95%;
+  --card: 240 10% 10%;
+  --card-foreground: 240 10% 95%;
+  --popover: 240 10% 10%;
+  --popover-foreground: 240 10% 95%;
+  --primary: 240 100% 75%;
+  --primary-foreground: 240 12% 8%;
+  --secondary: 260 40% 20%;
+  --secondary-foreground: 240 10% 95%;
+  --muted: 240 8% 15%;
+  --muted-foreground: 240 5% 65%;
+  --accent: 245 30% 18%;
+  --accent-foreground: 240 10% 95%;
+  --destructive: 0 85% 65%;
+  --destructive-foreground: 0 0% 100%;
+  --border: transparent;
+  --input: 240 10% 15%;
+  --ring: 240 100% 75%;
   
   --sidebar-background: 240 5.9% 10%;
   --sidebar-foreground: 240 4.8% 95.9%;
@@ -140,30 +151,39 @@
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* Enhanced button styles */
+  /* Google Material Design 3 Button Styles */
   .btn-primary {
-    @apply bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg;
+    @apply bg-gradient-to-r from-primary-500 to-primary-600 text-primary-foreground 
+           hover:from-primary-600 hover:to-primary-700 hover:shadow-lg hover:scale-[1.02]
+           rounded-full shadow-md transition-all duration-200;
   }
   
   .btn-secondary {
-    @apply bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-input;
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/90 
+           rounded-full shadow-sm hover:shadow-md transition-all duration-200;
   }
   
   .btn-outline {
-    @apply border border-input bg-background hover:bg-accent hover:text-accent-foreground;
+    @apply bg-muted/50 text-foreground hover:bg-muted hover:scale-[1.02]
+           rounded-full shadow-sm hover:shadow-md transition-all duration-200;
   }
   
   .btn-ghost {
-    @apply hover:bg-accent hover:text-accent-foreground;
+    @apply hover:bg-accent/70 hover:text-accent-foreground rounded-full
+           transition-all duration-200;
   }
 
-  /* Gradient styles */
+  /* Google-Style Gradients */
   .gradient-primary {
-    @apply bg-gradient-to-r from-primary-500 to-primary-700;
+    @apply bg-gradient-to-br from-primary-400 via-primary-500 to-primary-600;
   }
   
   .gradient-secondary {
-    @apply bg-gradient-to-r from-secondary to-muted;
+    @apply bg-gradient-to-br from-secondary via-accent to-muted;
+  }
+  
+  .gradient-surface {
+    @apply bg-gradient-to-br from-background via-muted/30 to-accent/50;
   }
 
   /* Enhanced focus ring */
@@ -171,18 +191,38 @@
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
   }
 
+  /* Google Material Design Form Fields */
+  .input-field {
+    @apply flex h-12 w-full rounded-xl bg-input px-4 py-3 text-sm ring-offset-background 
+           file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground 
+           placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 
+           focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:bg-background 
+           focus-visible:shadow-md disabled:cursor-not-allowed disabled:opacity-50 
+           transition-all duration-200;
+  }
+
   /* Glass effect */
   .glass-effect {
     @apply bg-background/80 backdrop-blur-sm border border-border/50;
   }
 
-  /* Enhanced card styles */
+  /* Google Material Design Card Styles */
   .card-elevated {
-    @apply shadow-lg hover:shadow-xl transition-shadow duration-300;
+    @apply shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl;
   }
   
   .card-interactive {
-    @apply hover:scale-[1.02] transition-transform duration-200 cursor-pointer;
+    @apply hover:scale-[1.02] hover:shadow-lg transition-all duration-200 cursor-pointer rounded-2xl;
+  }
+
+  /* Google-Style Navigation */
+  .nav-pill {
+    @apply rounded-full px-6 py-2 text-sm font-medium transition-all duration-200
+           hover:bg-primary/10 hover:text-primary focus-ring;
+  }
+  
+  .nav-pill-active {
+    @apply bg-primary text-primary-foreground shadow-md;
   }
 
   /* Layout utilities */

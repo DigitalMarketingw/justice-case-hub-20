@@ -115,13 +115,15 @@ export default {
 				'3xl': 'var(--spacing-3xl)',
 			},
 			borderRadius: {
-				'xs': '0.125rem',
-				'sm': '0.25rem',
-				'md': '0.375rem',
-				lg: 'var(--radius)',
-				xl: 'calc(var(--radius) + 0.25rem)',
-				'2xl': 'calc(var(--radius) + 0.5rem)',
-				'3xl': 'calc(var(--radius) + 0.75rem)',
+				'xs': '0.25rem',
+				'sm': '0.5rem',
+				'md': '0.75rem',
+				lg: 'var(--radius)', /* 1rem - Google style */
+				xl: 'calc(var(--radius) + 0.25rem)', /* 1.25rem */
+				'2xl': 'calc(var(--radius) + 0.5rem)', /* 1.5rem */
+				'3xl': 'calc(var(--radius) + 0.75rem)', /* 1.75rem */
+				'4xl': '2rem', /* Extra large for hero sections */
+				'full': '9999px', /* Perfect circles/pills */
 			},
 			boxShadow: {
 				'sm': 'var(--shadow-sm)',

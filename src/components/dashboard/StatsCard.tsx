@@ -36,11 +36,11 @@ export function StatsCard({
   const getCardVariant = () => {
     switch (variant) {
       case "gradient":
-        return "gradient-primary text-primary-foreground border-0";
+        return "gradient-primary text-primary-foreground shadow-xl";
       case "glass":
-        return "glass-effect border-white/20 backdrop-blur-lg";
+        return "bg-card/80 backdrop-blur-lg shadow-lg";
       default:
-        return "bg-card border";
+        return "bg-card shadow-md";
     }
   };
 

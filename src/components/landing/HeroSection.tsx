@@ -36,9 +36,9 @@ const HeroSection = ({ onContactClick }: HeroSectionProps) => {
   return (
     <section className="relative overflow-hidden px-6 py-20 lg:py-32">
       {/* Background Elements */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary-900/20 via-secondary-900/10 to-accent-900/20"></div>
-      <div className="absolute top-0 right-0 w-96 h-96 bg-primary-500/10 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-secondary-500/10 rounded-full blur-3xl"></div>
+      <div className="absolute inset-0 gradient-surface"></div>
+      <div className="absolute top-0 right-0 w-96 h-96 bg-primary-400/20 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-secondary/30 rounded-full blur-3xl"></div>
       
       <div className="relative max-w-7xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
@@ -77,8 +77,8 @@ const HeroSection = ({ onContactClick }: HeroSectionProps) => {
                 "Ensure ABA compliance"
               ].map((benefit, index) => (
                 <div key={index} className="flex items-center space-x-3">
-                  <CheckCircle className="w-5 h-5 text-white flex-shrink-0" />
-                  <span className="text-white font-medium">{benefit}</span>
+                  <CheckCircle className="w-5 h-5 text-primary flex-shrink-0" />
+                  <span className="text-foreground font-medium">{benefit}</span>
                 </div>
               ))}
             </div>
