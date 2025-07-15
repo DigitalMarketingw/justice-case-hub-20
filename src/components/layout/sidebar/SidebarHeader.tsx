@@ -9,7 +9,7 @@ interface SidebarHeaderProps {
 
 export function SidebarHeader({ isCollapsed, onToggleCollapse }: SidebarHeaderProps) {
   return (
-    <div className="flex items-center justify-between p-4 border-b border-slate-700">
+    <div className="flex items-center justify-between p-4 border-b border-gray-200">
       {!isCollapsed && (
         <div className="flex items-center space-x-3">
           <img 
@@ -23,7 +23,7 @@ export function SidebarHeader({ isCollapsed, onToggleCollapse }: SidebarHeaderPr
         variant="ghost"
         size="sm"
         onClick={onToggleCollapse}
-        className="text-white hover:bg-slate-800"
+        className="text-gray-600 hover:text-gray-800 hover:bg-gray-100"
       >
         {isCollapsed ? <Menu size={20} /> : <X size={20} />}
       </Button>

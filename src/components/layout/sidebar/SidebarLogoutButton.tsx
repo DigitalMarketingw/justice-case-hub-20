@@ -40,7 +40,7 @@ export function SidebarLogoutButton({ isCollapsed, onSignOut }: SidebarLogoutBut
       size="sm"
       onClick={handleSignOut}
       disabled={isLoggingOut}
-      className="w-full justify-start text-slate-300 hover:bg-red-800 hover:text-white disabled:opacity-50 bg-red-900/20 border border-red-800"
+      className="w-full justify-start text-gray-700 hover:bg-red-50 hover:text-red-600 disabled:opacity-50 bg-red-50/50 border border-red-200"
     >
       <LogOut className="h-4 w-4 mr-2" />
       {!isCollapsed && (isLoggingOut ? "LOGGING OUT..." : "EMERGENCY LOGOUT")}

@@ -20,8 +20,8 @@ export default {
 		},
 		extend: {
 			fontFamily: {
-				sans: ['Inter', 'system-ui', 'sans-serif'],
-				display: ['Playfair Display', 'Georgia', 'serif'],
+				sans: ['Roboto', 'system-ui', 'sans-serif'],
+				display: ['Roboto', 'system-ui', 'sans-serif'],
 			},
 			fontSize: {
 				'xs': ['0.75rem', { lineHeight: '1rem' }],

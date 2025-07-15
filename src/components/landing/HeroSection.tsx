@@ -88,7 +88,7 @@ const HeroSection = ({ onContactClick }: HeroSectionProps) => {
               <Button 
                 onClick={onContactClick}
                 size="xl"
-                variant="gradient"
+                variant="default"
                 className="group relative overflow-hidden"
               >
                 <span className="relative z-10 flex items-center">

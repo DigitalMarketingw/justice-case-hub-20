@@ -1,58 +1,49 @@
-
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Playfair+Display:wght@400..900&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  /* Google-Style Color System - Based on uploaded gradient */
-  --background: 0 0% 100%;
-  --foreground: 240 8% 15%;
-  --card: 0 0% 100%;
-  --card-foreground: 240 8% 15%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 240 8% 15%;
+  /* Simple Gray-Based Color System */
+  --background: 0 0% 100%;              /* bg-white */
+  --foreground: 215 28% 17%;            /* text-gray-800 */
   
-  /* Primary Gradient Colors from uploaded palette */
-  --primary: 240 100% 67%; /* Vibrant blue from left side */
-  --primary-foreground: 0 0% 100%;
-  --primary-50: 240 100% 97%;
-  --primary-100: 240 96% 93%;
-  --primary-200: 240 90% 85%;
-  --primary-300: 240 88% 75%;
-  --primary-400: 240 92% 70%;
-  --primary-500: 240 100% 67%;
-  --primary-600: 240 95% 60%;
-  --primary-700: 240 85% 50%;
-  --primary-800: 240 75% 40%;
-  --primary-900: 240 65% 30%;
+  --card: 0 0% 100%;                    /* bg-white */
+  --card-foreground: 215 28% 17%;       /* text-gray-800 */
   
-  /* Secondary - Periwinkle from right side of gradient */
-  --secondary: 260 70% 92%;
-  --secondary-foreground: 240 8% 15%;
+  --popover: 0 0% 100%;                 /* bg-white */
+  --popover-foreground: 215 28% 17%;    /* text-gray-800 */
   
-  /* Surface Colors - Minimal, clean */
-  --muted: 240 10% 97%;
-  --muted-foreground: 240 5% 45%;
-  --accent: 245 50% 96%;
-  --accent-foreground: 240 8% 15%;
+  --secondary: 210 20% 98%;             /* bg-gray-50 */
+  --secondary-foreground: 215 25% 27%;  /* text-gray-700 */
   
-  /* Status Colors - Harmonized with primary */
-  --destructive: 0 85% 65%;
-  --destructive-foreground: 0 0% 100%;
-  --success: 142 70% 45%;
-  --success-foreground: 0 0% 100%;
-  --warning: 45 95% 55%;
-  --warning-foreground: 45 15% 15%;
-  --info: 200 90% 55%;
-  --info-foreground: 0 0% 100%;
+  --muted: 210 20% 98%;                 /* bg-gray-50 */
+  --muted-foreground: 215 25% 27%;      /* text-gray-700 */
   
-  /* Interaction States - No borders, subtle fills */
-  --border: transparent;
-  --input: 240 15% 96%;
-  --ring: 240 100% 67%;
-  --radius: 1rem; /* Larger radius for Google-style curves */
+  --accent: 210 20% 98%;                /* bg-gray-50 */
+  --accent-foreground: 215 28% 17%;     /* text-gray-800 */
+  
+  --primary: 221 83% 53%;               /* bg-blue-600 */
+  --primary-foreground: 0 0% 100%;      /* text-white */
+  
+  --destructive: 0 84% 60%;             /* bg-red-600 */
+  --destructive-foreground: 0 0% 100%;  /* text-white */
+  
+  --success: 142 76% 36%;               /* bg-green-600 */
+  --success-foreground: 0 0% 100%;      /* text-white */
+  
+  --warning: 38 92% 50%;                /* bg-yellow-500 */
+  --warning-foreground: 0 0% 100%;      /* text-white */
+  
+  --info: 199 89% 48%;                  /* bg-blue-500 */
+  --info-foreground: 0 0% 100%;         /* text-white */
+  
+  --border: 214 32% 91%;                /* border-gray-200 */
+  --input: 214 32% 91%;                 /* border-gray-300 */
+  --ring: 221 83% 53%;                  /* focus:ring-blue-500 */
 
+  /* Typography & Layout */
+  --radius: 0.75rem;                    /* rounded-xl default */
+  
   /* Spacing System */
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
@@ -61,246 +52,164 @@
   --spacing-xl: 2rem;
   --spacing-2xl: 3rem;
   --spacing-3xl: 4rem;
+  
+  /* Shadow System */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
 
-  /* Google Material Design 3 Shadow System */
-  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px 0 rgb(0 0 0 / 0.06);
-  --shadow-md: 0 4px 8px -1px rgb(0 0 0 / 0.05), 0 2px 4px -1px rgb(0 0 0 / 0.03);
-  --shadow-lg: 0 8px 16px -4px rgb(0 0 0 / 0.06), 0 4px 6px -2px rgb(0 0 0 / 0.03);
-  --shadow-xl: 0 16px 32px -8px rgb(0 0 0 / 0.08), 0 8px 16px -4px rgb(0 0 0 / 0.03);
-  --shadow-2xl: 0 24px 48px -12px rgb(0 0 0 / 0.12), 0 16px 32px -8px rgb(0 0 0 / 0.04);
-
-  /* Sidebar */
-  --sidebar-background: 0 0% 98%;
-  --sidebar-foreground: 240 5.3% 26.1%;
-  --sidebar-primary: 240 5.9% 10%;
-  --sidebar-primary-foreground: 0 0% 98%;
-  --sidebar-accent: 240 4.8% 95.9%;
-  --sidebar-accent-foreground: 240 5.9% 10%;
-  --sidebar-border: 220 13% 91%;
-  --sidebar-ring: 217.2 91.2% 59.8%;
+  /* Sidebar Colors */
+  --sidebar-background: 210 20% 98%;    /* bg-gray-50 */
+  --sidebar-foreground: 215 25% 27%;    /* text-gray-700 */
+  --sidebar-primary: 221 83% 53%;       /* bg-blue-600 */
+  --sidebar-primary-foreground: 0 0% 100%; /* text-white */
+  --sidebar-accent: 210 20% 98%;        /* bg-gray-50 */
+  --sidebar-accent-foreground: 215 28% 17%; /* text-gray-800 */
+  --sidebar-border: 214 32% 91%;        /* border-gray-200 */
+  --sidebar-ring: 221 83% 53%;          /* focus:ring-blue-500 */
 }
 
-.dark {
-  --background: 240 12% 8%;
-  --foreground: 240 10% 95%;
-  --card: 240 10% 10%;
-  --card-foreground: 240 10% 95%;
-  --popover: 240 10% 10%;
-  --popover-foreground: 240 10% 95%;
-  --primary: 240 100% 75%;
-  --primary-foreground: 240 12% 8%;
-  --secondary: 260 40% 20%;
-  --secondary-foreground: 240 10% 95%;
-  --muted: 240 8% 15%;
-  --muted-foreground: 240 5% 65%;
-  --accent: 245 30% 18%;
-  --accent-foreground: 240 10% 95%;
-  --destructive: 0 85% 65%;
-  --destructive-foreground: 0 0% 100%;
-  --border: transparent;
-  --input: 240 10% 15%;
-  --ring: 240 100% 75%;
-  
-  --sidebar-background: 240 5.9% 10%;
-  --sidebar-foreground: 240 4.8% 95.9%;
-  --sidebar-primary: 224.3 76.3% 94.1%;
-  --sidebar-primary-foreground: 240 5.9% 10%;
-  --sidebar-accent: 240 3.7% 15.9%;
-  --sidebar-accent-foreground: 240 4.8% 95.9%;
-  --sidebar-border: 240 3.7% 15.9%;
-  --sidebar-ring: 217.2 91.2% 59.8%;
+/* Base Styles */
+* {
+  border-color: hsl(var(--border));
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  
-  html {
-    scroll-behavior: smooth;
-  }
-  
-  body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility;
-  }
-
-  /* Performance optimizations */
-  * {
-    box-sizing: border-box;
-  }
-  
-  img {
-    max-width: 100%;
-    height: auto;
-  }
-  
-  /* Improved focus styles */
-  *:focus-visible {
-    outline: 2px solid hsl(var(--ring));
-    outline-offset: 2px;
-  }
+body {
+  color: hsl(var(--foreground));
+  background: hsl(var(--background));
+  font-family: 'Roboto', system-ui, sans-serif;
+  font-feature-settings: "rlig" 1, "calt" 1;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-@layer components {
-  /* Enhanced transitions */
-  .transition-smooth {
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  /* Google Material Design 3 Button Styles */
-  .btn-primary {
-    @apply bg-gradient-to-r from-primary-500 to-primary-600 text-primary-foreground 
-           hover:from-primary-600 hover:to-primary-700 hover:shadow-lg hover:scale-[1.02]
-           rounded-full shadow-md transition-all duration-200;
-  }
-  
-  .btn-secondary {
-    @apply bg-secondary text-secondary-foreground hover:bg-secondary/90 
-           rounded-full shadow-sm hover:shadow-md transition-all duration-200;
-  }
-  
-  .btn-outline {
-    @apply bg-muted/50 text-foreground hover:bg-muted hover:scale-[1.02]
-           rounded-full shadow-sm hover:shadow-md transition-all duration-200;
-  }
-  
-  .btn-ghost {
-    @apply hover:bg-accent/70 hover:text-accent-foreground rounded-full
-           transition-all duration-200;
-  }
-
-  /* Google-Style Gradients */
-  .gradient-primary {
-    @apply bg-gradient-to-br from-primary-400 via-primary-500 to-primary-600;
-  }
-  
-  .gradient-secondary {
-    @apply bg-gradient-to-br from-secondary via-accent to-muted;
-  }
-  
-  .gradient-surface {
-    @apply bg-gradient-to-br from-background via-muted/30 to-accent/50;
-  }
-
-  /* Enhanced focus ring */
-  .focus-ring {
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
-  }
-
-  /* Google Material Design Form Fields */
-  .input-field {
-    @apply flex h-12 w-full rounded-xl bg-input px-4 py-3 text-sm ring-offset-background 
-           file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground 
-           placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 
-           focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:bg-background 
-           focus-visible:shadow-md disabled:cursor-not-allowed disabled:opacity-50 
-           transition-all duration-200;
-  }
-
-  /* Glass effect */
-  .glass-effect {
-    @apply bg-background/80 backdrop-blur-sm border border-border/50;
-  }
-
-  /* Google Material Design Card Styles */
-  .card-elevated {
-    @apply shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl;
-  }
-  
-  .card-interactive {
-    @apply hover:scale-[1.02] hover:shadow-lg transition-all duration-200 cursor-pointer rounded-2xl;
-  }
-
-  /* Google-Style Navigation */
-  .nav-pill {
-    @apply rounded-full px-6 py-2 text-sm font-medium transition-all duration-200
-           hover:bg-primary/10 hover:text-primary focus-ring;
-  }
-  
-  .nav-pill-active {
-    @apply bg-primary text-primary-foreground shadow-md;
-  }
-
-  /* Layout utilities */
-  .container-padding {
-    @apply px-4 sm:px-6 lg:px-8;
-  }
-  
-  .section-spacing {
-    @apply py-12 lg:py-16;
-  }
-
-  /* Performance utilities */
-  .will-change-transform {
-    will-change: transform;
-  }
-  
-  .gpu-accelerated {
-    transform: translateZ(0);
-  }
+/* Hide scrollbar for webkit browsers */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
-@layer utilities {
-  /* Text selection */
-  .select-none {
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-  }
-
-  /* Scrollbar styles */
-  .scrollbar-thin {
-    scrollbar-width: thin;
-    scrollbar-color: hsl(var(--muted-foreground)) hsl(var(--muted));
-  }
-  
-  .scrollbar-thin::-webkit-scrollbar {
-    width: 6px;
-  }
-  
-  .scrollbar-thin::-webkit-scrollbar-track {
-    background: hsl(var(--muted));
-  }
-  
-  .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: hsl(var(--muted-foreground));
-    border-radius: 3px;
-  }
-
-  /* Animation utilities */
-  .animate-in {
-    animation: fade-in 0.5s ease-in-out;
-  }
-  
-  .animate-out {
-    animation: fade-out 0.3s ease-in-out;
-  }
-
-  /* Reduced motion */
-  @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-    }
-  }
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-/* Print styles */
-@media print {
-  .no-print {
-    display: none !important;
-  }
-  
-  * {
-    -webkit-print-color-adjust: exact !important;
-    color-adjust: exact !important;
-  }
+/* Global Utility Classes */
+.text-gray-800 {
+  @apply text-foreground;
+}
+
+.text-gray-700 {
+  @apply text-secondary-foreground;
+}
+
+.text-gray-900 {
+  @apply text-foreground font-semibold;
+}
+
+.bg-gray-50 {
+  @apply bg-secondary;
+}
+
+.bg-white {
+  @apply bg-background;
+}
+
+.border-gray-200 {
+  @apply border-border;
+}
+
+.border-gray-300 {
+  @apply border-input;
+}
+
+.bg-gray-100 {
+  @apply bg-accent;
+}
+
+.bg-gray-300 {
+  @apply bg-muted-foreground/20;
+}
+
+.divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
+  @apply border-border;
+}
+
+/* Button Component Classes */
+.btn-primary {
+  @apply inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition bg-primary text-primary-foreground hover:bg-primary/90;
+}
+
+.btn-secondary {
+  @apply inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition bg-secondary text-secondary-foreground hover:bg-secondary/80;
+}
+
+.btn-outline {
+  @apply inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition border border-input bg-background text-foreground hover:bg-accent hover:text-accent-foreground;
+}
+
+.btn-ghost {
+  @apply inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition hover:bg-accent hover:text-accent-foreground;
+}
+
+/* Input Component Classes */
+.input-field {
+  @apply block w-full rounded-md border-input shadow-sm focus:ring-primary focus:border-primary text-sm px-3 py-2;
+}
+
+/* Focus Ring Utility */
+.focus-ring {
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+}
+
+/* Navigation Classes */
+.nav-bar {
+  @apply flex items-center justify-between px-6 py-4 bg-white border-b shadow-sm text-gray-800;
+}
+
+/* Sidebar Classes */
+.sidebar-menu {
+  @apply w-64 h-screen bg-gray-50 border-r text-sm text-gray-700 py-6 px-4 space-y-4;
+}
+
+/* Dashboard Card Classes */
+.dashboard-card {
+  @apply bg-white p-5 rounded-2xl shadow-md hover:shadow-lg transition-all duration-200;
+}
+
+/* Page Header Classes */
+.page-header {
+  @apply text-2xl font-semibold text-gray-900 mb-2;
+}
+
+/* Table Classes */
+.data-table {
+  @apply min-w-full divide-y divide-gray-200 text-sm text-gray-800;
+}
+
+/* Tag/Chip Classes */
+.tag-chip {
+  @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold bg-gray-100 text-gray-800;
+}
+
+/* Modal Classes */
+.modal-overlay {
+  @apply fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50;
+}
+
+/* Tab Classes */
+.tab-nav {
+  @apply flex space-x-6 border-b text-sm font-medium text-gray-700;
+}
+
+/* Avatar Classes */
+.avatar-round {
+  @apply rounded-full h-10 w-10 bg-gray-300 flex items-center justify-center text-white font-bold cursor-pointer;
+}
+
+/* Notification Toast Classes */
+.toast-notification {
+  @apply fixed bottom-5 right-5 z-50 bg-success text-white px-4 py-2 rounded-lg shadow-lg text-sm;
 }

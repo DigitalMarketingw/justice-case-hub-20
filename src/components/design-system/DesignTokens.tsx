@@ -72,7 +72,7 @@ export function DesignTokens() {
             <Button variant="secondary">Secondary</Button>
             <Button variant="outline">Outline</Button>
             <Button variant="ghost">Ghost</Button>
-            <Button variant="gradient">Gradient</Button>
+            <Button variant="default">Primary</Button>
             <Button variant="success">Success</Button>
             <Button variant="destructive">Destructive</Button>
           </div>

@@ -163,7 +163,7 @@ const BenefitsSection = ({ onLoginClick }: BenefitsSectionProps) => {
                 <Button 
                   onClick={onLoginClick}
                   size="xl"
-                  variant="gradient"
+                  variant="default"
                   className="group"
                 >
                   <span className="flex items-center">

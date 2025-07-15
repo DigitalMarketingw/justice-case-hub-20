@@ -21,15 +21,15 @@ export function Sidebar({ className }: SidebarProps) {
   if (loading) {
     return (
       <div className={cn(
-        "flex flex-col bg-slate-900 text-white w-64",
+        "flex flex-col bg-gray-50 text-gray-700 w-64",
         className
       )}>
-        <div className="p-4 border-b border-slate-700">
-          <div className="h-6 bg-slate-700 rounded animate-pulse"></div>
+        <div className="p-4 border-b border-gray-200">
+          <div className="h-6 bg-gray-200 rounded animate-pulse"></div>
         </div>
         <div className="flex-1 p-4 space-y-2">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-8 bg-slate-700 rounded animate-pulse"></div>
+            <div key={i} className="h-8 bg-gray-200 rounded animate-pulse"></div>
           ))}
         </div>
       </div>
@@ -42,7 +42,7 @@ export function Sidebar({ className }: SidebarProps) {
 
   return (
     <div className={cn(
-      "flex flex-col bg-slate-900 text-white transition-all duration-300",
+      "flex flex-col bg-gray-50 text-gray-700 transition-all duration-300",
       isCollapsed ? "w-16" : "w-64",
       className
     )}>
@@ -56,7 +56,7 @@ export function Sidebar({ className }: SidebarProps) {
         isCollapsed={isCollapsed}
       />
 
-      <div className="p-4 border-t border-slate-700 space-y-3">
+      <div className="p-4 border-t border-gray-200 space-y-3">
         <SidebarUserInfo 
           isCollapsed={isCollapsed}
           displayName={displayName}

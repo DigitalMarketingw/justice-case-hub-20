@@ -38,11 +38,11 @@ export function EnhancedStatsCard({
   const getCardVariant = () => {
     switch (variant) {
       case "gradient":
-        return "gradient-primary text-primary-foreground border-0 shadow-xl";
+        return "bg-blue-600 text-white border-0 shadow-xl";
       case "glass":
-        return "glass-effect border-white/20 backdrop-blur-lg bg-white/10";
+        return "bg-white/80 border-gray-200 backdrop-blur-lg";
       default:
-        return "bg-card border hover:shadow-lg";
+        return "bg-white border-gray-200 hover:shadow-lg";
     }
   };
 
