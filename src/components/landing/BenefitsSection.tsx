@@ -121,7 +121,7 @@ const BenefitsSection = ({ onLoginClick }: BenefitsSectionProps) => {
             <h3 className="text-3xl font-display font-bold text-white mb-4">
               Trusted by Legal Professionals
             </h3>
-            <p className="text-foreground/80">See what our clients say about their experience</p>
+            <p className="text-foreground/80 text-white">See what our clients say about their experience</p>
           </div>
           
           <div className="grid md:grid-cols-2 gap-8">
