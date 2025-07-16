@@ -38,9 +38,9 @@ const LandingNavigation = ({ onLoginClick, onContactClick }: LandingNavigationPr
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-3">
               <img 
-                src="/lovable-uploads/bbf7762d-182e-48ac-b791-d3c06762a94c.png" 
+                src="/lovable-uploads/corbeen logo powered by mynx softwares blue.png" 
                 alt="LAWerp500 Logo" 
-                className="h-12 w-auto cursor-pointer"
+                className="h-14 w-auto cursor-pointer"
                 onClick={() => navigate("/")}
               />
             </div>

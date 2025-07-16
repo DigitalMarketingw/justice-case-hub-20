@@ -161,9 +161,9 @@ const Auth = () => {
         <div className="text-center space-y-6">
           <div className="flex items-center justify-center">
             <img 
-              src="/lovable-uploads/bbf7762d-182e-48ac-b791-d3c06762a94c.png" 
+              src="/lovable-uploads/corbeen white.png" 
               alt="LAWerp500 Logo" 
-              className="h-16 w-auto"
+              className="h-24 w-auto"
             />
           </div>
         </div>
