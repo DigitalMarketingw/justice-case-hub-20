@@ -36,7 +36,14 @@ const HeroSection = ({ onContactClick }: HeroSectionProps) => {
   return (
     <section className="relative overflow-hidden px-6 py-20 lg:py-32">
       {/* Background Elements */}
-      <div className="absolute inset-0 gradient-surface"></div>
+      <div className="absolute inset-0 "
+      style={{
+             backgroundImage: 'url(/auth-gradient-bg.png)',
+             backgroundSize: 'cover',
+             backgroundPosition: 'center',
+             backgroundRepeat: 'no-repeat'
+           }}
+      ></div>
       <div className="absolute top-0 right-0 w-96 h-96 bg-primary-400/20 rounded-full blur-3xl"></div>
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-secondary/30 rounded-full blur-3xl"></div>
       
@@ -56,20 +63,20 @@ const HeroSection = ({ onContactClick }: HeroSectionProps) => {
             {/* Main Headline */}
             <div className="space-y-4">
               <h1 className="text-5xl lg:text-7xl font-display font-bold text-foreground leading-tight">
-                The Complete
-                <span className="block bg-gradient-to-r from-primary-500 via-primary-400 to-secondary-400 bg-clip-text text-transparent">
-                  Legal Practice
+                The Complete<br></br>
+                <span className="text-4xl lg:text-6xl font-display font-bold text-white mb-6">
+                  Legal Practice<br></br>
                 </span>
                 Management Suite
               </h1>
-              <p className="text-xl lg:text-2xl text-foreground/80 leading-relaxed font-medium">
+              <p className="text-xl lg:text-2xl text-foreground/80 text-white leading-relaxed font-medium">
                 Trusted by top law firms to streamline operations, increase billable hours, 
                 and deliver exceptional client experiences. Join the legal technology revolution.
               </p>
             </div>
 
             {/* Value Propositions */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-8 text-white">
               {[
                 "Increase billable hours by 35%",
                 "Reduce admin time by 60%",
@@ -78,7 +85,7 @@ const HeroSection = ({ onContactClick }: HeroSectionProps) => {
               ].map((benefit, index) => (
                 <div key={index} className="flex items-center space-x-3">
                   <CheckCircle className="w-5 h-5 text-primary flex-shrink-0" />
-                  <span className="text-foreground font-medium">{benefit}</span>
+                  <span className="text-foreground text-white font-medium">{benefit}</span>
                 </div>
               ))}
             </div>
@@ -97,16 +104,6 @@ const HeroSection = ({ onContactClick }: HeroSectionProps) => {
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </span>
               </Button>
-            </div>
-
-            {/* Social Proof */}
-            <div className="pt-8 border-t border-border/20">
-              <p className="text-sm text-foreground/70 mb-4">Trusted by leading law firms including:</p>
-              <div className="flex items-center space-x-6 text-primary-500">
-                <span className="font-semibold text-lg">BigLaw Partners</span>
-                <span className="font-semibold text-lg">Legal Associates</span>
-                <span className="font-semibold text-lg">Family Law Group</span>
-              </div>
             </div>
           </div>
           

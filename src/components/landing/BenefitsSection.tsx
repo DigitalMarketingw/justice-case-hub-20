@@ -72,17 +72,17 @@ const BenefitsSection = ({ onLoginClick }: BenefitsSectionProps) => {
       <div className="relative max-w-7xl mx-auto">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <Badge variant="outline" className="mb-4 bg-primary-500/10 text-primary-400 border-primary-500/20">
+          {/* <Badge variant="destructive" className="mb-4 bg-primary-500/10 text-primary-400 border-primary-500/20">
             <Zap className="w-3 h-3 mr-1" />
             Proven Results
-          </Badge>
+          </Badge> */}
           <h2 className="text-4xl lg:text-6xl font-display font-bold text-white mb-6">
             Why Leading Law Firms
-            <span className="block bg-gradient-to-r from-primary-400 to-secondary-400 bg-clip-text text-transparent">
+            <span className="block bg-clip-text ">
               Choose LAWerp500
             </span>
           </h2>
-          <p className="text-xl text-foreground/80 max-w-3xl mx-auto">
+          <p className="text-xl text-white max-w-3xl mx-auto">
             Join thousands of legal professionals who have transformed their practice 
             with our comprehensive management platform.
           </p>

@@ -148,14 +148,14 @@ const FeaturesSection = () => {
         </div>
 
         {/* Bottom CTA */}
-        <div className="text-center mt-16">
+        {/* <div className="text-center mt-16">
           <p className="text-foreground/70 mb-4">
             Ready to see how these features work together?
           </p>
           <Badge variant="outline" className="text-primary-600 border-primary-200 bg-primary-50">
             Schedule a personalized demo with our legal technology experts
           </Badge>
-        </div>
+        </div> */}
       </div>
     </section>
   );

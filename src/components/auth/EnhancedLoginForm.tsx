@@ -57,16 +57,10 @@ const EnhancedLoginForm = ({ onSignUpClick }: EnhancedLoginFormProps) => {
       <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur-sm">
         <CardHeader className="text-center space-y-4 pb-6">
           <div className="flex items-center justify-center space-x-3">
-            <div className="p-3 bg-primary-50 rounded-full">
-              <Shield className="h-8 w-8 text-primary-600" />
-            </div>
             <div>
               <CardTitle className="text-2xl font-display text-gray-900">
-                Secure Login
+                 Login
               </CardTitle>
-              <CardDescription className="text-gray-600">
-                Access your legal practice management dashboard
-              </CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -172,26 +166,6 @@ const EnhancedLoginForm = ({ onSignUpClick }: EnhancedLoginFormProps) => {
                   Create account
                 </Button>
               </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Security Features */}
-      <Card className="border-gray-200 bg-gray-50/50">
-        <CardContent className="pt-6">
-          <div className="text-center space-y-4">
-            <h4 className="text-sm font-semibold text-gray-900 flex items-center justify-center">
-              <Shield className="w-4 h-4 mr-2 text-primary-600" />
-              Your data is protected by
-            </h4>
-            <div className="grid grid-cols-2 gap-2">
-              {securityFeatures.map((feature, index) => (
-                <div key={index} className="flex items-center space-x-2 text-xs text-gray-600">
-                  <CheckCircle className="w-3 h-3 text-success-500 flex-shrink-0" />
-                  <span>{feature}</span>
-                </div>
-              ))}
             </div>
           </div>
         </CardContent>

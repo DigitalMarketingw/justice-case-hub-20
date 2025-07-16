@@ -122,24 +122,11 @@ const SignUpForm = ({ onSignInClick }: SignUpFormProps) => {
       <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur-sm">
         <CardHeader className="text-center space-y-4 pb-6">
           <div className="flex items-center justify-center space-x-3">
-            <div className="p-3 bg-primary-50 rounded-full">
-              <UserPlus className="h-8 w-8 text-primary-600" />
-            </div>
             <div>
               <CardTitle className="text-2xl font-display text-gray-900">
                 Create Account
               </CardTitle>
-              <CardDescription className="text-gray-600">
-                Join thousands of legal professionals using LAWerp500
-              </CardDescription>
             </div>
-          </div>
-          
-          <div className="flex justify-center">
-            <Badge variant="outline" className="text-xs bg-primary-50 text-primary-700 border-primary-200">
-              <CheckCircle className="w-3 h-3 mr-1" />
-              Free 30-day trial
-            </Badge>
           </div>
         </CardHeader>
         
