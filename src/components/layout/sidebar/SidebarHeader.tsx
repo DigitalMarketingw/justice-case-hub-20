@@ -13,8 +13,8 @@ export function SidebarHeader({ isCollapsed, onToggleCollapse }: SidebarHeaderPr
       {!isCollapsed && (
         <div className="flex items-center space-x-3">
           <img 
-            src="src/assets/corbeen logo powered by mynx softwares blue.png" 
-            alt="LAWerp500 Logo" 
+            src="/corbeen logo powered by mynx softwares blue.png" 
+            alt="Corbeen Logo" 
             className="h-14 w-auto"
           />
         </div>
