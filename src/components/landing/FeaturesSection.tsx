@@ -102,7 +102,7 @@ const FeaturesSection = () => {
             <span className="block text-primary-500">In One Powerful Platform</span>
           </h2>
           <p className="text-xl text-foreground/80 max-w-4xl mx-auto leading-relaxed">
-            From case intake to final billing, LAWerp500 provides comprehensive tools designed specifically 
+            From case intake to final billing, Corbeen provides comprehensive tools designed specifically 
             for legal professionals. Increase efficiency, ensure compliance, and grow your practice.
           </p>
         </div>

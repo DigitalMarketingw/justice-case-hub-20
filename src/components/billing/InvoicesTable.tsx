@@ -110,7 +110,7 @@ export function InvoicesTable() {
 </head>
 <body>
     <div class="header">
-        <h1>LAWerp500</h1>
+        <h1>Corbeen</h1>
         <h2>Invoice</h2>
     </div>
     

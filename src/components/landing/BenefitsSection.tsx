@@ -52,14 +52,14 @@ const BenefitsSection = ({ onLoginClick }: BenefitsSectionProps) => {
       name: "Sarah Chen",
       title: "Managing Partner",
       firm: "Chen & Associates",
-      quote: "LAWerp500 transformed our practice. We've increased efficiency by 40% and our clients love the transparency.",
+      quote: "Corbeen transformed our practice. We've increased efficiency by 40% and our clients love the transparency.",
       rating: 5
     },
     {
       name: "Michael Rodriguez",
       title: "Solo Practitioner",
       firm: "Rodriguez Law",
-      quote: "As a solo attorney, LAWerp500 gives me the tools of a large firm. It's like having a full administrative team.",
+      quote: "As a solo attorney, Corbeen gives me the tools of a large firm. It's like having a full administrative team.",
       rating: 5
     }
   ];
@@ -79,7 +79,7 @@ const BenefitsSection = ({ onLoginClick }: BenefitsSectionProps) => {
           <h2 className="text-4xl lg:text-6xl font-display font-bold text-white mb-6">
             Why Leading Law Firms
             <span className="block bg-clip-text ">
-              Choose LAWerp500
+              Choose Corbeen
             </span>
           </h2>
           <p className="text-xl text-white max-w-3xl mx-auto">
@@ -156,7 +156,7 @@ const BenefitsSection = ({ onLoginClick }: BenefitsSectionProps) => {
                 Ready to Transform Your Practice?
               </h3>
               <p className="text-xl text-foreground/80 mb-8">
-                Join the legal technology revolution and see why LAWerp500 is the 
+                Join the legal technology revolution and see why Corbeen is the 
                 preferred choice for modern law firms.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">

@@ -183,7 +183,7 @@ const Auth = () => {
             <div className="text-center">
               <h3 className="text-lg font-semibold text-white mb-4">Quick Demo Access</h3>
               <p className="text-sm text-white/70 mb-4">
-                Try LAWerp500 instantly with these demo accounts
+                Try Corbeen instantly with these demo accounts
               </p>
             </div>
 

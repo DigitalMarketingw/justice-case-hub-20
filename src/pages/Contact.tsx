@@ -68,7 +68,7 @@ const Contact = () => {
           </h1>
           <p className="text-xl text-slate-200 max-w-3xl mx-auto">
             Ready to transform your law firm's operations? Get in touch with our team 
-            to discuss how LAWerp500 can streamline your practice.
+            to discuss how Corbeen can streamline your practice.
           </p>
         </div>
 
@@ -188,7 +188,7 @@ const Contact = () => {
                   <Mail className="w-6 h-6 text-primary-500 mt-1 flex-shrink-0" />
                   <div>
                     <h4 className="font-semibold text-foreground">Email Support</h4>
-                    <p className="text-muted-foreground">support@lawerp500.com</p>
+                    <p className="text-muted-foreground">support@Corbeen.com</p>
                     <p className="text-sm text-muted-foreground">Response within 24 hours</p>
                   </div>
                 </div>
@@ -206,7 +206,7 @@ const Contact = () => {
 
             <Card className="bg-card/80 backdrop-blur-lg border-border/20">
               <CardHeader>
-                <CardTitle className="text-xl font-display">Why Choose LAWerp500?</CardTitle>
+                <CardTitle className="text-xl font-display">Why Choose Corbeen?</CardTitle>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3 text-muted-foreground">

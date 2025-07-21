@@ -29,7 +29,7 @@ const OnboardingFlow = ({ userRole, onComplete }: OnboardingFlowProps) => {
   const getStepsForRole = (role: UserRole) => {
     const baseSteps = [
       {
-        title: "Welcome to LAWerp500",
+        title: "Welcome to Corbeen",
         description: "Let's get you set up for success",
         icon: Star,
         content: "Welcome! We're excited to help you streamline your legal practice."
@@ -169,7 +169,7 @@ const OnboardingFlow = ({ userRole, onComplete }: OnboardingFlowProps) => {
               {currentStep === 0 && (
                 <div className="bg-primary-50 rounded-lg p-6 space-y-4">
                   <h4 className="font-semibold text-primary-900">
-                    What makes LAWerp500 special?
+                    What makes Corbeen special?
                   </h4>
                   <div className="grid gap-3">
                     {[

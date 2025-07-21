@@ -265,7 +265,7 @@ const Pricing = () => {
               Ready to Get Started?
             </h2>
             <p className="text-lg text-slate-300 mb-8 max-w-2xl mx-auto">
-              Join thousands of legal professionals who trust LAWerp500 to manage their practice.
+              Join thousands of legal professionals who trust Corbeen to manage their practice.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 

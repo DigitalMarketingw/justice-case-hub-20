@@ -59,7 +59,7 @@ const LandingFooter = () => {
             <div className="lg:col-span-1 space-y-6">
               <div className="flex items-center space-x-3">
                 <Scale className="h-8 w-8 text-primary-400" />
-                <span className="text-2xl font-display font-bold text-white">LAWerp500</span>
+                <span className="text-2xl font-display font-bold text-white">Corbeen</span>
               </div>
               <p className="text-slate-300 leading-relaxed">
                 Empowering law firms worldwide with comprehensive practice management solutions 
@@ -74,7 +74,7 @@ const LandingFooter = () => {
                 </div>
                 <div className="flex items-center space-x-3 text-sm text-slate-300">
                   <Mail className="w-4 h-4 text-primary-400" />
-                  <span>support@lawerp500.com</span>
+                  <span>support@Corbeen.com</span>
                 </div>
                 <div className="flex items-center space-x-3 text-sm text-slate-300">
                   <MapPin className="w-4 h-4 text-primary-400" />
@@ -133,7 +133,7 @@ const LandingFooter = () => {
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="text-center md:text-left">
               <p className="text-slate-300 text-sm">
-                © 2024 LAWerp500. All rights reserved. Professional legal practice management software.
+                © 2024 Corbeen. All rights reserved. Professional legal practice management software.
               </p>
               <p className="text-slate-400 text-xs mt-1">
                 Built by legal professionals, for legal professionals.
