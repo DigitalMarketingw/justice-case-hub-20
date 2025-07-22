@@ -70,7 +70,7 @@ const LandingFooter = () => {
               <div className="space-y-3">
                 <div className="flex items-center space-x-3 text-sm text-slate-300">
                   <Phone className="w-4 h-4 text-primary-400" />
-                  <span>(555) 123-LEGAL</span>
+                  <span>+1(972) 499-6969</span>
                 </div>
                 <div className="flex items-center space-x-3 text-sm text-slate-300">
                   <Mail className="w-4 h-4 text-primary-400" />
@@ -78,7 +78,7 @@ const LandingFooter = () => {
                 </div>
                 <div className="flex items-center space-x-3 text-sm text-slate-300">
                   <MapPin className="w-4 h-4 text-primary-400" />
-                  <span>New York, NY • Los Angeles, CA</span>
+                  <span>Suite 2450, 2711 N Haskell Ave., Dallas, TX 75204</span>
                 </div>
               </div>
 

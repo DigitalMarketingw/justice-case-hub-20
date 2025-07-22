@@ -204,7 +204,7 @@ const Features = () => {
         {/* CTA Section */}
         <section className="py-20 px-6">
           <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl lg:text-4xl font-display font-bold text-white mb-6">
+            <h2 className="text-3xl lg:text-4xl font-display font-bold text-blue-700 mb-6">
               Ready to Transform Your Practice?
             </h2>
             <p className="text-lg text-slate-300 mb-8 max-w-2xl mx-auto">

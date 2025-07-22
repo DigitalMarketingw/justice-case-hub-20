@@ -152,7 +152,7 @@ const BenefitsSection = ({ onLoginClick }: BenefitsSectionProps) => {
           <Card className="bg-gradient-to-r from-primary-600/20 to-secondary-600/20 backdrop-blur-lg border-border/20 p-12">
             <div className="max-w-3xl mx-auto">
               <Award className="w-16 h-16 text-primary-400 mx-auto mb-6" />
-              <h3 className="text-3xl lg:text-4xl font-display font-bold text-white mb-6">
+              <h3 className="text-3xl lg:text-4xl font-display font-bold text-blue-700 mb-6">
                 Ready to Transform Your Practice?
               </h3>
               <p className="text-xl text-foreground/80 mb-8">

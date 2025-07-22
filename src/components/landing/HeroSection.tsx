@@ -62,7 +62,7 @@ const HeroSection = ({ onContactClick }: HeroSectionProps) => {
 
             {/* Main Headline */}
             <div className="space-y-4">
-              <h1 className="text-5xl lg:text-7xl font-display font-bold text-foreground leading-tight">
+              <h1 className="text-5xl lg:text-7xl font-display font-bold leading-tight text-blue-600">
                 The Complete<br></br>
                 <span className="text-4xl lg:text-6xl font-display font-bold text-white mb-6">
                   Legal Practice<br></br>
