@@ -68,9 +68,12 @@ export function CalendarView({ refreshTrigger }: CalendarViewProps) {
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
+        console.log('No authenticated user found');
         setEvents([]);
         return;
       }
+
+      console.log('Fetching events for user:', user.id);
 
       // Fetch events with basic information for now
       const { data, error } = await supabase
@@ -80,22 +83,24 @@ export function CalendarView({ refreshTrigger }: CalendarViewProps) {
 
       if (error) {
         console.error('Error fetching events:', error);
+        console.error('User ID:', user.id);
+        console.error('Error details:', error.details, error.hint);
         toast({
           title: "Error",
-          description: "Failed to load calendar events",
+          description: `Failed to load calendar events: ${error.message}`,
           variant: "destructive",
         });
         setEvents([]);
         return;
       }
 
-      console.log('Fetched events with participants:', data);
+      console.log('Successfully fetched events:', data?.length || 0, 'events');
       setEvents(data || []);
     } catch (error) {
-      console.error('Error fetching events:', error);
+      console.error('Unexpected error fetching events:', error);
       toast({
-        title: "Error",
-        description: "Failed to load calendar events",
+        title: "Error", 
+        description: "An unexpected error occurred while loading events",
         variant: "destructive",
       });
       setEvents([]);

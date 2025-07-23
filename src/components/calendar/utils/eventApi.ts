@@ -42,6 +42,7 @@ export const createCalendarEvent = async (data: FormData) => {
 
   if (error) {
     console.error('Error creating calendar event:', error);
+    console.error('Event data that failed:', eventData);
     throw new Error(`Failed to create event: ${error.message}`);
   }
 
