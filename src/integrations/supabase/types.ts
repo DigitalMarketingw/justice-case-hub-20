@@ -227,10 +227,52 @@ export type Database = {
           },
         ]
       }
+      calendar_event_participants: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          participant_id: string
+          participant_type: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          participant_id: string
+          participant_type: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          participant_id?: string
+          participant_type?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_event_participants_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "calendar_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendar_events: {
         Row: {
           attendees: string[] | null
+          attorney_id: string | null
+          case_id: string | null
+          client_id: string | null
           created_at: string
+          created_by: string
           description: string | null
           end_time: string
           event_type: string | null
@@ -245,7 +287,11 @@ export type Database = {
         }
         Insert: {
           attendees?: string[] | null
+          attorney_id?: string | null
+          case_id?: string | null
+          client_id?: string | null
           created_at?: string
+          created_by?: string
           description?: string | null
           end_time: string
           event_type?: string | null
@@ -260,7 +306,11 @@ export type Database = {
         }
         Update: {
           attendees?: string[] | null
+          attorney_id?: string | null
+          case_id?: string | null
+          client_id?: string | null
           created_at?: string
+          created_by?: string
           description?: string | null
           end_time?: string
           event_type?: string | null
