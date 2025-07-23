@@ -790,6 +790,7 @@ export type Database = {
           is_confidential: boolean | null
           mime_type: string | null
           name: string
+          tags: Json | null
           updated_at: string | null
           uploaded_by: string
         }
@@ -806,6 +807,7 @@ export type Database = {
           is_confidential?: boolean | null
           mime_type?: string | null
           name: string
+          tags?: Json | null
           updated_at?: string | null
           uploaded_by: string
         }
@@ -822,6 +824,7 @@ export type Database = {
           is_confidential?: boolean | null
           mime_type?: string | null
           name?: string
+          tags?: Json | null
           updated_at?: string | null
           uploaded_by?: string
         }
@@ -1126,6 +1129,7 @@ export type Database = {
         Row: {
           activated_at: string | null
           assigned_attorney_id: string | null
+          avatar_url: string | null
           created_at: string | null
           created_by: string | null
           dropped_by: string | null
@@ -1151,6 +1155,7 @@ export type Database = {
         Insert: {
           activated_at?: string | null
           assigned_attorney_id?: string | null
+          avatar_url?: string | null
           created_at?: string | null
           created_by?: string | null
           dropped_by?: string | null
@@ -1176,6 +1181,7 @@ export type Database = {
         Update: {
           activated_at?: string | null
           assigned_attorney_id?: string | null
+          avatar_url?: string | null
           created_at?: string | null
           created_by?: string | null
           dropped_by?: string | null
