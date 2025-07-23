@@ -21,6 +21,29 @@ const SuperAdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Redirect if not super admin
+  useEffect(() => {
+    if (profile && profile.role !== 'super_admin') {
+      console.log('Not super admin, redirecting to appropriate dashboard');
+      switch (profile.role) {
+        case 'firm_admin':
+          navigate('/firm-admin', { replace: true });
+          break;
+        case 'case_manager':
+          navigate('/case-manager', { replace: true });
+          break;
+        case 'attorney':
+          navigate('/attorney', { replace: true });
+          break;
+        case 'client':
+          navigate('/client', { replace: true });
+          break;
+        default:
+          navigate('/attorney', { replace: true });
+      }
+    }
+  }, [profile, navigate]);
+
   useEffect(() => {
     const fetchStats = async () => {
       setLoading(true);
@@ -72,8 +95,11 @@ const SuperAdminDashboard = () => {
       }
     };
 
-    fetchStats();
-  }, [toast]);
+    // Only fetch stats if user is confirmed super admin
+    if (profile?.role === 'super_admin') {
+      fetchStats();
+    }
+  }, [toast, profile?.role]);
 
   const handleNavigateToFirms = () => {
     navigate('/firms');
@@ -94,6 +120,11 @@ const SuperAdminDashboard = () => {
   const handleNavigateToSettings = () => {
     navigate('/settings');
   };
+
+  // Don't render if not super admin (redirect is happening)
+  if (!profile || profile.role !== 'super_admin') {
+    return <div>Redirecting...</div>;
+  }
 
   return (
     <SidebarProvider>
