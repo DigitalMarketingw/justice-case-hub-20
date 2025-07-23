@@ -94,12 +94,16 @@ export const useProfileState = (user: User | null, loading: boolean) => {
           }
         } else {
           console.log('No profile found, creating fallback');
+          
+          // Special handling for super admin email
+          const userRole = user.email === 'superadmin@demo.com' ? 'super_admin' : 'attorney';
+          
           const fallbackProfile: UserProfile = {
             id: user.id,
             email: user.email || '',
             first_name: null,
             last_name: null,
-            role: 'attorney' as const,
+            role: userRole as const,
             firm_id: null,
             is_active: true,
             phone: null,
@@ -112,12 +116,15 @@ export const useProfileState = (user: User | null, loading: boolean) => {
         
         // Check if this is still the current attempt before setting fallback
         if (fetchAttemptRef.current === attemptId) {
+          // Special handling for super admin email
+          const userRole = user.email === 'superadmin@demo.com' ? 'super_admin' : 'attorney';
+          
           const fallbackProfile: UserProfile = {
             id: user.id,
             email: user.email || '',
             first_name: null,
             last_name: null,
-            role: 'attorney' as const,
+            role: userRole as const,
             firm_id: null,
             is_active: true,
             phone: null,
@@ -137,12 +144,16 @@ export const useProfileState = (user: User | null, loading: boolean) => {
     timeoutRef.current = setTimeout(() => {
       if (fetchAttemptRef.current === attemptId && !profile) {
         console.log('Profile fetch timeout, creating fallback profile');
+        
+        // Special handling for super admin email
+        const userRole = user.email === 'superadmin@demo.com' ? 'super_admin' : 'attorney';
+        
         const fallbackProfile: UserProfile = {
           id: user.id,
           email: user.email || '',
           first_name: null,
           last_name: null,
-          role: 'attorney' as const,
+          role: userRole as const,
           firm_id: null,
           is_active: true,
           phone: null,
