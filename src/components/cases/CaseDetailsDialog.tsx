@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { User, Building, Calendar, Clock, DollarSign, FileText, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 import { CaseReferralHistory } from "./CaseReferralHistory";
 
@@ -52,6 +53,7 @@ interface CaseDetails {
 export function CaseDetailsDialog({ open, onOpenChange, caseId }: CaseDetailsDialogProps) {
   const [caseDetails, setCaseDetails] = useState<CaseDetails | null>(null);
   const [loading, setLoading] = useState(false);
+  const { profile } = useAuth();
 
   useEffect(() => {
     if (open && caseId) {
@@ -77,28 +79,56 @@ export function CaseDetailsDialog({ open, onOpenChange, caseId }: CaseDetailsDia
       if (caseError) throw caseError;
       if (!caseData) throw new Error('Case not found');
 
-      // Fetch documents count
-      const { count: documentsCount } = await supabase
-        .from('documents')
-        .select('*', { count: 'exact', head: true })
-        .eq('case_id', caseId);
-
-      // Fetch billing entries stats
-      const { data: billingData } = await supabase
-        .from('billing_entries')
-        .select('hours_worked')
-        .eq('case_id', caseId);
-
-      const totalHoursLogged = billingData?.reduce((sum, entry) => sum + (entry.hours_worked || 0), 0) || 0;
-
-      setCaseDetails({
+      // Initialize case details with basic data
+      let detailsData = {
         ...caseData,
-        documents_count: documentsCount || 0,
-        billing_entries_count: billingData?.length || 0,
-        total_hours_logged: totalHoursLogged,
-      });
+        documents_count: 0,
+        billing_entries_count: 0,
+        total_hours_logged: 0,
+      };
+
+      // Role-aware additional data fetching
+      const userRole = profile?.role;
+      const isClientRole = userRole === 'client';
+      const isAttorneyRole = userRole === 'attorney';
+      const isAdminRole = ['super_admin', 'firm_admin', 'case_manager'].includes(userRole || '');
+
+      // Fetch documents count - handle role-based access
+      try {
+        const { count: documentsCount } = await supabase
+          .from('documents')
+          .select('*', { count: 'exact', head: true })
+          .eq('case_id', caseId);
+        
+        detailsData.documents_count = documentsCount || 0;
+      } catch (docError) {
+        console.warn('Unable to fetch documents count due to access restrictions:', docError);
+        // For clients or attorneys without access, this is expected
+        detailsData.documents_count = 0;
+      }
+
+      // Fetch billing entries stats - handle role-based access
+      try {
+        const { data: billingData } = await supabase
+          .from('billing_entries')
+          .select('hours_worked')
+          .eq('case_id', caseId);
+
+        const totalHoursLogged = billingData?.reduce((sum, entry) => sum + (entry.hours_worked || 0), 0) || 0;
+        
+        detailsData.billing_entries_count = billingData?.length || 0;
+        detailsData.total_hours_logged = totalHoursLogged;
+      } catch (billingError) {
+        console.warn('Unable to fetch billing data due to access restrictions:', billingError);
+        // For clients without billing access, this is expected
+        detailsData.billing_entries_count = 0;
+        detailsData.total_hours_logged = 0;
+      }
+
+      setCaseDetails(detailsData);
     } catch (error) {
       console.error('Error fetching case details:', error);
+      setCaseDetails(null);
     } finally {
       setLoading(false);
     }
@@ -294,28 +324,36 @@ export function CaseDetailsDialog({ open, onOpenChange, caseId }: CaseDetailsDia
 
           {/* Financial & Time Information */}
           <div className="grid md:grid-cols-3 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center text-base">
-                  <DollarSign className="h-4 w-4 mr-2" />
-                  Billing
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {caseDetails.billable_rate && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-700">Billable Rate</p>
-                    <p>${caseDetails.billable_rate}/hour</p>
-                  </div>
-                )}
-                {caseDetails.total_billed !== undefined && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-700">Total Billed</p>
-                    <p className="text-lg font-semibold text-green-600">${caseDetails.total_billed}</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            {/* Show billing info to attorneys and admins, hide from clients based on role */}
+            {(profile?.role !== 'client' || (caseDetails.billable_rate || caseDetails.total_billed !== undefined)) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center text-base">
+                    <DollarSign className="h-4 w-4 mr-2" />
+                    Billing
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {caseDetails.billable_rate && (
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Billable Rate</p>
+                      <p>${caseDetails.billable_rate}/hour</p>
+                    </div>
+                  )}
+                  {caseDetails.total_billed !== undefined && (
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Total Billed</p>
+                      <p className="text-lg font-semibold text-green-600">${caseDetails.total_billed}</p>
+                    </div>
+                  )}
+                  {profile?.role === 'client' && !caseDetails.billable_rate && caseDetails.total_billed === undefined && (
+                    <div className="text-sm text-gray-500">
+                      Billing information not available
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             <Card>
               <CardHeader>
@@ -333,8 +371,11 @@ export function CaseDetailsDialog({ open, onOpenChange, caseId }: CaseDetailsDia
                 )}
                 <div>
                   <p className="text-sm font-medium text-gray-700">Hours Logged</p>
-                  <p className="text-lg font-semibold text-blue-600">{caseDetails.total_hours_logged}h</p>
+                  <p className="text-lg font-semibold text-blue-600">{caseDetails.total_hours_logged || 0}h</p>
                 </div>
+                {profile?.role === 'client' && caseDetails.total_hours_logged === 0 && (
+                  <p className="text-xs text-gray-500">Time tracking data may be limited for your role</p>
+                )}
               </CardContent>
             </Card>
 
@@ -348,8 +389,13 @@ export function CaseDetailsDialog({ open, onOpenChange, caseId }: CaseDetailsDia
               <CardContent>
                 <div>
                   <p className="text-sm font-medium text-gray-700">Total Documents</p>
-                  <p className="text-lg font-semibold text-purple-600">{caseDetails.documents_count}</p>
+                  <p className="text-lg font-semibold text-purple-600">{caseDetails.documents_count || 0}</p>
                 </div>
+                {caseDetails.documents_count === 0 && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    {profile?.role === 'client' ? 'No documents available to you' : 'No documents found'}
+                  </p>
+                )}
               </CardContent>
             </Card>
           </div>
