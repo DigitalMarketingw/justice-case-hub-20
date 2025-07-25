@@ -37,13 +37,13 @@ interface CaseDetails {
     last_name: string;
     email: string;
     phone?: string;
-  };
+  } | null;
   attorney: {
     id: string;
     first_name: string;
     last_name: string;
     email: string;
-  };
+  } | null;
   documents_count?: number;
   billing_entries_count?: number;
   total_hours_logged?: number;
@@ -72,9 +72,10 @@ export function CaseDetailsDialog({ open, onOpenChange, caseId }: CaseDetailsDia
           attorney:profiles!cases_attorney_id_fkey(id, first_name, last_name, email)
         `)
         .eq('id', caseId)
-        .single();
+        .maybeSingle();
 
       if (caseError) throw caseError;
+      if (!caseData) throw new Error('Case not found');
 
       // Fetch documents count
       const { count: documentsCount } = await supabase
@@ -212,13 +213,13 @@ export function CaseDetailsDialog({ open, onOpenChange, caseId }: CaseDetailsDia
               <CardContent className="space-y-3">
                 <div>
                   <p className="text-sm font-medium text-gray-700">Name</p>
-                  <p>{caseDetails.client.first_name} {caseDetails.client.last_name}</p>
+                  <p>{caseDetails.client ? `${caseDetails.client.first_name} ${caseDetails.client.last_name}` : 'Client information not available'}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-700">Email</p>
-                  <p>{caseDetails.client.email}</p>
+                  <p>{caseDetails.client?.email || 'Not available'}</p>
                 </div>
-                {caseDetails.client.phone && (
+                {caseDetails.client?.phone && (
                   <div>
                     <p className="text-sm font-medium text-gray-700">Phone</p>
                     <p>{caseDetails.client.phone}</p>
@@ -237,11 +238,11 @@ export function CaseDetailsDialog({ open, onOpenChange, caseId }: CaseDetailsDia
               <CardContent className="space-y-3">
                 <div>
                   <p className="text-sm font-medium text-gray-700">Name</p>
-                  <p>{caseDetails.attorney.first_name} {caseDetails.attorney.last_name}</p>
+                  <p>{caseDetails.attorney ? `${caseDetails.attorney.first_name} ${caseDetails.attorney.last_name}` : 'Attorney information not available'}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-700">Email</p>
-                  <p>{caseDetails.attorney.email}</p>
+                  <p>{caseDetails.attorney?.email || 'Not available'}</p>
                 </div>
               </CardContent>
             </Card>
