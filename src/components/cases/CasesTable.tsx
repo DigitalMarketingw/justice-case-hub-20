@@ -49,7 +49,7 @@ export function CasesTable({ searchTerm }: CasesTableProps) {
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [selectedCaseId, setSelectedCaseId] = useState<string>("");
   const [selectedClientId, setSelectedClientId] = useState<string>("");
-  const { profile } = useAuth();
+  const { profile, loading: authLoading } = useAuth();
 
   const fetchCases = async () => {
     try {
@@ -150,7 +150,19 @@ export function CasesTable({ searchTerm }: CasesTableProps) {
     setDetailsDialogOpen(true);
   };
 
+  // Safely check if user can drop cases, handling case where profile is undefined
   const canDropCases = profile?.role === 'firm_admin' || profile?.role === 'case_manager' || profile?.role === 'super_admin';
+
+  // Early return if auth is still loading
+  if (authLoading) {
+    return (
+      <div className="space-y-4">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="h-16 bg-gray-100 rounded animate-pulse" />
+        ))}
+      </div>
+    );
+  }
 
   if (loading) {
     return (
