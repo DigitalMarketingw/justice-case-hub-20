@@ -20,6 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { CaseDocumentsDialog } from "./CaseDocumentsDialog";
+import { CaseDetailsDialog } from "./CaseDetailsDialog";
 
 interface Case {
   id: string;
@@ -43,6 +44,7 @@ export function CasesTable({ searchTerm }: CasesTableProps) {
   const [cases, setCases] = useState<Case[]>([]);
   const [loading, setLoading] = useState(true);
   const [documentsDialogOpen, setDocumentsDialogOpen] = useState(false);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [selectedCaseId, setSelectedCaseId] = useState<string>("");
   const [selectedClientId, setSelectedClientId] = useState<string>("");
 
@@ -139,6 +141,11 @@ export function CasesTable({ searchTerm }: CasesTableProps) {
     setDocumentsDialogOpen(true);
   };
 
+  const handleViewDetails = (caseId: string) => {
+    setSelectedCaseId(caseId);
+    setDetailsDialogOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -213,7 +220,7 @@ export function CasesTable({ searchTerm }: CasesTableProps) {
                         <FileText className="mr-2 h-4 w-4" />
                         View Documents
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleViewDetails(caseItem.id)}>
                         <Eye className="mr-2 h-4 w-4" />
                         View Details
                       </DropdownMenuItem>
@@ -231,6 +238,12 @@ export function CasesTable({ searchTerm }: CasesTableProps) {
         onOpenChange={setDocumentsDialogOpen}
         caseId={selectedCaseId}
         clientId={selectedClientId}
+      />
+
+      <CaseDetailsDialog
+        open={detailsDialogOpen}
+        onOpenChange={setDetailsDialogOpen}
+        caseId={selectedCaseId}
       />
     </>
   );
