@@ -8,10 +8,16 @@ import { Plus, Search } from "lucide-react";
 import { CasesStats } from "@/components/cases/CasesStats";
 import { CasesTable } from "@/components/cases/CasesTable";
 import { AddCaseDialog } from "@/components/cases/AddCaseDialog";
+import { DroppedCasesSection } from "@/components/cases/DroppedCasesSection";
 
 function Cases() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleRefresh = () => {
+    setRefreshKey(prev => prev + 1);
+  };
 
   return (
     <SidebarProvider>
@@ -29,7 +35,7 @@ function Cases() {
             </Button>
           </div>
 
-          <CasesStats />
+          <CasesStats key={refreshKey} />
 
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <div className="flex items-center space-x-4 mb-6">
@@ -44,7 +50,11 @@ function Cases() {
               </div>
             </div>
 
-            <CasesTable searchTerm={searchTerm} />
+            <CasesTable searchTerm={searchTerm} key={refreshKey} />
+          </div>
+
+          <div className="mt-8">
+            <DroppedCasesSection onCaseReactivated={handleRefresh} />
           </div>
 
           <AddCaseDialog 

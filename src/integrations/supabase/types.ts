@@ -449,10 +449,14 @@ export type Database = {
           court_name: string | null
           created_at: string | null
           description: string | null
+          drop_reason: string | null
+          dropped_by: string | null
+          dropped_date: string | null
           estimated_hours: number | null
           filing_date: string | null
           firm_id: string | null
           id: string
+          is_dropped: boolean | null
           is_referral: boolean | null
           judge_name: string | null
           original_attorney_id: string | null
@@ -473,10 +477,14 @@ export type Database = {
           court_name?: string | null
           created_at?: string | null
           description?: string | null
+          drop_reason?: string | null
+          dropped_by?: string | null
+          dropped_date?: string | null
           estimated_hours?: number | null
           filing_date?: string | null
           firm_id?: string | null
           id?: string
+          is_dropped?: boolean | null
           is_referral?: boolean | null
           judge_name?: string | null
           original_attorney_id?: string | null
@@ -497,10 +505,14 @@ export type Database = {
           court_name?: string | null
           created_at?: string | null
           description?: string | null
+          drop_reason?: string | null
+          dropped_by?: string | null
+          dropped_date?: string | null
           estimated_hours?: number | null
           filing_date?: string | null
           firm_id?: string | null
           id?: string
+          is_dropped?: boolean | null
           is_referral?: boolean | null
           judge_name?: string | null
           original_attorney_id?: string | null
@@ -522,6 +534,13 @@ export type Database = {
           {
             foreignKeyName: "cases_client_id_fkey"
             columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cases_dropped_by_fkey"
+            columns: ["dropped_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]

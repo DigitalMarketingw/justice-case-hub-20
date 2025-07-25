@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/table";
 import { CaseDocumentsDialog } from "./CaseDocumentsDialog";
 import { CaseDetailsDialog } from "./CaseDetailsDialog";
+import { useAuth } from "@/contexts/AuthContext";
+import { DropCaseDialog } from "./DropCaseDialog";
 
 interface Case {
   id: string;
@@ -47,6 +49,7 @@ export function CasesTable({ searchTerm }: CasesTableProps) {
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [selectedCaseId, setSelectedCaseId] = useState<string>("");
   const [selectedClientId, setSelectedClientId] = useState<string>("");
+  const { profile } = useAuth();
 
   const fetchCases = async () => {
     try {
@@ -56,6 +59,7 @@ export function CasesTable({ searchTerm }: CasesTableProps) {
       let casesQuery = supabase
         .from('cases')
         .select('*')
+        .eq('is_dropped', false)
         .order('created_at', { ascending: false });
 
       if (searchTerm) {
@@ -146,6 +150,8 @@ export function CasesTable({ searchTerm }: CasesTableProps) {
     setDetailsDialogOpen(true);
   };
 
+  const canDropCases = profile?.role === 'firm_admin' || profile?.role === 'case_manager' || profile?.role === 'super_admin';
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -226,6 +232,13 @@ export function CasesTable({ searchTerm }: CasesTableProps) {
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
+                  {canDropCases && (
+                    <DropCaseDialog
+                      caseId={caseItem.id}
+                      caseTitle={caseItem.title}
+                      onCaseDropped={fetchCases}
+                    />
+                  )}
                 </TableCell>
               </TableRow>
             ))
